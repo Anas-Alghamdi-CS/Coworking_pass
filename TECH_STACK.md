@@ -3,7 +3,7 @@
 تم اعتماد التقنيات التالية لبناء مشروع **Coworking Pass**:
 
 - **التصميم (UI/UX):** Figma
-- **الواجهات الأمامية (Frontend):** React مع Tailwind CSS
-- **الواجهات الخلفية (Backend):** Node.js (Express)
+- **إطار العمل الموحد (Frontend & Backend):** Next.js (استخدام Pages/App Router للواجهات، و API Routes للباك إند)
+- **تنسيق الواجهات:** Tailwind CSS
 - **قاعدة البيانات (Database):** PostgreSQL
 
