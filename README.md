@@ -21,7 +21,7 @@
 
 ```bash
 # سحب نسخة من المشروع إلى جهازك
-git clone https://github.com/Anas-Alghamdi-CS/Coworking_pass.git
+git clone https://github.com/Coworking-Pass-Team/Coworking_pass.git
 
 # الدخول إلى مجلد المشروع
 cd Coworking_pass
