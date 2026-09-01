@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, Search, CalendarDays, User, Settings, LogOut,
   Building2, Users, BarChart3, BookOpen, Menu, X, ChevronRight,
-  Briefcase, Warehouse, AlertCircle
+  Briefcase, AlertCircle
 } from 'lucide-react';
 import { Screen, UserRole } from '@/types/types';
 import { useApp } from './store';
@@ -54,7 +54,7 @@ import Reports from './admin/Reports';
 interface NavItem {
   label: string;
   screen: Screen;
-  icon: typeof LayoutDashboard;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
 const individualNav: NavItem[] = [
@@ -133,77 +133,80 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-soot">
+    <div className="flex flex-col h-full bg-moss text-plaster select-none">
       {/* Brand Logo */}
-      <div className="px-5 py-6">
+      <div className="px-6 py-6 border-b border-plaster/15">
         <button
+          type="button"
           onClick={() => { navigate(dashboardScreen); setMobileOpen(false); }}
-          className="flex items-center gap-2.5 group"
+          className="flex items-center gap-3 group cursor-pointer focus:outline-none w-full text-left"
         >
-          <LogoImage className="w-8 h-8 rounded-lg group-hover:scale-105 transition-transform" />
-          <span className="font-semibold text-plaster text-base tracking-tight" style={{ fontFamily: 'DM Serif Display, serif' }}>
+          <LogoImage className="w-8 h-8 rounded-xl ring-1 ring-plaster/25 group-hover:scale-105 transition-transform" />
+          <span className="font-semibold text-plaster text-base tracking-tight font-serif-display group-hover:text-plaster-surface transition-colors">
             Coworking Pass
           </span>
         </button>
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto">
+      <nav className="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
         {navItems.map(item => {
           const active = isActive(item);
+          const Icon = item.icon;
           return (
             <button
               key={item.screen}
+              type="button"
               onClick={() => { navigate(item.screen); setMobileOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all ${
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
                 active
-                  ? 'bg-[#B3C9D6] text-soot shadow-sm font-semibold'
-                  : 'text-plaster/65 hover:bg-white/10 hover:text-plaster'
+                  ? 'bg-plaster-surface text-soot font-semibold shadow-sm'
+                  : 'text-plaster/85 hover:bg-eucalyptus/30 hover:text-plaster hover:translate-x-0.5'
               }`}
             >
-              <item.icon size={18} className={active ? 'text-soot' : 'text-plaster/60'} />
+              <Icon size={18} className={active ? 'text-soot' : 'text-plaster/75'} />
               <span>{item.label}</span>
-              {active && <ChevronRight size={15} className="ml-auto text-soot" />}
+              {active && <ChevronRight size={14} className="ml-auto text-soot" />}
             </button>
           );
         })}
       </nav>
 
-      {/* User Profile Footer (Clickable Profile & Logout) */}
-      <div className="px-3 pb-6 mt-auto border-t border-white/10 pt-4">
-        {/* Clickable Profile Card */}
+      {/* User Profile Footer */}
+      <div className="px-3.5 pb-5 pt-3 mt-auto border-t border-plaster/15 space-y-1.5 bg-black/10">
         <button
+          type="button"
           onClick={handleProfileClick}
-          className="w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-white/10 transition-all text-left group cursor-pointer"
+          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-eucalyptus/25 transition-all duration-200 text-left group cursor-pointer"
           title="Click to view and edit your profile"
         >
           <div className="relative">
             <img
               src={currentUser.avatar}
               alt={currentUser.name}
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-eucalyptus/40 group-hover:ring-eucalyptus group-hover:scale-105 transition-all shrink-0"
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-plaster group-hover:ring-plaster-surface transition-all shrink-0"
             />
-            <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-              <User size={12} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 rounded-full bg-soot/0 group-hover:bg-soot/20 transition-colors flex items-center justify-center">
+              <User size={12} className="text-plaster opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-plaster truncate group-hover:text-white transition-colors">
+            <div className="text-xs font-semibold text-plaster truncate group-hover:text-plaster-surface transition-colors">
               {currentUser.name}
             </div>
-            <div className="text-xs text-plaster/50 capitalize truncate group-hover:text-plaster/75 transition-colors">
-              {currentUser.role}
+            <div className="text-[11px] text-plaster/75 capitalize truncate">
+              {currentUser.role} Account
             </div>
           </div>
-          <ChevronRight size={14} className="text-plaster/30 group-hover:text-plaster/80 group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight size={13} className="text-plaster/60 group-hover:text-plaster group-hover:translate-x-0.5 transition-all" />
         </button>
 
-        {/* Logout Button */}
         <button
+          type="button"
           onClick={() => setShowLogoutModal(true)}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 mt-1 rounded-xl text-sm font-medium text-plaster/60 hover:bg-red-500/10 hover:text-red-400 transition-all"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-plaster/80 hover:bg-red-500/20 hover:text-white transition-all duration-200 cursor-pointer"
         >
-          <LogOut size={16} />
+          <LogOut size={15} />
           <span>Log out</span>
         </button>
       </div>
@@ -211,26 +214,27 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-plaster">
+    <div className="flex min-h-screen bg-plaster text-soot">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-soot h-screen sticky top-0 border-r border-soot/10">
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-moss h-screen sticky top-0 border-r border-soot/10 shadow-xs z-30">
         <SidebarContent />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-50 lg:hidden bg-soot/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 lg:hidden bg-soot/60 backdrop-blur-xs"
           onClick={() => setMobileOpen(false)}
         >
           <aside
-            className="w-64 bg-soot h-full"
+            className="w-64 bg-moss h-full shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="absolute top-4 right-4">
               <button
+                type="button"
                 onClick={() => setMobileOpen(false)}
-                className="p-2 text-plaster/60 hover:text-plaster rounded-lg hover:bg-white/10 transition-colors"
+                className="p-2 text-plaster hover:text-white rounded-lg hover:bg-eucalyptus/30 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -242,38 +246,42 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Top Bar */}
-        <header className="lg:hidden sticky top-0 z-40 bg-plaster/95 backdrop-blur-sm border-b border-soot/8 h-15 flex items-center justify-between px-4">
+        <header className="lg:hidden sticky top-0 z-40 bg-plaster/95 backdrop-blur-xs border-b border-soot/10 h-15 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={() => setMobileOpen(true)}
-              className="p-2 rounded-xl hover:bg-soot/5 text-soot transition-colors"
+              className="p-2 rounded-xl hover:bg-plaster-dark text-soot transition-colors cursor-pointer"
             >
               <Menu size={22} />
             </button>
-            <button onClick={() => navigate(dashboardScreen)} className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate(dashboardScreen)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
               <LogoImage className="w-7 h-7 rounded-lg" />
-              <span className="font-semibold text-soot text-sm tracking-tight" style={{ fontFamily: 'DM Serif Display, serif' }}>
+              <span className="font-semibold text-soot text-sm tracking-tight font-serif-display">
                 Coworking Pass
               </span>
             </button>
           </div>
 
-          {/* Clickable Mobile Avatar */}
           <button
+            type="button"
             onClick={handleProfileClick}
-            className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-eucalyptus/40 transition-all"
+            className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-moss transition-all cursor-pointer"
             title="Go to Profile"
           >
             <img
               src={currentUser.avatar}
               alt={currentUser.name}
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-soot/10"
+              className="w-8 h-8 rounded-full object-cover ring-1 ring-soot/15"
             />
           </button>
         </header>
 
-        <main className="flex-1 bg-plaster">
+        <main className="flex-1 bg-plaster p-4 sm:p-6 lg:p-8 overflow-y-auto">
           {children}
         </main>
       </div>
@@ -285,13 +293,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         title="Confirm Logout"
         size="sm"
       >
-        <div className="p-6">
+        <div className="p-6 bg-plaster-surface rounded-3xl">
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-11 h-11 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-              <AlertCircle size={22} className="text-red-500" />
+            <div className="w-11 h-11 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+              <AlertCircle size={22} className="text-red-600" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-soot mb-1">
+              <h3 className="text-base font-semibold text-soot mb-1 font-serif-display">
                 Are you sure you want to log out?
               </h3>
               <p className="text-xs text-moss leading-relaxed">
@@ -302,14 +310,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={() => setShowLogoutModal(false)}
-              className="flex-1 py-3 rounded-xl border border-soot/15 text-soot text-sm font-semibold hover:bg-soot/5 transition-colors"
+              className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium hover:bg-plaster-dark transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleConfirmLogout}
-              className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors shadow-sm"
+              className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-xs cursor-pointer"
             >
               Log Out
             </button>
@@ -325,14 +335,14 @@ export function Toast() {
   if (!toast) return null;
 
   const colors = {
-    success: 'bg-soot text-plaster border border-eucalyptus/30',
-    error: 'bg-red-500 text-white',
-    info: 'bg-mist text-soot font-medium',
+    success: 'bg-moss text-plaster border border-plaster/30',
+    error: 'bg-red-600 text-white',
+    info: 'bg-plaster-surface text-soot font-medium border border-soot/10',
   };
 
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-2xl shadow-xl text-sm font-medium ${
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-100 px-5 py-3 rounded-2xl shadow-xl text-sm font-medium ${
         colors[toast.type as keyof typeof colors] || colors.info
       } transition-all animate-bounce`}
     >
@@ -342,23 +352,22 @@ export function Toast() {
 }
 
 function AdminSettingsPage() {
-  const { currentUser } = useApp();
+  const { currentUser, logout } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { logout } = useApp();
 
   if (!currentUser) return null;
 
   return (
-    <div className="max-w-3xl mx-auto px-6 sm:px-8 py-10">
-      <h1 className="text-4xl text-soot font-normal mb-8" style={{ fontFamily: 'DM Serif Display, serif' }}>
+    <div className="max-w-3xl mx-auto py-6">
+      <h1 className="text-3xl text-soot font-normal mb-6 font-serif-display">
         Admin Settings
       </h1>
-      <div className="bg-white rounded-3xl border border-soot/8 p-8 shadow-sm mb-6">
-        <h2 className="text-xl font-semibold text-soot mb-6" style={{ fontFamily: 'DM Serif Display, serif' }}>
+      <div className="bg-plaster-surface rounded-3xl border border-soot/10 p-6 sm:p-8 shadow-xs mb-6">
+        <h2 className="text-lg font-semibold text-soot mb-6 font-serif-display">
           Account Details
         </h2>
-        <div className="flex items-center gap-5 mb-6 pb-6 border-b border-soot/8">
-          <img src={currentUser.avatar} alt={currentUser.name} className="w-16 h-16 rounded-full object-cover ring-2 ring-eucalyptus/30" />
+        <div className="flex items-center gap-5 mb-6 pb-6 border-b border-soot/10">
+          <img src={currentUser.avatar} alt={currentUser.name} className="w-16 h-16 rounded-full object-cover ring-2 ring-moss" />
           <div>
             <div className="font-semibold text-soot text-lg">{currentUser.name}</div>
             <div className="text-sm text-moss">{currentUser.email}</div>
@@ -366,19 +375,20 @@ function AdminSettingsPage() {
           </div>
         </div>
         <button
+          type="button"
           onClick={() => setShowLogoutModal(true)}
-          className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors shadow-sm"
+          className="px-5 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-xs cursor-pointer"
         >
           Log Out
         </button>
       </div>
 
       <Modal open={showLogoutModal} onClose={() => setShowLogoutModal(false)} title="Confirm Logout" size="sm">
-        <div className="p-6">
+        <div className="p-6 bg-plaster-surface rounded-3xl">
           <p className="text-sm text-soot mb-6">Are you sure you want to log out of admin account?</p>
           <div className="flex gap-3">
-            <button onClick={() => setShowLogoutModal(false)} className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium">Cancel</button>
-            <button onClick={() => { setShowLogoutModal(false); logout(); }} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold">Log Out</button>
+            <button type="button" onClick={() => setShowLogoutModal(false)} className="flex-1 py-2 rounded-xl border border-soot/15 text-soot text-sm font-medium hover:bg-plaster-dark cursor-pointer">Cancel</button>
+            <button type="button" onClick={() => { setShowLogoutModal(false); logout(); }} className="flex-1 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 cursor-pointer">Log Out</button>
           </div>
         </div>
       </Modal>
@@ -470,7 +480,7 @@ export function Router() {
     );
   }
 
-  // Individual flow
+  // Individual Member flow
   return (
     <DashboardLayout>
       {screen === 'ind-dashboard' && <IndividualDashboard />}

@@ -1,21 +1,31 @@
 import React from 'react';
 
-interface BadgeProps {
-  variant?: 'success' | 'warning' | 'danger' | 'info';
+export interface BadgeProps {
+  variant?: 'eucalyptus' | 'soot' | 'mist' | 'success' | 'warning' | 'danger' | 'info';
   children: React.ReactNode;
+  className?: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ variant = 'info', children }) => {
+export const Badge: React.FC<BadgeProps> = ({
+  variant = 'eucalyptus',
+  children,
+  className = '',
+}) => {
   const styles = {
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-    danger: 'bg-rose-50 text-rose-700 border-rose-200',
-    info: 'bg-blue-50 text-blue-700 border-blue-200',
+    eucalyptus: 'bg-eucalyptus/20 text-soot border-eucalyptus/30 font-semibold',
+    soot: 'bg-soot text-plaster border-soot-light/30 font-medium',
+    mist: 'bg-mist-light text-soot border-mist font-medium',
+    success: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold',
+    warning: 'bg-amber-50 text-amber-900 border-amber-300 font-semibold',
+    danger: 'bg-rose-50 text-rose-800 border-rose-300 font-semibold',
+    info: 'bg-mist/30 text-soot border-mist font-semibold',
   };
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${styles[variant]}`}>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border ${styles[variant]} ${className}`}>
       {children}
     </span>
   );
 };
+
+export default Badge;

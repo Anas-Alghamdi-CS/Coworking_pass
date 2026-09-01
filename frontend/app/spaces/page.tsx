@@ -4,6 +4,10 @@ import React, { useState, useMemo } from 'react';
 import { Search, SlidersHorizontal, X, MapPin, ChevronDown } from 'lucide-react';
 import { useApp } from '@/app/store';
 import SpaceCard from '@/components/spaces/spaceCard';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import Badge from '@/components/ui/Badge';
 
 const CITIES = ['Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah', 'Makkah'];
 const TYPES = ['all', 'hot-desk', 'private-office', 'meeting-room', 'mixed'];
@@ -38,15 +42,15 @@ export default function Browse() {
       if (city && s.city !== city) return false;
       if (spaceType !== 'all' && s.type !== spaceType) return false;
       if (s.pricing.daily > maxPrice) return false;
-      if (availableOnly && s.availableCapacity === 0) return false;
+      if (availableOnly && s.availableCapacity <= 0) return false;
       if (selectedAmenities.length > 0 && !selectedAmenities.every(a => s.amenities.includes(a))) return false;
       return true;
     });
 
-    if (sort === 'Price: Low to High') list = [...list].sort((a, b) => a.pricing.daily - b.pricing.daily);
-    else if (sort === 'Price: High to Low') list = [...list].sort((a, b) => b.pricing.daily - a.pricing.daily);
-    else if (sort === 'Rating') list = [...list].sort((a, b) => b.rating - a.rating);
-    else if (sort === 'Availability') list = [...list].sort((a, b) => b.availableCapacity - a.availableCapacity);
+    if (sort === 'Price: Low to High') list.sort((a, b) => a.pricing.daily - b.pricing.daily);
+    else if (sort === 'Price: High to Low') list.sort((a, b) => b.pricing.daily - a.pricing.daily);
+    else if (sort === 'Rating') list.sort((a, b) => b.rating - a.rating);
+    else if (sort === 'Availability') list.sort((a, b) => b.availableCapacity - a.availableCapacity);
 
     return list;
   }, [visible, query, city, spaceType, maxPrice, availableOnly, selectedAmenities, sort]);
@@ -67,44 +71,49 @@ export default function Browse() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 sm:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl sm:text-5xl text-soot font-normal mb-1" style={{ fontFamily: 'DM Serif Display, serif' }}>
-          Browse Spaces
-        </h1>
-        <p className="text-moss text-sm font-medium">{filtered.length} spaces found</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl sm:text-5xl text-soot font-normal mb-2 font-serif-display">
+            Browse Workspaces
+          </h1>
+          <p className="text-moss text-sm font-medium">Discover and book verified coworking spaces across Saudi Arabia</p>
+        </div>
+        <Badge variant="eucalyptus" className="self-start sm:self-auto px-4 py-1.5 text-xs font-semibold">
+          {filtered.length} Workspaces Found
+        </Badge>
       </div>
 
       {/* Search + Filter Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 mb-8">
         {/* Search input */}
         <div className="relative flex-1">
-          <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-moss stroke-[1.7]" />
+          <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-moss stroke-[1.7] z-10 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search by space name or city..."
+            placeholder="Search by space name, city, or district..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-soot/10 bg-white text-soot text-sm outline-none focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20 placeholder:text-moss/70 shadow-sm transition-all"
+            className="w-full pl-11 pr-10 py-3 rounded-2xl border border-soot/15 bg-white text-soot text-sm outline-none focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/25 placeholder:text-soot/50 shadow-xs transition-all"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-moss hover:text-soot"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-moss hover:text-soot p-1"
             >
-              <X size={14} />
+              <X size={15} />
             </button>
           )}
         </div>
 
         {/* City Filter */}
-        <div className="relative">
-          <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-moss pointer-events-none" />
+        <div className="relative min-w-[160px]">
+          <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-moss pointer-events-none z-10" />
           <select
             value={city}
             onChange={e => setCity(e.target.value)}
-            className="w-full md:w-auto pl-9 pr-9 py-3 rounded-2xl border border-soot/10 bg-white text-soot text-sm outline-none focus:border-eucalyptus appearance-none cursor-pointer shadow-sm font-medium"
+            className="w-full pl-9 pr-9 py-3 rounded-2xl border border-soot/15 bg-white text-soot text-sm outline-none focus:border-eucalyptus appearance-none cursor-pointer shadow-xs font-medium"
           >
             <option value="">All Cities</option>
             {CITIES.map(c => (
@@ -117,13 +126,11 @@ export default function Browse() {
         </div>
 
         {/* Filter Toggle Button */}
-        <button
+        <Button
+          type="button"
+          variant={showFilters || hasActiveFilters ? 'secondary' : 'outline'}
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border text-sm font-medium transition-all shadow-sm ${
-            showFilters || hasActiveFilters
-              ? 'bg-soot text-plaster border-soot shadow-md'
-              : 'border-soot/10 bg-white text-soot hover:bg-soot/5'
-          }`}
+          className="rounded-2xl py-3"
         >
           <SlidersHorizontal size={15} />
           <span>Filters</span>
@@ -132,7 +139,7 @@ export default function Browse() {
               •
             </span>
           )}
-        </button>
+        </Button>
 
         {/* Sort Select */}
         <div className="relative">
@@ -216,10 +223,10 @@ export default function Browse() {
                   <button
                     key={a}
                     onClick={() => toggleAmenity(a)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-all font-medium ${
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 font-medium cursor-pointer active:scale-[0.98] ${
                       selectedAmenities.includes(a)
-                        ? 'bg-eucalyptus text-soot border-eucalyptus shadow-sm'
-                        : 'border-soot/12 text-moss hover:border-soot/30 hover:text-soot bg-plaster/50'
+                        ? 'bg-eucalyptus text-soot border-eucalyptus shadow-xs'
+                        : 'border-soot/12 text-moss hover:bg-plaster-dark/60 hover:text-soot bg-plaster/50'
                     }`}
                   >
                     {a}

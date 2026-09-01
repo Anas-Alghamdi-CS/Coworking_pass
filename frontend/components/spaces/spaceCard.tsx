@@ -4,6 +4,7 @@ import React from 'react';
 import { Heart, MapPin, Star, Users } from 'lucide-react';
 import { Space } from '@/types/types';
 import { useApp } from '@/app/store';
+import Badge from '@/components/ui/Badge';
 
 interface SpaceCardProps {
   space: Space;
@@ -15,14 +16,14 @@ export default function SpaceCard({ space, onSelect }: SpaceCardProps) {
   const isFav = favorites.includes(space.id);
 
   const availability = space.availableCapacity === 0
-    ? { label: 'Fully Booked', badgeStyle: 'bg-white/95 text-red-600' }
+    ? { label: 'Fully Booked', variant: 'danger' as const }
     : space.availableCapacity <= 5
-    ? { label: 'Limited', badgeStyle: 'bg-white/95 text-amber-700' }
-    : { label: 'Available', badgeStyle: 'bg-white/95 text-[#516B5D]' };
+    ? { label: 'Limited', variant: 'warning' as const }
+    : { label: 'Available', variant: 'eucalyptus' as const };
 
   return (
     <div
-      className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group border border-soot/8 flex flex-col justify-between"
+      className="bg-plaster-dark/40 hover:bg-plaster-dark/80 rounded-3xl overflow-hidden shadow-xs transition-colors duration-200 cursor-pointer group border border-soot/12 flex flex-col justify-between active:scale-[0.99]"
       onClick={() => onSelect(space)}
     >
       {/* Image Thumbnail */}
@@ -32,12 +33,14 @@ export default function SpaceCard({ space, onSelect }: SpaceCardProps) {
           alt={space.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-soot/40 via-transparent to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-soot/60 via-transparent to-black/10" />
 
         {/* Top-left Status Badge */}
-        <span className={`absolute top-3.5 left-3.5 text-xs font-semibold px-3 py-1 rounded-full shadow-sm ${availability.badgeStyle}`}>
-          {availability.label}
-        </span>
+        <div className="absolute top-3.5 left-3.5">
+          <Badge variant={availability.variant} className="shadow-xs text-xs font-semibold px-3 py-1 bg-white/95 backdrop-blur-md">
+            {availability.label}
+          </Badge>
+        </div>
 
         {/* Top-right Favorite Button */}
         {currentUser && (

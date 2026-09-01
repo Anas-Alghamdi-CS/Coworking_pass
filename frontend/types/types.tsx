@@ -1,4 +1,3 @@
-export type UserRole = 'individual' | 'organization' | 'provider' | 'admin';
 export type BookingStatus = 'active' | 'previous' | 'cancelled';
 export type BookingType = 'hot-desk' | 'private-office' | 'meeting-room';
 export type BookingPlan = 'daily' | 'monthly' | 'yearly';
@@ -50,26 +49,31 @@ export interface PaymentCard {
   expiry: string; // MM/YY
 }
 
+export type UserRole = 'individual' | 'organization' | 'provider' | 'admin' | 'B2C' | 'HR_ADMIN' | 'PARTNER_ADMIN' | 'SUPER_ADMIN';
+
 export interface User {
   id: string;
   name: string;
   email: string;
   password: string;
   role: UserRole;
+  erdRole?: 'B2C' | 'HR_ADMIN' | 'PARTNER_ADMIN' | 'SUPER_ADMIN';
   phone: string;
   avatar: string;
   isBlocked: boolean;
   joinDate: string;
-  orgName?: string;
-  orgSize?: number;
+  companyId?: string; // FK to COMPANIES for B2B employees
+  orgName?: string; // COMPANIES.name
+  orgSize?: number; // total_passes_purchased
   employees?: Employee[];
   orgDescription?: string;
   website?: string;
   industry?: string;
   savedCards?: PaymentCard[];
-  businessName?: string;
+  businessName?: string; // PARTNERS.brand_name
   crNumber?: string;
   businessDescription?: string;
+  revenueShare?: number; // PARTNERS.revenue_share_percentage
 }
 
 export interface Booking {
