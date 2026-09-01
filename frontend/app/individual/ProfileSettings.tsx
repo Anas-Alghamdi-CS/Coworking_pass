@@ -1,144 +1,235 @@
 'use client';
-import { useState } from 'react';
-import { User, Settings, Bell, Shield, Camera } from 'lucide-react';
+
+import React, { useState } from 'react';
+import { User, Settings, Bell, Shield, Camera, Check, AlertCircle } from 'lucide-react';
 import { useApp } from '@/app/store';
 
 export default function ProfileSettings({ mode }: { mode: 'profile' | 'settings' }) {
-  const { currentUser, updateCurrentUser, navigate, nav } = useApp();
+  const { currentUser, updateCurrentUser, navigate, nav, showToast } = useApp();
   if (!currentUser) return null;
 
   const [name, setName] = useState(currentUser.name);
   const [phone, setPhone] = useState(currentUser.phone);
   const [saved, setSaved] = useState(false);
-  const [notifications, setNotifications] = useState({ bookings: true, promotions: false, updates: true, waitlist: true });
+  const [activeTab, setActiveTab] = useState<'profile' | 'settings'>(
+    mode || (nav.screen === 'ind-settings' ? 'settings' : 'profile')
+  );
+  const [notifications, setNotifications] = useState({
+    bookings: true,
+    promotions: false,
+    updates: true,
+    waitlist: true,
+  });
   const [privacy, setPrivacy] = useState({ profileVisible: true, showBookings: false });
-
-  const activeMode = nav.screen === 'ind-settings' ? 'settings' : 'profile';
 
   const handleSave = () => {
     updateCurrentUser({ name, phone });
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    showToast('Profile updated successfully', 'success');
+    setTimeout(() => setSaved(false), 2500);
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <h1 className="text-3xl text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>
-          {activeMode === 'profile' ? 'Profile' : 'Settings'}
+    <div className="max-w-4xl mx-auto px-6 sm:px-8 py-10">
+      {/* Title */}
+      <div className="mb-8">
+        <h1 className="text-4xl sm:text-5xl text-soot font-normal mb-1" style={{ fontFamily: 'DM Serif Display, serif' }}>
+          {activeTab === 'profile' ? 'My Profile' : 'Account Settings'}
         </h1>
+        <p className="text-moss text-sm font-medium">Manage your personal details and account preferences</p>
       </div>
 
-      {nav.screen === 'ind-profile' && (
+      {/* Tab Switcher */}
+      <div className="inline-flex items-center gap-1.5 bg-white rounded-2xl p-1.5 border border-soot/8 shadow-sm mb-8">
+        <button
+          onClick={() => {
+            setActiveTab('profile');
+            navigate('ind-profile');
+          }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            activeTab === 'profile'
+              ? 'bg-soot text-plaster font-semibold shadow-sm'
+              : 'text-moss hover:text-soot'
+          }`}
+        >
+          <User size={16} />
+          <span>Profile</span>
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('settings');
+            navigate('ind-settings');
+          }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            activeTab === 'settings'
+              ? 'bg-soot text-plaster font-semibold shadow-sm'
+              : 'text-moss hover:text-soot'
+          }`}
+        >
+          <Settings size={16} />
+          <span>Settings</span>
+        </button>
+      </div>
+
+      {activeTab === 'profile' && (
         <div className="space-y-6">
-          {/* Avatar section */}
-          <div className="bg-white rounded-2xl border border-soot/8 p-6">
-            <h2 className="font-semibold text-soot mb-4">Personal information</h2>
-            <div className="flex items-center gap-5 mb-6">
+          {/* Profile Card */}
+          <div className="bg-white rounded-3xl border border-soot/8 p-8 shadow-sm">
+            <h2 className="text-xl font-semibold text-soot mb-6" style={{ fontFamily: 'DM Serif Display, serif' }}>
+              Personal Information
+            </h2>
+
+            <div className="flex items-center gap-6 mb-8 pb-6 border-b border-soot/8">
               <div className="relative">
-                <img src={currentUser.avatar} alt={currentUser.name} className="w-18 h-18 rounded-full object-cover ring-4 ring-eucalyptus/20" style={{ width: 72, height: 72 }} />
-                <button className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-eucalyptus flex items-center justify-center">
-                  <Camera size={11} className="text-soot" />
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-20 h-20 rounded-full object-cover ring-4 ring-eucalyptus/30 shadow-sm"
+                />
+                <button
+                  className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-soot text-plaster hover:bg-soot-light flex items-center justify-center shadow-md transition-all active:scale-95"
+                  title="Change avatar"
+                >
+                  <Camera size={13} />
                 </button>
               </div>
               <div>
-                <div className="font-semibold text-soot">{currentUser.name}</div>
+                <div className="font-semibold text-soot text-lg">{currentUser.name}</div>
                 <div className="text-sm text-moss">{currentUser.email}</div>
-                <div className="text-xs text-moss mt-0.5 capitalize">{currentUser.role} account</div>
+                <div className="inline-block text-xs font-semibold uppercase tracking-wider text-moss bg-eucalyptus/20 px-2.5 py-0.5 rounded-full mt-1.5">
+                  {currentUser.role} Account
+                </div>
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-medium text-moss mb-1.5">Full name</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
+                  Full Name
+                </label>
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-plaster text-soot text-sm outline-none focus:border-eucalyptus"
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white focus:ring-2 focus:ring-eucalyptus/20 transition-all font-medium"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-moss mb-1.5">Email address</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
+                  Email Address
+                </label>
                 <input
                   value={currentUser.email}
                   disabled
-                  className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/5 text-moss text-sm cursor-not-allowed"
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/8 bg-soot/5 text-moss text-sm cursor-not-allowed font-medium"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-moss mb-1.5">Phone number</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
+                  Phone Number
+                </label>
                 <input
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-plaster text-soot text-sm outline-none focus:border-eucalyptus"
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white focus:ring-2 focus:ring-eucalyptus/20 transition-all font-medium"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-moss mb-1.5">Member since</label>
-                <div className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/5 text-moss text-sm">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
+                  Member Since
+                </label>
+                <div className="w-full px-4 py-3 rounded-2xl border border-soot/8 bg-soot/5 text-moss text-sm font-medium">
                   {currentUser.joinDate}
                 </div>
               </div>
             </div>
 
-            <div className="mt-5 flex items-center gap-3">
+            <div className="mt-8 flex items-center justify-end">
               <button
                 onClick={handleSave}
-                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${saved ? 'bg-eucalyptus text-soot' : 'bg-soot text-plaster hover:bg-soot-light'}`}
+                className={`px-8 py-3 rounded-2xl text-sm font-semibold transition-all shadow-sm ${
+                  saved
+                    ? 'bg-eucalyptus text-soot'
+                    : 'bg-soot text-plaster hover:bg-soot-light active:scale-98'
+                }`}
               >
-                {saved ? '✓ Saved' : 'Save changes'}
+                {saved ? '✓ Saved Changes' : 'Save Changes'}
               </button>
             </div>
           </div>
 
-          {/* Account info */}
-          <div className="bg-white rounded-2xl border border-soot/8 p-6">
-            <h2 className="font-semibold text-soot mb-4">Account details</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-soot/5">
-                <span className="text-sm text-moss">Account type</span>
-                <span className="text-sm font-medium text-soot capitalize">{currentUser.role}</span>
+          {/* Account Summary Card */}
+          <div className="bg-white rounded-3xl border border-soot/8 p-8 shadow-sm">
+            <h2 className="text-xl font-semibold text-soot mb-6" style={{ fontFamily: 'DM Serif Display, serif' }}>
+              Account Details
+            </h2>
+            <div className="divide-y divide-soot/6">
+              <div className="flex justify-between items-center py-3">
+                <span className="text-sm text-moss font-medium">Account Role</span>
+                <span className="text-sm font-semibold text-soot capitalize">{currentUser.role}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-soot/5">
-                <span className="text-sm text-moss">Account status</span>
-                <span className="text-sm font-medium text-moss bg-eucalyptus/15 px-2 py-0.5 rounded-full">Active</span>
+              <div className="flex justify-between items-center py-3">
+                <span className="text-sm text-moss font-medium">Status</span>
+                <span className="text-xs font-semibold text-moss bg-eucalyptus/20 border border-eucalyptus/30 px-3 py-1 rounded-full">
+                  Active
+                </span>
               </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-moss">Member since</span>
-                <span className="text-sm font-medium text-soot">{currentUser.joinDate}</span>
+              <div className="flex justify-between items-center py-3">
+                <span className="text-sm text-moss font-medium">Language</span>
+                <span className="text-sm font-semibold text-soot">English (US)</span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {nav.screen === 'ind-settings' && (
+      {activeTab === 'settings' && (
         <div className="space-y-6">
-          {/* Notifications */}
-          <div className="bg-white rounded-2xl border border-soot/8 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Bell size={16} className="text-moss" />
-              <h2 className="font-semibold text-soot">Notifications</h2>
+          {/* Notifications Card */}
+          <div className="bg-white rounded-3xl border border-soot/8 p-8 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <Bell size={20} className="text-moss" />
+              <h2 className="text-xl font-semibold text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>
+                Notification Preferences
+              </h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               {[
-                { key: 'bookings' as const, label: 'Booking confirmations', desc: 'Get notified about your bookings' },
-                { key: 'waitlist' as const, label: 'Waitlist updates', desc: 'When a spot opens for spaces you\'re waiting for' },
-                { key: 'updates' as const, label: 'Platform updates', desc: 'New features and improvements' },
-                { key: 'promotions' as const, label: 'Promotions', desc: 'Special offers and discounts' },
+                {
+                  key: 'bookings' as const,
+                  label: 'Booking confirmations & reminders',
+                  desc: 'Instant updates regarding your active passes and renewals',
+                },
+                {
+                  key: 'waitlist' as const,
+                  label: 'Waitlist notifications',
+                  desc: 'Immediate alerts as soon as fully booked spots become open',
+                },
+                {
+                  key: 'updates' as const,
+                  label: 'Platform announcements',
+                  desc: 'News about newly added spaces and system improvements',
+                },
+                {
+                  key: 'promotions' as const,
+                  label: 'Special discounts & offers',
+                  desc: 'Occasional seasonal deals from coworking spaces',
+                },
               ].map(item => (
-                <div key={item.key} className="flex items-center justify-between">
+                <div key={item.key} className="flex items-center justify-between gap-4 py-2 border-b border-soot/5 last:border-b-0">
                   <div>
-                    <div className="text-sm font-medium text-soot">{item.label}</div>
-                    <div className="text-xs text-moss">{item.desc}</div>
+                    <div className="text-sm font-semibold text-soot">{item.label}</div>
+                    <div className="text-xs text-moss mt-0.5">{item.desc}</div>
                   </div>
                   <button
                     onClick={() => setNotifications(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
-                    className={`w-10 h-5.5 rounded-full transition-colors relative ${notifications[item.key] ? 'bg-eucalyptus' : 'bg-soot/15'}`}
-                    style={{ width: 40, height: 22 }}
+                    className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer shrink-0 ${
+                      notifications[item.key] ? 'bg-eucalyptus' : 'bg-soot/15'
+                    }`}
                   >
-                    <div className={`absolute top-0.5 w-4.5 h-4.5 bg-white rounded-full shadow transition-transform ${notifications[item.key] ? 'translate-x-5' : 'translate-x-0.5'}`}
-                      style={{ width: 18, height: 18, top: 2, left: notifications[item.key] ? 20 : 2, position: 'absolute', transition: 'left 0.2s' }}
+                    <div
+                      className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        notifications[item.key] ? 'translate-x-6' : 'translate-x-0.5'
+                      }`}
                     />
                   </button>
                 </div>
@@ -146,28 +237,42 @@ export default function ProfileSettings({ mode }: { mode: 'profile' | 'settings'
             </div>
           </div>
 
-          {/* Privacy */}
-          <div className="bg-white rounded-2xl border border-soot/8 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield size={16} className="text-moss" />
-              <h2 className="font-semibold text-soot">Privacy</h2>
+          {/* Privacy Card */}
+          <div className="bg-white rounded-3xl border border-soot/8 p-8 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <Shield size={20} className="text-moss" />
+              <h2 className="text-xl font-semibold text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>
+                Privacy & Visibility
+              </h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               {[
-                { key: 'profileVisible' as const, label: 'Profile visibility', desc: 'Make your profile visible to others' },
-                { key: 'showBookings' as const, label: 'Show bookings', desc: 'Allow others to see your booked spaces' },
+                {
+                  key: 'profileVisible' as const,
+                  label: 'Community visibility',
+                  desc: 'Allow other verified coworkers at the same venue to see your profile name',
+                },
+                {
+                  key: 'showBookings' as const,
+                  label: 'Activity sharing',
+                  desc: 'Show your current booked location status to teammates',
+                },
               ].map(item => (
-                <div key={item.key} className="flex items-center justify-between">
+                <div key={item.key} className="flex items-center justify-between gap-4 py-2 border-b border-soot/5 last:border-b-0">
                   <div>
-                    <div className="text-sm font-medium text-soot">{item.label}</div>
-                    <div className="text-xs text-moss">{item.desc}</div>
+                    <div className="text-sm font-semibold text-soot">{item.label}</div>
+                    <div className="text-xs text-moss mt-0.5">{item.desc}</div>
                   </div>
                   <button
                     onClick={() => setPrivacy(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
-                    style={{ width: 40, height: 22, borderRadius: 11, position: 'relative', transition: 'background 0.2s', background: privacy[item.key] ? '#98AA9D' : 'rgba(45,53,54,0.15)' }}
+                    className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer shrink-0 ${
+                      privacy[item.key] ? 'bg-eucalyptus' : 'bg-soot/15'
+                    }`}
                   >
                     <div
-                      style={{ width: 18, height: 18, top: 2, left: privacy[item.key] ? 20 : 2, position: 'absolute', background: 'white', borderRadius: 9, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+                      className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        privacy[item.key] ? 'translate-x-6' : 'translate-x-0.5'
+                      }`}
                     />
                   </button>
                 </div>
@@ -175,12 +280,16 @@ export default function ProfileSettings({ mode }: { mode: 'profile' | 'settings'
             </div>
           </div>
 
-          {/* Danger zone */}
-          <div className="bg-white rounded-2xl border border-red-100 p-6">
-            <h2 className="font-semibold text-red-600 mb-3">Danger zone</h2>
-            <p className="text-sm text-moss mb-4">Once you delete your account, all your data will be permanently removed. This cannot be undone.</p>
-            <button className="px-4 py-2 rounded-xl border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors">
-              Delete account
+          {/* Danger Zone */}
+          <div className="bg-white rounded-3xl border border-red-200 p-8 shadow-sm">
+            <h2 className="text-xl font-semibold text-red-600 mb-2" style={{ fontFamily: 'DM Serif Display, serif' }}>
+              Danger Zone
+            </h2>
+            <p className="text-sm text-moss mb-5 leading-relaxed">
+              Once you delete your account, your profile and history will be permanently wiped. This action cannot be reversed.
+            </p>
+            <button className="px-5 py-2.5 rounded-xl border border-red-300 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors">
+              Delete Account
             </button>
           </div>
         </div>
