@@ -204,8 +204,8 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-1',
-    name: 'Ahmed Al-Mansoori',
-    email: 'ahmed@example.com',
+    name: 'Hadel Turki',
+    email: 'hadel@example.com',
     password: 'password',
     role: 'individual',
     phone: '+966 55 123 4567',

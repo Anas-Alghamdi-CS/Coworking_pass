@@ -23,9 +23,10 @@ import Modal from '@/components/ui/Modal';
 export default function SpaceDetails() {
   const { nav, navigate, goBack, spaces, currentUser, favorites, toggleFavorite, waitlist, autobooking, joinWaitlist } = useApp();
   
-  // استخراج المعرّف مع دعم الـ fallback
-  const spaceId = nav?.params?.spaceId || '';
-  const space = spaces.find(s => s.id === spaceId);
+  // Extract spaceId from nav state or URL fallback
+  const urlId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '';
+  const spaceId = nav?.params?.spaceId || (urlId && urlId !== 'page' && urlId !== '[id]' ? urlId : '') || 'space-1';
+  const space = spaces.find(s => s.id === spaceId) || spaces[0];
 
   const [imgIndex, setImgIndex] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<'daily' | 'monthly' | 'yearly'>('monthly');

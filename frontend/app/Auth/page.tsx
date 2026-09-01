@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, EyeOff, Building2, User, ArrowRight, Warehouse } from 'lucide-react';
+import { Eye, EyeOff, Building2, User, ArrowRight, Warehouse, Check } from 'lucide-react';
 import { useApp } from '@/app/store';
 import LogoImage from '@/components/layout/logo';
 
@@ -228,7 +228,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 }
 
 export function ChooseAccountType() {
-  const { navigate, completeSignup, pendingUser } = useApp();
+  const { navigate, completeSignup, pendingUser, setPendingUser } = useApp();
   const [selected, setSelected] = useState<'individual' | 'organization' | 'provider' | null>(null);
   const [orgName, setOrgName] = useState('');
   const [orgSize, setOrgSize] = useState('');
@@ -238,11 +238,27 @@ export function ChooseAccountType() {
 
   const handleContinue = () => {
     if (!selected) return;
-    if (!pendingUser) { navigate('login'); return; }
     if (selected === 'organization' && !orgName.trim()) return;
     if (selected === 'provider' && !businessName.trim()) return;
+
+    if (!pendingUser) {
+      // Fallback in case user landed on choose-type directly
+      const tempUser = {
+        id: `user-${Date.now()}`,
+        name: 'New Member',
+        email: 'member@coworkingpass.sa',
+        password: 'password',
+        role: selected,
+        phone: '+966 50 123 4567',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&auto=format',
+        isBlocked: false,
+        joinDate: new Date().toISOString().split('T')[0],
+      };
+      setPendingUser(tempUser);
+    }
+
     if (selected === 'organization') {
-      completeSignup(selected, { orgName, orgSize: parseInt(orgSize) || 10, industry });
+      completeSignup(selected, { orgName, orgSize: parseInt(orgSize) || 10, industry: industry || 'Technology' });
     } else if (selected === 'provider') {
       completeSignup(selected, { businessName, crNumber });
     } else {
@@ -255,15 +271,17 @@ export function ChooseAccountType() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Logo onClick={() => navigate('landing')} />
-          <h1 className="text-2xl text-soot mt-5" style={{ fontFamily: 'DM Serif Display, serif' }}>How will you use Coworking Pass?</h1>
-          <p className="text-moss text-sm mt-2">Choose your account type to get started</p>
+          <h1 className="text-3xl text-soot mt-5 font-normal" style={{ fontFamily: 'DM Serif Display, serif' }}>
+            How will you use Coworking Pass?
+          </h1>
+          <p className="text-moss text-sm mt-2">Choose your account type to finish registration</p>
         </div>
 
         <div className="space-y-3 mb-6">
           <button
             onClick={() => setSelected('individual')}
-            className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
-              selected === 'individual' ? 'border-eucalyptus bg-eucalyptus/10' : 'border-soot/10 bg-white hover:border-eucalyptus/40'
+            className={`w-full p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+              selected === 'individual' ? 'border-eucalyptus bg-eucalyptus/10 shadow-sm' : 'border-soot/10 bg-white hover:border-eucalyptus/40'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -281,8 +299,8 @@ export function ChooseAccountType() {
 
           <button
             onClick={() => setSelected('organization')}
-            className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
-              selected === 'organization' ? 'border-eucalyptus bg-eucalyptus/10' : 'border-soot/10 bg-white hover:border-eucalyptus/40'
+            className={`w-full p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+              selected === 'organization' ? 'border-eucalyptus bg-eucalyptus/10 shadow-sm' : 'border-soot/10 bg-white hover:border-eucalyptus/40'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -300,8 +318,8 @@ export function ChooseAccountType() {
 
           <button
             onClick={() => setSelected('provider')}
-            className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
-              selected === 'provider' ? 'border-eucalyptus bg-eucalyptus/10' : 'border-soot/10 bg-white hover:border-eucalyptus/40'
+            className={`w-full p-5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+              selected === 'provider' ? 'border-eucalyptus bg-eucalyptus/10 shadow-sm' : 'border-soot/10 bg-white hover:border-eucalyptus/40'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -371,19 +389,31 @@ export function ChooseAccountType() {
           </div>
         )}
 
-        <button
-          onClick={handleContinue}
-          disabled={!selected || (selected === 'organization' && !orgName.trim()) || (selected === 'provider' && !businessName.trim())}
-          className="w-full py-3 rounded-xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
-        >
-          Go to my dashboard
-          <ArrowRight size={15} />
-        </button>
+        <div className="pt-3 pb-8">
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={!selected || (selected === 'organization' && !orgName.trim()) || (selected === 'provider' && !businessName.trim())}
+            className="w-full py-4 px-6 rounded-2xl bg-soot text-plaster font-semibold text-base hover:bg-soot-light disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg active:scale-[0.99] cursor-pointer"
+          >
+            <Check size={18} className="text-eucalyptus" />
+            <span>Complete Sign Up</span>
+            <ArrowRight size={17} />
+          </button>
+          {!selected && (
+            <p className="text-center text-xs text-moss/75 mt-2.5 font-medium">
+              Please select an account type above to complete your sign up
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 export default function AuthPage() {
-  return <ChooseAccountType />;
+  const { nav } = useApp();
+  if (nav.screen === 'signup') return <SignUpScreen />;
+  if (nav.screen === 'choose-type') return <ChooseAccountType />;
+  return <LoginScreen />;
 }

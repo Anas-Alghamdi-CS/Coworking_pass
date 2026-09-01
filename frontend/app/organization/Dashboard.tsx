@@ -2,7 +2,7 @@
 
 import { Building2, CalendarDays, Users, TrendingUp, ArrowRight, Plus, BarChart3, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Booking, Space } from '@/types';
+import { Booking, Space } from '@/types/types';
 
 export default function OrgDashboard() {
   const { currentUser, bookings, spaces, navigate } = useApp();
