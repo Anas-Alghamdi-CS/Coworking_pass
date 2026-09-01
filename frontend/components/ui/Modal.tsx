@@ -1,42 +1,62 @@
-'use client';
-import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
+import { ReactNode, useEffect } from 'react';
 
 interface ModalProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  title: string;
-  children: React.ReactNode;
+  title?: string;
+  children: ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
   useEffect(() => {
-    if (isOpen) {
+    if (open) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
 
-  if (!isOpen) return null;
+  if (!open) return null;
+
+  const widths = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',};
+
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm transition-all">
-      <div className="w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto animate-in fade-in slide-in-from-bottom duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
-          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-lg text-xl"
-            aria-label="إغلاق"
-          >
-            ✕
-          </button>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(45,53,54,0.5)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
+      <div
+        className={`bg-plaster rounded-2xl shadow-2xl w-full ${widths[size]} max-h-[90vh] overflow-y-auto`}
+        onClick={e => e.stopPropagation()}
+      >
+        {title && (
+          <div className="flex items-center justify-between px-6 py-4 border-b border-soot/10">
+            <h3 className="text-lg font-semibold text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>{title}</h3>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-soot/10 transition-colors text-moss hover:text-soot">
+              <X size={18} />
+            </button>
+          </div>
+        )}
+        {!title && (
+          <div className="absolute top-4 right-4">
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-soot/10 transition-colors text-moss hover:text-soot">
+              <X size={18} />
+            </button>
+          </div>
+        )}
+        <div className={title ? '' : 'pt-2'}>
+          {children}
         </div>
-        <div>{children}</div>
       </div>
     </div>
   );
-};
+}
