@@ -1,4 +1,4 @@
-export type UserRole = 'individual' | 'organization' | 'admin';
+export type UserRole = 'individual' | 'organization' | 'provider' | 'admin';
 export type BookingStatus = 'active' | 'previous' | 'cancelled';
 export type BookingType = 'hot-desk' | 'private-office' | 'meeting-room';
 export type BookingPlan = 'daily' | 'monthly' | 'yearly';
@@ -14,6 +14,8 @@ export interface Space {
   id: string;
   name: string;
   city: string;
+  region?: string;
+  district?: string;
   address: string;
   description: string;
   type: SpaceType;
@@ -29,6 +31,8 @@ export interface Space {
   openHours: string;
   phone: string;
   email: string;
+  ownerId?: string; // id of the provider (User with role 'provider') who owns/manages this space
+  status?: 'published' | 'draft' | 'hidden';
 }
 
 export interface Employee {
@@ -36,6 +40,14 @@ export interface Employee {
   name: string;
   email: string;
   department: string;
+}
+
+export interface PaymentCard {
+  id: string;
+  brand: 'Visa' | 'Mastercard' | 'Mada';
+  last4: string;
+  holderName: string;
+  expiry: string; // MM/YY
 }
 
 export interface User {
@@ -54,6 +66,10 @@ export interface User {
   orgDescription?: string;
   website?: string;
   industry?: string;
+  savedCards?: PaymentCard[];
+  businessName?: string;
+  crNumber?: string;
+  businessDescription?: string;
 }
 
 export interface Booking {
@@ -97,12 +113,23 @@ export type Screen =
   | 'team-bookings'
   | 'org-profile'
   | 'org-settings'
+  | 'company-workspaces'
+  | 'company-add-workspace'
+  | 'company-bookings'
+  | 'company-team'
+  | 'company-workspace-details'
+  | 'company-reports'
   | 'admin-dashboard'
   | 'admin-spaces'
   | 'admin-users'
   | 'admin-bookings'
   | 'admin-reports'
-  | 'admin-settings';
+  | 'admin-settings'
+  | 'provider-dashboard'
+  | 'provider-spaces'
+  | 'provider-bookings'
+  | 'provider-profile'
+  | 'provider-settings';
 
 export interface NavState {
   screen: Screen;

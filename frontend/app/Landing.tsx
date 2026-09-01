@@ -25,7 +25,7 @@ export default function Landing() {
       <section className="relative min-h-[85vh] flex items-center">
         <div className="absolute inset-0 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&h=1000&fit=crop&auto=format"
+            src="landing-hero.jpg"
             alt="Modern coworking space"
             className="w-full h-full object-cover"
           />

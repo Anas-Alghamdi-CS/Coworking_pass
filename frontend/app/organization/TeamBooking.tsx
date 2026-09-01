@@ -1,15 +1,16 @@
 'use client';
+
 import { useState } from 'react';
 import { ArrowLeft, Check, Users, Calendar, ChevronRight, MapPin, CreditCard } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { BookingPlan, BookingType } from '@/types/types';
+import { BookingPlan, BookingType, Employee, Space } from '@/types';
 
 const STEPS = ['Type', 'Team', 'Schedule', 'Review'];
 
 export default function TeamBooking() {
   const { nav, goBack, spaces, currentUser, addBooking, navigate } = useApp();
   const spaceId = nav.params?.spaceId;
-  const space = spaces.find(s => s.id === spaceId);
+  const space = spaces.find((s: Space) => s.id === spaceId);
 
   const [step, setStep] = useState(0);
   const [bookingType, setBookingType] = useState<BookingType>('hot-desk');
@@ -17,6 +18,7 @@ export default function TeamBooking() {
   const [seats, setSeats] = useState(1);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [startDate, setStartDate] = useState('');
+  const [manualEndDate, setManualEndDate] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +34,9 @@ export default function TeamBooking() {
     return d.toISOString().split('T')[0];
   };
 
-  const endDate = getEndDate(startDate, plan);
+  const endDate = plan === 'daily'
+   ? manualEndDate
+   : getEndDate(startDate, plan);
   const pricePerSeat = space.pricing[plan];
   const totalPrice = pricePerSeat * seats;
   const planLabel = plan === 'daily' ? '/day' : plan === 'monthly' ? '/month' : '/year';
@@ -231,7 +235,7 @@ export default function TeamBooking() {
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-soot/8 divide-y divide-soot/5">
-              {employees.map(emp => {
+              {employees.map((emp: Employee) => {
                 const sel = selectedEmployees.includes(emp.id);
                 const disabled = !sel && selectedEmployees.length >= seats;
                 return (
@@ -275,12 +279,34 @@ export default function TeamBooking() {
                 className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
               />
             </div>
-            {startDate && plan !== 'daily' && (
-              <div>
-                <label className="block text-xs font-medium text-moss mb-1.5">End date</label>
-                <div className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/3 text-soot text-sm">{endDate}</div>
-              </div>
-            )}
+            {startDate && plan === 'daily' && (
+  <div>
+    <label className="block text-xs font-medium text-moss mb-1.5 flex items-center gap-1.5">
+      <Calendar size={13} />
+      End date
+    </label>
+
+    <input
+      type="date"
+      value={manualEndDate}
+      min={startDate}
+      onChange={e => setManualEndDate(e.target.value)}
+      className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
+    />
+  </div>
+)}
+
+{startDate && plan !== 'daily' && (
+  <div>
+    <label className="block text-xs font-medium text-moss mb-1.5">
+      End date (auto-calculated)
+    </label>
+
+    <div className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/3 text-soot text-sm">
+      {endDate}
+    </div>
+  </div>
+)}
           </div>
         </div>
       )}
@@ -295,7 +321,7 @@ export default function TeamBooking() {
               { l: 'Plan', v: plan.charAt(0).toUpperCase() + plan.slice(1) },
               { l: 'Seats', v: seats.toString() },
               { l: 'Start', v: startDate },
-              ...(plan !== 'daily' ? [{ l: 'End', v: endDate }] : []),
+              ...(endDate ? [{ l: 'End', v: endDate }] : []),
               { l: 'Team members', v: selectedEmployees.length > 0 ? `${selectedEmployees.length} assigned` : 'Not specified' },
             ].map(r => (
               <div key={r.l} className="flex justify-between">
@@ -328,8 +354,33 @@ export default function TeamBooking() {
         </button>
         {step < 3 ? (
           <button
-            onClick={() => { if (step === 2 && !startDate) return; setStep(s => s + 1); }}
-            disabled={step === 2 && !startDate}
+            onClick={() => { if (step === 2 && !startDate) {
+    return;
+  }
+
+  if (step === 2 && plan === 'daily' && !manualEndDate) {
+    return;
+  }
+
+  if (
+    step === 2 &&
+    plan === 'daily' &&
+    manualEndDate < startDate
+  ) {
+    return;
+  }
+
+  setStep(s => s + 1);
+}}
+disabled={
+  step === 2 &&
+  (
+    !startDate ||
+    (plan === 'daily' && !manualEndDate) ||
+    (plan === 'daily' && manualEndDate < startDate)
+  )
+}
+
             className="flex-1 py-3 rounded-xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light disabled:opacity-50"
           >
             Continue

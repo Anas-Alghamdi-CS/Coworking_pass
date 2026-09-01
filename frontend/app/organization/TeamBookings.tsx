@@ -1,9 +1,10 @@
 'use client';
+
 import { useState } from 'react';
 import { MapPin, Calendar, Users, AlertCircle, X } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Booking, BookingStatus } from '@/types/types';
-import Modal from '@/components/ui/Modal';
+import { Booking, BookingStatus, Employee } from '@/types';
+import Modal from '@/components/Modal';
 
 const TABS: { label: string; status: BookingStatus }[] = [
   { label: 'Active', status: 'active' },
@@ -20,17 +21,17 @@ export default function TeamBookings() {
 
   if (!currentUser) return null;
 
-  const orgBookings = bookings.filter(b => b.userId === currentUser.id);
-  const filtered = orgBookings.filter(b => b.status === activeTab);
+  const orgBookings = bookings.filter((b: Booking) => b.userId === currentUser.id);
+  const filtered = orgBookings.filter((b: Booking) => b.status === activeTab);
   const employees = currentUser.employees || [];
 
   const counts = {
-    active: orgBookings.filter(b => b.status === 'active').length,
-    previous: orgBookings.filter(b => b.status === 'previous').length,
-    cancelled: orgBookings.filter(b => b.status === 'cancelled').length,
+    active: orgBookings.filter((b: Booking) => b.status === 'active').length,
+    previous: orgBookings.filter((b: Booking) => b.status === 'previous').length,
+    cancelled: orgBookings.filter((b: Booking) => b.status === 'cancelled').length,
   };
 
-  const getEmpName = (id: string) => employees.find(e => e.id === id)?.name || id;
+  const getEmpName = (id: string) => employees.find((e: Employee) => e.id === id)?.name || id;
 
   const handleCancel = () => {
     if (selectedBooking) {
@@ -92,7 +93,7 @@ export default function TeamBookings() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map(booking => (
+          {filtered.map((booking: Booking) => (
             <div
               key={booking.id}
               onClick={() => { setSelectedBooking(booking); setDetailsModal(true); }}
@@ -129,7 +130,7 @@ export default function TeamBookings() {
 
                   {booking.employees.length > 0 && (
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                      {booking.employees.slice(0, 3).map(eId => (
+                      {booking.employees.slice(0, 3).map((eId: string) => (
                         <span key={eId} className="text-[11px] bg-eucalyptus/15 text-moss px-2 py-0.5 rounded-full">
                           {getEmpName(eId).split(' ')[0]}
                         </span>

@@ -21,7 +21,7 @@ import { useApp } from '@/app/store';
 import Modal from '@/components/ui/Modal';
 
 export default function SpaceDetails() {
-  const { nav, navigate, goBack, spaces, currentUser, favorites, toggleFavorite, waitlist, autobooking, joinWaitlist, toggleAutoBooking } = useApp();
+  const { nav, navigate, goBack, spaces, currentUser, favorites, toggleFavorite, waitlist, autobooking, joinWaitlist } = useApp();
   
   // استخراج المعرّف مع دعم الـ fallback
   const spaceId = nav?.params?.spaceId || '';
@@ -298,13 +298,11 @@ export default function SpaceDetails() {
                 <div>
                   <button
                     type="button"
-                    onClick={() => { if (!currentUser) { navigate('login'); return; } toggleAutoBooking(space.id); }}
-                    className={`w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
-                      autoBookOn ? 'bg-soot text-plaster' : 'bg-eucalyptus/20 text-moss hover:bg-eucalyptus/30'
-                    }`}
+                    onClick={() => { if (!currentUser) navigate('login'); }}
+                    className="w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors bg-eucalyptus/20 text-moss hover:bg-eucalyptus/30"
                   >
-                    <Zap size={15} />
-                    {autoBookOn ? 'Auto-Booking: ON' : 'Enable Auto-Booking'}
+                    <Bell size={15} />
+                    Enable Notifications
                   </button>
                   {autoBookOn && (
                     <p className="text-[11px] text-moss text-center mt-1.5">
@@ -441,16 +439,16 @@ export default function SpaceDetails() {
 
               <div className="flex items-center justify-between gap-3 p-4 rounded-xl border border-soot/10 mb-5">
                 <div>
-                  <div className="text-sm font-semibold text-soot">Enable Auto-Booking</div>
-                  <div className="text-xs text-moss mt-1">Automatically book when a spot becomes available</div>
+                  <div className="text-sm font-semibold text-soot">Enable Notifications</div>
+                  <div className="text-xs text-moss mt-1">Get alerts when spaces become available</div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => toggleAutoBooking(space.id)}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${autoBookOn ? 'bg-[#8FA7B2]' : 'bg-soot/15'}`}
+                  onClick={() => { if (!currentUser) navigate('login'); }}
+                  className="relative w-12 h-7 rounded-full transition-colors bg-soot/15"
                 >
                   <span
-                    className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${autoBookOn ? 'translate-x-6' : 'translate-x-1'}`}
+                    className="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform translate-x-1"
                   />
                 </button>
               </div>

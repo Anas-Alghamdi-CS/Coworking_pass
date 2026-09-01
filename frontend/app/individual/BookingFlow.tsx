@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import { ArrowLeft, Check, Calendar, Users, CreditCard, MapPin, ChevronRight } from 'lucide-react';
 import { useApp } from '@/app/store';
@@ -32,11 +33,11 @@ export default function BookingFlow() {
   const { nav, navigate, goBack, spaces, currentUser, addBooking, showToast } = useApp();
   const spaceId = nav.params?.spaceId;
   const space = spaces.find(s => s.id === spaceId);
-
   const [step, setStep] = useState(0);
   const [plan, setPlan] = useState<BookingPlan>((nav.params?.plan as BookingPlan) || 'monthly');
   const [deskType, setDeskType] = useState<BookingType>('hot-desk');
   const [startDate, setStartDate] = useState('');
+  const [manualEndDate, setManualEndDate] = useState('');
   const [seats, setSeats] = useState(1);
   const [notes, setNotes] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
@@ -52,15 +53,35 @@ export default function BookingFlow() {
     return d.toISOString().split('T')[0];
   };
 
-  const endDate = getEndDate(startDate, plan);
+  const endDate = plan === 'daily'
+    ? manualEndDate
+    : getEndDate(startDate, plan)
   const planPrice = space.pricing[plan];
   const totalPrice = planPrice * seats;
   const priceLabel = plan === 'daily' ? '/day' : plan === 'monthly' ? '/month' : '/year';
 
   const validateStep = () => {
-    if (step === 1 && !startDate) { showToast('Please select a start date.', 'error'); return false; }
-    return true;
-  };
+  if (step === 1 && !startDate) {
+    showToast('Please select a start date.', 'error');
+    return false;
+  }
+
+  if (step === 1 && plan === 'daily' && !manualEndDate) {
+    showToast('Please select an end date.', 'error');
+    return false;
+  }
+
+  if (
+    step === 1 &&
+    plan === 'daily' &&
+    manualEndDate < startDate
+  ) {
+    showToast('End date cannot be before start date.', 'error');
+    return false;
+  }
+
+  return true;
+};
 
   const next = () => {
     if (!validateStep()) return;
@@ -245,12 +266,34 @@ export default function BookingFlow() {
               />
             </div>
 
-            {startDate && plan !== 'daily' && (
-              <div>
-                <label className="block text-xs font-medium text-moss mb-1.5">End date (auto-calculated)</label>
-                <div className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/3 text-soot text-sm">{endDate}</div>
-              </div>
-            )}
+            {startDate && plan === 'daily' && (
+  <div>
+    <label className="block text-xs font-medium text-moss mb-1.5 flex items-center gap-1.5">
+      <Calendar size={13} />
+      End date
+    </label>
+
+    <input
+      type="date"
+      value={manualEndDate}
+      min={startDate}
+      onChange={e => setManualEndDate(e.target.value)}
+      className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
+    />
+  </div>
+)}
+
+{startDate && plan !== 'daily' && (
+  <div>
+    <label className="block text-xs font-medium text-moss mb-1.5">
+      End date (auto-calculated)
+    </label>
+
+    <div className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/3 text-soot text-sm">
+      {endDate}
+    </div>
+  </div>
+)}
 
             <div>
               <label className="block text-xs font-medium text-moss mb-1.5 flex items-center gap-1.5">
@@ -300,7 +343,7 @@ export default function BookingFlow() {
             <Row label="Type" value={deskType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} />
             <Row label="Plan" value={plan.charAt(0).toUpperCase() + plan.slice(1)} />
             <Row label="Start" value={startDate} />
-            {plan !== 'daily' && <Row label="End" value={endDate} />}
+            {endDate && <Row label="End date" value={endDate} />}
             <Row label="Seats" value={seats.toString()} />
             {notes && <Row label="Notes" value={notes} />}
             <div className="pt-3 border-t border-soot/8">

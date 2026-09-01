@@ -1,6 +1,7 @@
 'use client';
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType } from '@/types/types';
+import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard } from '@/types/types';
 import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS } from '@/data/data';
 
 interface AppContextType {
@@ -13,7 +14,7 @@ interface AppContextType {
   currentUser: User | null;
   login: (email: string, password: string) => { success: boolean; error?: string };
   signup: (name: string, email: string, password: string, phone: string) => User;
-  completeSignup: (role: UserRole, orgData?: { orgName: string; orgSize: number; industry: string }) => void;
+  completeSignup: (role: UserRole, extraData?: Partial<User>) => void;
   logout: () => void;
   setPendingUser: (user: Partial<User>) => void;
   pendingUser: Partial<User> | null;
@@ -43,8 +44,13 @@ interface AppContextType {
   // Waitlist
   waitlist: Record<string, boolean>;
   autobooking: Record<string, boolean>;
+  autobookingCard: Record<string, string>; // spaceId -> PaymentCard.id used for auto-booking charges
   joinWaitlist: (spaceId: string) => void;
-  toggleAutoBooking: (spaceId: string) => void;
+  enableAutoBooking: (spaceId: string, cardId: string) => void;
+  disableAutoBooking: (spaceId: string) => void;
+
+  // Payment cards
+  addPaymentCard: (card: Omit<PaymentCard, 'id'>) => PaymentCard;
 
   // Toast
   toast: { message: string; type: 'success' | 'error' | 'info' } | null;
@@ -64,14 +70,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>(['space-1', 'space-3']);
   const [waitlist, setWaitlist] = useState<Record<string, boolean>>({});
   const [autobooking, setAutobooking] = useState<Record<string, boolean>>({});
+  const [autobookingCard, setAutobookingCard] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<AppContextType['toast']>(null);
 
   const navigate = (screen: Screen, params: Record<string, any> = {}) => {
     setHistory(prev => [...prev.slice(-9), nav]);
     setNav({ screen, params });
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
+    window.scrollTo(0, 0);
   };
 
   const goBack = () => {
@@ -94,6 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentUser(user);
     if (user.role === 'admin') navigate('admin-dashboard');
     else if (user.role === 'organization') navigate('org-dashboard');
+    else if (user.role === 'provider') navigate('provider-dashboard');
     else navigate('ind-dashboard');
     return { success: true };
   };
@@ -115,17 +121,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return newUser;
   };
 
-  const completeSignup = (role: UserRole, orgData?: { orgName: string; orgSize: number; industry: string }) => {
+  const completeSignup = (role: UserRole, extraData?: Partial<User>) => {
     if (!pendingUser) return;
     const updated: User = {
       ...(pendingUser as User),
       role,
-      ...(orgData || {}),
+      ...(extraData || {}),
     };
     setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
     setCurrentUser(updated);
     setPendingUser(null);
     if (role === 'organization') navigate('org-dashboard');
+    else if (role === 'provider') navigate('provider-dashboard');
     else navigate('ind-dashboard');
     showToast('Welcome to Coworking Pass!');
   };
@@ -224,12 +231,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     showToast('You have joined the waitlist! We\'ll notify you when a spot opens.');
   };
 
-  const toggleAutoBooking = (spaceId: string) => {
-    setAutobooking(prev => {
-      const enabled = !prev[spaceId];
-      showToast(enabled ? 'Auto-Booking enabled! We\'ll book automatically when a spot opens.' : 'Auto-Booking disabled.', enabled ? 'success' : 'info');
-      return { ...prev, [spaceId]: enabled };
+  const enableAutoBooking = (spaceId: string, cardId: string) => {
+    setAutobooking(prev => ({ ...prev, [spaceId]: true }));
+    setAutobookingCard(prev => ({ ...prev, [spaceId]: cardId }));
+    showToast('Auto-Booking enabled! We\'ll charge your selected card and book automatically when a spot opens.', 'success');
+  };
+
+  const disableAutoBooking = (spaceId: string) => {
+    setAutobooking(prev => ({ ...prev, [spaceId]: false }));
+    setAutobookingCard(prev => {
+      const next = { ...prev };
+      delete next[spaceId];
+      return next;
     });
+    showToast('Auto-Booking disabled.', 'info');
+  };
+
+  const addPaymentCard = (card: Omit<PaymentCard, 'id'>) => {
+    const newCard: PaymentCard = { ...card, id: `card-${Date.now()}` };
+    if (currentUser) {
+      const updated = { ...currentUser, savedCards: [...(currentUser.savedCards || []), newCard] };
+      setCurrentUser(updated);
+      setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+    }
+    return newCard;
   };
 
   return (
@@ -239,7 +264,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       spaces, favorites, toggleFavorite, addSpace, updateSpace, toggleSpaceVisibility, deleteSpace,
       bookings, addBooking, cancelBooking, updateBookingStatus,
       users, blockUser, unblockUser, changeUserRole,
-      waitlist, autobooking, joinWaitlist, toggleAutoBooking,
+      waitlist, autobooking, autobookingCard, joinWaitlist, enableAutoBooking, disableAutoBooking,
+      addPaymentCard,
       toast, showToast, updateCurrentUser, completeSignup,
     }}>
       {children}

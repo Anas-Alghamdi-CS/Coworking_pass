@@ -1,9 +1,9 @@
 'use client';
+
 import { useState } from 'react';
-import { Eye, EyeOff, Building2, User, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Building2, User, ArrowRight, Warehouse } from 'lucide-react';
 import { useApp } from '@/app/store';
 import LogoImage from '@/components/layout/logo';
-
 
 function Logo({ onClick }: { onClick: () => void }) {
   return (
@@ -66,11 +66,9 @@ export function LoginScreen() {
               className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20 placeholder:text-moss/50"
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-moss mb-1.5">
-              Password
-            </label>
 
+          <div>
+            <label className="block text-xs font-medium text-moss mb-1.5">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -79,7 +77,6 @@ export function LoginScreen() {
                 placeholder="••••••••"
                 className="w-full px-4 py-2.5 pr-10 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20 placeholder:text-moss/50"
               />
-
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -90,16 +87,6 @@ export function LoginScreen() {
             </div>
           </div>
 
-          <div className="flex justify-end -mt-2">
-            <button
-              type="button"
-              onClick={() => alert('Password reset feature coming soon.')}
-              className="text-xs text-moss hover:text-soot hover:underline transition-colors"
-            >
-              Forgot password?
-            </button>
-          </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -108,7 +95,6 @@ export function LoginScreen() {
             {loading ? 'Signing in...' : 'Sign in'}
             {!loading && <ArrowRight size={15} />}
           </button>
-
         </form>
 
         <p className="text-center text-sm text-moss mt-5">
@@ -243,16 +229,25 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 export function ChooseAccountType() {
   const { navigate, completeSignup, pendingUser } = useApp();
-  const [selected, setSelected] = useState<'individual' | 'organization' | null>(null);
+  const [selected, setSelected] = useState<'individual' | 'organization' | 'provider' | null>(null);
   const [orgName, setOrgName] = useState('');
   const [orgSize, setOrgSize] = useState('');
   const [industry, setIndustry] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [crNumber, setCrNumber] = useState('');
 
   const handleContinue = () => {
     if (!selected) return;
     if (!pendingUser) { navigate('login'); return; }
     if (selected === 'organization' && !orgName.trim()) return;
-    completeSignup(selected, selected === 'organization' ? { orgName, orgSize: parseInt(orgSize) || 10, industry } : undefined);
+    if (selected === 'provider' && !businessName.trim()) return;
+    if (selected === 'organization') {
+      completeSignup(selected, { orgName, orgSize: parseInt(orgSize) || 10, industry });
+    } else if (selected === 'provider') {
+      completeSignup(selected, { businessName, crNumber });
+    } else {
+      completeSignup(selected);
+    }
   };
 
   return (
@@ -302,7 +297,47 @@ export function ChooseAccountType() {
               </div>
             </div>
           </button>
+
+          <button
+            onClick={() => setSelected('provider')}
+            className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${
+              selected === 'provider' ? 'border-eucalyptus bg-eucalyptus/10' : 'border-soot/10 bg-white hover:border-eucalyptus/40'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selected === 'provider' ? 'bg-eucalyptus' : 'bg-soot/8'}`}>
+                <Warehouse size={18} className={selected === 'provider' ? 'text-soot' : 'text-moss'} />
+              </div>
+              <div>
+                <div className="font-semibold text-soot">Space Provider</div>
+                <div className="text-sm text-moss mt-0.5 leading-relaxed">
+                  For businesses that own a coworking space and want to list it and track its bookings.
+                </div>
+              </div>
+            </div>
+          </button>
         </div>
+
+        {selected === 'provider' && (
+          <div className="bg-white rounded-2xl border border-soot/8 p-5 mb-5 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-moss mb-1.5">Business name <span className="text-red-400">*</span></label>
+              <input
+                value={businessName} onChange={e => setBusinessName(e.target.value)}
+                placeholder="The Hub Riyadh Holdings"
+                className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-plaster text-soot text-sm outline-none focus:border-eucalyptus"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-moss mb-1.5">Commercial Registration (CR) number</label>
+              <input
+                value={crNumber} onChange={e => setCrNumber(e.target.value)}
+                placeholder="1010xxxxxx"
+                className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-plaster text-soot text-sm outline-none focus:border-eucalyptus"
+              />
+            </div>
+          </div>
+        )}
 
         {selected === 'organization' && (
           <div className="bg-white rounded-2xl border border-soot/8 p-5 mb-5 space-y-4">
@@ -338,7 +373,7 @@ export function ChooseAccountType() {
 
         <button
           onClick={handleContinue}
-          disabled={!selected || (selected === 'organization' && !orgName.trim())}
+          disabled={!selected || (selected === 'organization' && !orgName.trim()) || (selected === 'provider' && !businessName.trim())}
           className="w-full py-3 rounded-xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
         >
           Go to my dashboard
@@ -350,8 +385,5 @@ export function ChooseAccountType() {
 }
 
 export default function AuthPage() {
-  const { nav } = useApp();
-  if (nav.screen === 'signup') return <SignUpScreen />;
-  if (nav.screen === 'choose-type') return <ChooseAccountType />;
-  return <LoginScreen />;
+  return <ChooseAccountType />;
 }
