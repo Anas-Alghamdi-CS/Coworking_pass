@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowRight, MapPin, Star, Users, Zap, Shield, Headphones, ChevronDown, Quote } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowRight, MapPin, Star, Users, Zap, Headphones, Shield, ChevronDown, Quote, Check } from 'lucide-react';
 import { useApp } from './store';
 import GuestNav from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -13,6 +13,8 @@ const cities = ['All Cities', 'Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah',
 export default function Landing() {
   const { navigate, spaces } = useApp();
   const [searchCity, setSearchCity] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const featured = spaces.filter(s => s.isFeatured && s.isVisible).slice(0, 3);
 
@@ -20,95 +22,133 @@ export default function Landing() {
     navigate('browse', { city: searchCity });
   };
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-plaster">
       <GuestNav />
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pb-16">
         <div className="absolute inset-0">
           <img
             src="/landing-hero.jpg"
             alt="Modern coworking space"
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center saturate-110"
+            fetchPriority="high"
           />
-          {/* Subtle overlay for clean brightness and clear text */}
-          <div className="absolute inset-0 bg-gradient-to-t from-soot/60 via-soot/20 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-soot/45 via-soot/60 to-soot/85 pointer-events-none" />
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 w-full flex flex-col items-center justify-center text-center">
-          <Badge variant="mist" className="mb-6 bg-soot/40 backdrop-blur-md text-plaster border-soot/30 px-4 py-1.5 text-xs font-semibold">
-            <Zap size={13} className="text-eucalyptus" />
-            Saudi Arabia's Premier Coworking Network
-          </Badge>
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-14 w-full flex flex-col items-center justify-center text-center z-10">
+          {/* Top Badge */}
+          <div className="mb-6 inline-flex items-center gap-2 bg-soot/80 backdrop-blur-md text-plaster border border-plaster/25 shadow-md px-4 py-2 rounded-full text-xs sm:text-sm font-semibold">
+            <Zap size={14} className="text-plaster shrink-0" />
+            <span>Saudi Arabia&apos;s Premier Coworking Network</span>
+          </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-normal text-white leading-[1.15] mb-6 tracking-tight drop-shadow-md text-center font-serif-display">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-normal text-plaster leading-[1.15] mb-6 tracking-tight drop-shadow-md text-center font-serif-display">
             Your Perfect Workspace,<br />
             <span className="text-eucalyptus italic font-serif">Anywhere in the Kingdom.</span>
           </h1>
 
-          <p className="text-plaster/95 text-base sm:text-lg leading-relaxed mb-8 max-w-2xl font-normal text-center mx-auto">
+          <p className="text-plaster/95 text-base sm:text-lg leading-relaxed mb-8 max-w-2xl font-normal text-center mx-auto drop-shadow-sm">
             Instantly access flexible, fully equipped coworking spaces in Riyadh, Jeddah, Dammam, and beyond. Book by the day, month, or year.
           </p>
 
-          {/* Search Bar Widget */}
-          <div className="bg-plaster-surface/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 shadow-2xl border border-soot/15 flex flex-col sm:flex-row gap-3 w-full max-w-xl mx-auto">
-            <div className="flex items-center gap-3 flex-1 px-4 py-1 border border-soot/15 rounded-xl bg-plaster-dark/30 hover:bg-plaster-dark/50 focus-within:border-eucalyptus focus-within:ring-2 focus-within:ring-eucalyptus/30 transition-colors duration-200">
-              <MapPin size={18} className="text-moss shrink-0" />
-              <select
-                className="flex-1 bg-transparent text-soot text-sm font-medium outline-none cursor-pointer py-2.5"
-                value={searchCity}
-                onChange={e => setSearchCity(e.target.value)}
+          {/* Clean Integrated Search Bar */}
+          <div className="relative z-40 w-full max-w-xl mx-auto flex flex-col sm:flex-row items-center gap-2 p-1.5 bg-plaster-surface/95 backdrop-blur-md rounded-2xl border border-soot/15 shadow-2xl">
+            <div className="relative flex-1 w-full" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-plaster-dark/30 hover:bg-plaster-dark/60 border border-soot/12 transition-all duration-200 text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-eucalyptus focus-visible:ring-offset-1"
+                aria-haspopup="listbox"
+                aria-expanded={dropdownOpen}
               >
-                {cities.map(c => <option key={c} value={c === 'All Cities' ? '' : c}>{c}</option>)}
-              </select>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <MapPin size={18} className="text-moss shrink-0" />
+                  <span className="text-sm font-medium text-soot truncate">
+                    {searchCity || 'All Cities'}
+                  </span>
+                </div>
+                <ChevronDown
+                  size={16}
+                  className={`text-moss transition-transform duration-200 shrink-0 ${
+                    dropdownOpen ? 'rotate-180 text-soot' : ''
+                  }`}
+                />
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1.5 p-1.5 bg-[#FAF8F3] border border-soot/15 rounded-2xl shadow-2xl z-50 animate-in fade-in-50 zoom-in-95 duration-100">
+                  <div className="max-h-48 overflow-y-auto space-y-0.5">
+                    {cities.map(city => {
+                      const isSelected = (city === 'All Cities' && !searchCity) || searchCity === city;
+                      return (
+                        <button
+                          key={city}
+                          type="button"
+                          onClick={() => {
+                            setSearchCity(city === 'All Cities' ? '' : city);
+                            setDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-eucalyptus ${
+                            isSelected
+                              ? 'bg-soot text-plaster font-semibold'
+                              : 'text-soot hover:bg-plaster-dark/70 hover:text-soot'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-eucalyptus' : 'bg-transparent'}`} />
+                            <span>{city}</span>
+                          </div>
+                          {isSelected && <Check size={14} className="text-eucalyptus" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
+
             <Button
               onClick={handleSearch}
               variant="primary"
-              className="px-7 py-3 font-medium text-sm shrink-0 bg-soot text-plaster hover:bg-moss transition-colors duration-200"
+              className="w-full sm:w-auto px-7 py-3 font-semibold text-sm shrink-0 bg-soot text-plaster hover:bg-moss focus-visible:ring-2 focus-visible:ring-eucalyptus transition-colors duration-200 shadow-md active:scale-[0.98] cursor-pointer rounded-xl"
             >
               Find Spaces
               <ArrowRight size={16} />
             </Button>
           </div>
 
-          {/* Key Trust Stats */}
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mt-8 text-plaster/90 text-sm font-medium">
-            <div className="flex items-center gap-2">
-              <Star size={14} fill="currentColor" className="text-eucalyptus" />
+          {/* Larger & Polished Trust Pills */}
+          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-10">
+            <div className="bg-soot/80 backdrop-blur-md border border-plaster/20 px-5 py-2.5 rounded-full text-plaster text-xs sm:text-sm font-semibold flex items-center gap-2.5 shadow-lg">
+              <Star size={16} fill="currentColor" className="text-eucalyptus" />
               <span>4.8 Avg Rating</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Users size={14} className="text-eucalyptus" />
+            <div className="bg-soot/80 backdrop-blur-md border border-plaster/20 px-5 py-2.5 rounded-full text-plaster text-xs sm:text-sm font-semibold flex items-center gap-2.5 shadow-lg">
+              <Users size={16} className="text-eucalyptus" />
               <span>2,400+ Active Members</span>
             </div>
-            <div className="flex items-center gap-2">
-              <MapPin size={14} className="text-eucalyptus" />
+            <div className="bg-soot/80 backdrop-blur-md border border-plaster/20 px-5 py-2.5 rounded-full text-plaster text-xs sm:text-sm font-semibold flex items-center gap-2.5 shadow-lg">
+              <MapPin size={16} className="text-eucalyptus" />
               <span>Verified Workspaces</span>
             </div>
           </div>
         </div>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 animate-bounce pointer-events-none">
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-plaster/70 animate-bounce pointer-events-none">
           <ChevronDown size={24} />
-        </div>
-      </section>
-
-      {/* Stats Band */}
-      <section className="bg-soot py-14">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { value: '8+', label: 'Verified Spaces' },
-            { value: '6', label: 'Saudi Cities' },
-            { value: '2,400+', label: 'Active Members' },
-            { value: '4.8★', label: 'Average Rating' },
-          ].map(s => (
-            <div key={s.label} className="text-center">
-              <div className="text-3xl sm:text-4xl font-normal text-eucalyptus mb-1 font-serif-display">{s.value}</div>
-              <div className="text-plaster/90 text-sm font-medium">{s.label}</div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -121,7 +161,7 @@ export default function Landing() {
           </div>
           <button
             onClick={() => navigate('browse')}
-            className="hidden sm:flex items-center gap-2 text-sm font-medium text-soot hover:text-moss transition-colors duration-200 cursor-pointer"
+            className="hidden sm:flex items-center gap-2 text-sm font-medium text-soot hover:text-moss focus-visible:ring-2 focus-visible:ring-eucalyptus rounded-lg px-2 py-1 transition-colors duration-200 cursor-pointer"
           >
             View all <ArrowRight size={15} />
           </button>
@@ -131,13 +171,21 @@ export default function Landing() {
           {featured.map(space => (
             <div
               key={space.id}
-              className="group cursor-pointer bg-plaster-dark/40 hover:bg-plaster-dark/80 rounded-3xl border border-soot/12 overflow-hidden transition-colors duration-200 active:scale-[0.99]"
+              className="group cursor-pointer bg-plaster-dark/40 hover:bg-plaster-dark/80 rounded-3xl border border-soot/12 overflow-hidden transition-colors duration-200 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-eucalyptus"
+              tabIndex={0}
               onClick={() => navigate('space-details', { spaceId: space.id })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  navigate('space-details', { spaceId: space.id });
+                }
+              }}
             >
               <div className="relative h-56 overflow-hidden">
                 <img
                   src={space.images[0]}
                   alt={space.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-soot/70 via-soot/20 to-transparent" />
@@ -153,6 +201,7 @@ export default function Landing() {
                   <div className="text-moss text-[10px] font-medium">/ day</div>
                 </div>
               </div>
+
               <div className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-sm text-soot font-semibold">
                   <Star size={14} fill="currentColor" className="text-eucalyptus" />
@@ -178,62 +227,214 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="bg-mist-light/40 py-20 border-y border-soot/8">
+      {/* How it works - Visual Photo Cards */}
+      <section className="py-24 bg-plaster-dark/25 border-y border-soot/8 relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <p className="text-moss text-xs font-semibold uppercase tracking-wider mb-2">Simple Process</p>
-            <h2 className="text-4xl sm:text-5xl text-soot font-normal font-serif-display">How it works</h2>
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-plaster-surface border border-soot/10 text-moss text-xs font-semibold mb-3 shadow-xs">
+              <Zap size={13} className="text-eucalyptus shrink-0" />
+              <span>Seamless Experience</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl text-soot font-normal font-serif-display tracking-tight mb-4">
+              How it works
+            </h2>
+            <p className="text-moss text-sm sm:text-base leading-relaxed">
+              Get instant access to top-tier coworking spaces across the Kingdom in three simple steps.
+            </p>
           </div>
+
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { step: '01', title: 'Browse & Discover', desc: 'Explore verified coworking spaces across Saudi Arabia, filtered by city, workspace type, and amenities.' },
-              { step: '02', title: 'Choose Your Plan', desc: 'Select a flexible daily, monthly, or corporate pass that fits your schedule and budget.' },
-              { step: '03', title: 'Book & Work', desc: 'Confirm instantly and access your space. Manage, edit, or cancel anytime from your dashboard.' },
-            ].map(item => (
-              <div key={item.step} className="bg-plaster-dark/40 hover:bg-plaster-dark/80 rounded-3xl p-7 border border-soot/12 text-center transition-colors duration-200 active:scale-[0.99] cursor-pointer">
-                <div className="w-12 h-12 rounded-2xl bg-eucalyptus/20 text-soot flex items-center justify-center mx-auto mb-4 font-bold text-sm">
-                  {item.step}
+            {/* Card 1 - Discover */}
+            <div className="group bg-plaster-surface rounded-3xl border border-soot/12 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+              <div>
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6 bg-soot/5 border border-soot/8">
+                  <img
+                    src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop&q=80"
+                    alt="Browse spaces"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-soot/70 via-soot/20 to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3 bg-plaster-surface/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-soot/10 flex items-center justify-between shadow-md">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={13} className="text-moss shrink-0" />
+                      <span className="text-[11px] font-semibold text-soot">Riyadh &bull; Digital City</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-eucalyptus uppercase bg-soot/90 px-2 py-0.5 rounded-md">8+ Spaces</span>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-soot text-xl mb-2 font-serif-display">{item.title}</h3>
-                <p className="text-moss text-sm leading-relaxed">{item.desc}</p>
+
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-6 h-6 rounded-full bg-soot text-plaster text-xs font-bold flex items-center justify-center shrink-0">
+                    1
+                  </span>
+                  <h3 className="text-xl font-semibold text-soot font-serif-display">
+                    Browse & Discover
+                  </h3>
+                </div>
+                <p className="text-moss text-xs sm:text-sm leading-relaxed mt-2">
+                  Explore curated, high-speed verified workspaces across Saudi Arabia filtered by your exact needs.
+                </p>
               </div>
-            ))}
+            </div>
+
+            {/* Card 2 - Choose Plan */}
+            <div className="group bg-plaster-surface rounded-3xl border border-soot/12 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+              <div>
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6 bg-soot/5 border border-soot/8">
+                  <img
+                    src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80"
+                    alt="Choose your plan"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-soot/70 via-soot/20 to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3 bg-plaster-surface/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-soot/10 flex items-center justify-between shadow-md">
+                    <div className="flex items-center gap-2">
+                      <Zap size={13} className="text-moss shrink-0" />
+                      <span className="text-[11px] font-semibold text-soot">Flexible Passes</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-soot bg-eucalyptus/30 border border-soot/10 px-2 py-0.5 rounded-md">Day / Monthly</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-6 h-6 rounded-full bg-soot text-plaster text-xs font-bold flex items-center justify-center shrink-0">
+                    2
+                  </span>
+                  <h3 className="text-xl font-semibold text-soot font-serif-display">
+                    Choose Your Plan
+                  </h3>
+                </div>
+                <p className="text-moss text-xs sm:text-sm leading-relaxed mt-2">
+                  Select a flexible daily pass or recurring monthly membership with zero lock-in and seamless upgrades.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3 - Book & Work */}
+            <div className="group bg-plaster-surface rounded-3xl border border-soot/12 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+              <div>
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6 bg-soot/5 border border-soot/8">
+                  <img
+                    src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=600&auto=format&fit=crop&q=80"
+                    alt="Instant workspace access"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-soot/70 via-soot/20 to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3 bg-plaster-surface/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-soot/10 flex items-center justify-between shadow-md">
+                    <div className="flex items-center gap-2">
+                      <Check size={13} className="text-eucalyptus shrink-0 stroke-[3]" />
+                      <span className="text-[11px] font-semibold text-soot">Instant Check-in</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-plaster bg-soot px-2 py-0.5 rounded-md">Pass Ready</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="w-6 h-6 rounded-full bg-soot text-plaster text-xs font-bold flex items-center justify-center shrink-0">
+                    3
+                  </span>
+                  <h3 className="text-xl font-semibold text-soot font-serif-display">
+                    Book & Access
+                  </h3>
+                </div>
+                <p className="text-moss text-xs sm:text-sm leading-relaxed mt-2">
+                  Confirm instantly, receive digital access passes, and work productively right away.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Why Coworking Pass */}
-      <section className="py-20 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="text-moss text-xs font-semibold uppercase tracking-wider mb-2">Why Coworking Pass</p>
-            <h2 className="text-4xl sm:text-5xl text-soot mb-6 font-serif-display">Built for the modern professional</h2>
-            <div className="space-y-5">
-              {[
-                { icon: Zap, title: 'Instant Booking', desc: 'Book any space in under 2 minutes with real-time availability confirmation.', bg: 'bg-eucalyptus/20' },
-                { icon: Shield, title: 'Secure & Verified', desc: 'Every space is verified and all payments are processed securely.', bg: 'bg-mist-light' },
-                { icon: Headphones, title: 'Dedicated Support', desc: 'Our customer care team is always here to assist with your bookings.', bg: 'bg-eucalyptus/20' },
-              ].map(f => (
-                <div key={f.title} className="flex items-start gap-4">
-                  <div className={`w-11 h-11 rounded-2xl ${f.bg} flex items-center justify-center shrink-0 text-soot`}>
-                    <f.icon size={20} />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-soot text-base mb-1">{f.title}</div>
-                    <div className="text-moss text-sm leading-relaxed">{f.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <section className="py-24 max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="max-w-3xl mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-soot/5 border border-soot/10 text-moss text-xs font-semibold mb-4 shadow-xs">
+            <Shield size={13} className="text-moss shrink-0" />
+            <span>Enterprise Grade</span>
           </div>
-          <div className="relative h-80 rounded-3xl overflow-hidden border border-soot/10">
+          <h2 className="text-4xl sm:text-5xl text-soot font-normal font-serif-display tracking-tight leading-[1.15] mb-4">
+            Built for the modern <span className="text-moss italic font-serif">professional.</span>
+          </h2>
+          <p className="text-moss text-sm sm:text-base leading-relaxed">
+            Everything you need to stay productive, flexible, and connected across Saudi Arabia’s fastest-growing workspace network.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8 items-stretch">
+          <div className="flex flex-col justify-between gap-4">
+            {[
+              {
+                icon: Zap,
+                title: 'Instant 2-Minute Booking',
+                desc: 'Reserve on demand with real-time seat availability and zero waiting times.',
+                bg: 'bg-eucalyptus/25',
+                iconColor: 'text-soot',
+              },
+              {
+                icon: Shield,
+                title: 'Secure & Verified',
+                desc: 'Every space is personally vetted for ultra-fast Wi-Fi, ergonomics, and quiet zones.',
+                bg: 'bg-mist-light',
+                iconColor: 'text-moss',
+              },
+              {
+                icon: Headphones,
+                title: 'Dedicated Support',
+                desc: '24/7 dedicated assistance for your team bookings, modifications, and billing.',
+                bg: 'bg-eucalyptus/25',
+                iconColor: 'text-soot',
+              },
+            ].map((f) => (
+              <div
+                key={f.title}
+                className="flex-1 flex items-start gap-4 p-5 rounded-3xl bg-plaster-surface border border-soot/10 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <div className={`w-11 h-11 rounded-2xl ${f.bg} flex items-center justify-center shrink-0 shadow-xs mt-0.5`}>
+                  <f.icon size={19} className={f.iconColor} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-soot text-base mb-1 font-serif-display">
+                    {f.title}
+                  </h3>
+                  <p className="text-moss text-xs sm:text-sm leading-relaxed">
+                    {f.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="relative rounded-3xl overflow-hidden border border-soot/12 shadow-sm min-h-[360px] h-full flex flex-col justify-end">
             <img
-              src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&h=600&fit=crop&auto=format"
-              alt="Coworking professionals"
-              className="w-full h-full object-cover"
+              src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1000&auto=format&fit=crop&q=80"
+              alt="Coworking professionals collaborating"
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-soot/15 rounded-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-soot/60 via-soot/10 to-transparent pointer-events-none" />
+
+            <div className="relative z-10 m-4 sm:m-6 bg-plaster-surface/95 backdrop-blur-md rounded-2xl p-4 border border-soot/12 shadow-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-soot text-plaster flex items-center justify-center font-bold text-sm">
+                  99%
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-soot">Member Satisfaction</div>
+                  <div className="text-[10px] text-moss">Over 2,400+ reviews Kingdom-wide</div>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-eucalyptus uppercase bg-soot/90 px-2.5 py-1 rounded-lg">
+                Top Rated
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -243,39 +444,46 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto px-4 text-center space-y-4">
           <Quote size={32} className="text-eucalyptus mx-auto opacity-80" />
           <p className="text-xl sm:text-2xl text-soot font-serif-display italic leading-relaxed">
-            "Coworking Pass simplified remote work for our entire team across Riyadh and Jeddah. Seamless booking and outstanding space quality."
+            &ldquo;Coworking Pass simplified remote work for our entire team across Riyadh and Jeddah. Seamless booking and outstanding space quality.&rdquo;
           </p>
           <div className="pt-2">
             <div className="text-sm font-semibold text-soot">Sarah Al-Qahtani</div>
-            <div className="text-xs text-moss">Head of People & Culture, TechFlow Saudi</div>
+            <div className="text-xs text-moss">Head of People &amp; Culture, TechFlow Saudi</div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-soot py-20 text-center">
-        <div className="max-w-2xl mx-auto px-4">
-          <h2 className="text-4xl sm:text-5xl text-white mb-4 font-serif-display">
-            Ready to find your workspace?
-          </h2>
-          <p className="text-plaster/90 text-base sm:text-lg mb-8 leading-relaxed font-normal">
-            Join thousands of professionals working smarter across Saudi Arabia.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              onClick={() => navigate('signup')}
-              variant="primary"
-              className="px-8 py-3.5 font-medium text-base bg-plaster text-soot hover:bg-eucalyptus hover:text-soot transition-colors duration-200 cursor-pointer active:scale-[0.98]"
-            >
-              Get started free
-            </Button>
-            <Button
-              onClick={() => navigate('browse')}
-              variant="secondary"
-              className="px-8 py-3.5 font-medium text-base bg-plaster-dark/40 text-plaster hover:bg-plaster-dark hover:text-soot transition-colors duration-200 cursor-pointer active:scale-[0.98]"
-            >
-              Browse spaces
-            </Button>
+      {/* CTA Section - Full Width Floating Banner */}
+      <section className="py-20 max-w-6xl mx-auto px-4 sm:px-6 w-full">
+        <div className="relative w-full bg-soot rounded-3xl p-10 sm:p-16 text-center overflow-hidden border border-soot/20 shadow-2xl">
+          {/* Background Glow Accents */}
+          <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 rounded-full bg-eucalyptus/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 rounded-full bg-eucalyptus/5 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl mx-auto">
+            <h2 className="text-3xl sm:text-5xl text-plaster mb-4 font-normal font-serif-display tracking-tight">
+              Ready to find your workspace?
+            </h2>
+            <p className="text-plaster/80 text-sm sm:text-base mb-8 leading-relaxed max-w-xl mx-auto">
+              Join thousands of professionals working smarter across Saudi Arabia.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+              <button
+                type="button"
+                onClick={() => navigate('signup')}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm bg-eucalyptus text-soot hover:bg-eucalyptus/90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-soot active:scale-[0.98] transition-all shadow-lg cursor-pointer"
+              >
+                Get started free
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('browse')}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm bg-white/10 hover:bg-white/15 text-plaster border border-white/15 focus-visible:ring-2 focus-visible:ring-white active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Browse spaces
+              </button>
+            </div>
           </div>
         </div>
       </section>

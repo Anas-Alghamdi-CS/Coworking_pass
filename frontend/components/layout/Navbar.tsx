@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, User as UserIcon, LogOut, ChevronDown, Calendar, Shield, Building2, Warehouse, Sparkles } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, ChevronDown, Calendar, Building2 } from 'lucide-react';
 import { useApp } from '@/app/store';
 import Logo from './logo';
 import Badge from '@/components/ui/Badge';
@@ -130,9 +130,6 @@ export default function Navbar() {
                 }`}
               >
                 {l.label}
-                {isActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-eucalyptus" />
-                )}
               </button>
             );
           })}
