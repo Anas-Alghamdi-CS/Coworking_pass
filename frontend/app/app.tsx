@@ -91,55 +91,55 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="px-5 py-5">
+    <div className="flex flex-col h-full bg-soot">
+      <div className="px-5 py-6">
         <button onClick={() => { navigate(dashboardScreen); setMobileOpen(false); }} className="flex items-center gap-2.5">
           <LogoImage className="w-8 h-8 rounded-lg" />
-          <span className="font-semibold text-plaster text-[15px] tracking-tight">
+          <span className="font-semibold text-plaster text-base tracking-tight" style={{ fontFamily: 'DM Serif Display, serif' }}>
             Coworking Pass
           </span>
         </button>
       </div>
 
-      <nav className="flex-1 px-3 space-y-0.5">
+      <nav className="flex-1 px-3 space-y-1.5">
         {navItems.map(item => {
           const active = isActive(item);
           return (
             <button
               key={item.screen}
               onClick={() => { navigate(item.screen); setMobileOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all ${
                 active
-                  ? 'bg-eucalyptus text-soot'
-                  : 'text-plaster/70 hover:bg-white/10 hover:text-plaster'
+                  ? 'bg-[#B3C9D6] text-soot shadow-sm font-semibold'
+                  : 'text-plaster/65 hover:bg-white/10 hover:text-plaster'
               }`}
             >
-              <item.icon size={17} className={active ? 'text-soot' : ''} />
-              {item.label}
-              {active && <ChevronRight size={14} className="ml-auto" />}
+              <item.icon size={18} className={active ? 'text-soot' : 'text-plaster/60'} />
+              <span>{item.label}</span>
+              {active && <ChevronRight size={15} className="ml-auto text-soot" />}
             </button>
           );
         })}
       </nav>
 
-      <div className="px-3 pb-5 mt-4 border-t border-plaster/10 pt-4">
-        <div className="flex items-center gap-3 px-3 py-2 mb-2">
+      <div className="px-4 pb-6 mt-auto">
+        <div className="flex items-center gap-3 px-2 py-3 mb-2">
           <img
             src={currentUser.avatar}
             alt={currentUser.name}
-            className="w-8 h-8 rounded-full object-cover ring-2 ring-eucalyptus/30"
+            className="w-10 h-10 rounded-full object-cover ring-2 ring-eucalyptus/40 shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-plaster truncate">{currentUser.name}</div>
+            <div className="text-sm font-semibold text-plaster truncate">{currentUser.name}</div>
             <div className="text-xs text-plaster/50 capitalize truncate">{currentUser.role}</div>
           </div>
         </div>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-plaster/60 hover:bg-red-500/10 hover:text-red-400 transition-all"
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-plaster/60 hover:bg-white/10 hover:text-plaster transition-all"
         >
-          <LogOut size={17} />
-          Log out
+          <LogOut size={16} />
+          <span>Log out</span>
         </button>
       </div>
     </div>
