@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType } from './types';
-import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS } from './data';
+import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType } from '@/types/types';
+import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS } from '@/data/data';
 
 interface AppContextType {
   // Navigation

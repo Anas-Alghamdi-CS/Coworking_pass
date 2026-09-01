@@ -1,45 +1,62 @@
-import { useEffect } from 'react';
+'use client';
+
 import { AppProvider, useApp } from './store';
-import GuestNav from './components/GuestNav';
-import AppLayout from './components/AppLayout';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
 // Guest screens
-import Landing from './screens/Landing';
-import Browse from './screens/Browse';
-import SpaceDetails from './screens/SpaceDetails';
-import Pricing from './screens/Pricing';
-import Contact from './screens/Contact';
-import { LoginScreen, SignUpScreen, ChooseAccountType } from './screens/Auth';
+import Landing from './page';
+import Browse from './spaces/page';
+import SpaceDetails from './spaces/[id]/page';
+import Pricing from './Pricing';
+import Contact from './contact';
+import { LoginScreen, SignUpScreen, ChooseAccountType } from './Auth/page';
 
 // Individual screens
-import IndividualDashboard from './screens/individual/Dashboard';
-import BookingFlow from './screens/individual/BookingFlow';
-import MyBookings from './screens/individual/MyBookings';
-import ProfileSettings from './screens/individual/ProfileSettings';
+import IndividualDashboard from './individual/Dashboard';
+import BookingFlow from './individual/BookingFlow';
+import MyBookings from './individual/MyBookings';
+import ProfileSettings from './individual/ProfileSettings';
 
 // Organization screens
-import OrgDashboard from './screens/organization/Dashboard';
-import TeamBooking from './screens/organization/TeamBooking';
-import TeamBookings from './screens/organization/TeamBookings';
-import OrgProfile from './screens/organization/OrgProfile';
+import OrgDashboard from './organization/Dashboard';
+import TeamBooking from './organization/TeamBooking';
+import TeamBookings from './organization/TeamBookings';
+import OrgProfile from './organization/OrgProfile';
 
 // Admin screens
-import AdminDashboard from './screens/admin/Dashboard';
-import SpacesAdmin from './screens/admin/SpacesAdmin';
-import UsersAdmin from './screens/admin/UsersAdmin';
-import BookingsAdmin from './screens/admin/BookingsAdmin';
-import Reports from './screens/admin/Reports';
+import AdminDashboard from './admin/Dashboard';
+import SpacesAdmin from './admin/SpacesAdmin';
+import UsersAdmin from './admin/UsersAdmin';
+import BookingsAdmin from './admin/BookingsAdmin';
+import Reports from './admin/Reports';
+
+function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen flex flex-col bg-plaster">
+      <Navbar />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
+  );
+}
 
 function Toast() {
   const { toast } = useApp();
   if (!toast) return null;
+
   const colors = {
     success: 'bg-soot text-plaster',
     error: 'bg-red-500 text-white',
     info: 'bg-mist text-soot',
   };
+
   return (
-    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-medium ${colors[toast.type]} transition-all`}>
+    <div
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-lg text-sm font-medium ${
+        colors[toast.type as keyof typeof colors] || colors.info
+      } transition-all`}
+    >
       {toast.message}
     </div>
   );
@@ -54,8 +71,8 @@ function Router() {
     if (screen === 'landing') return <Landing />;
 
     return (
-      <div className="min-h-full flex flex-col bg-plaster">
-        {screen !== 'login' && screen !== 'signup' && screen !== 'choose-type' && <GuestNav />}
+      <div className="min-h-screen flex flex-col bg-plaster">
+        {screen !== 'login' && screen !== 'signup' && screen !== 'choose-type' && <Navbar />}
         <div className="flex-1">
           {screen === 'browse' && <Browse />}
           {screen === 'space-details' && <SpaceDetails />}
@@ -65,6 +82,7 @@ function Router() {
           {screen === 'signup' && <SignUpScreen />}
           {screen === 'choose-type' && <ChooseAccountType />}
         </div>
+        {screen !== 'login' && screen !== 'signup' && screen !== 'choose-type' && <Footer />}
       </div>
     );
   }
@@ -119,9 +137,12 @@ function Router() {
 function AdminSettingsPage() {
   const { currentUser, logout } = useApp();
   if (!currentUser) return null;
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-3xl text-soot mb-8" style={{ fontFamily: 'DM Serif Display, serif' }}>Admin Settings</h1>
+      <h1 className="text-3xl text-soot mb-8" style={{ fontFamily: 'DM Serif Display, serif' }}>
+        Admin Settings
+      </h1>
       <div className="bg-white rounded-2xl border border-soot/8 p-6 mb-4">
         <h2 className="font-semibold text-soot mb-4">Account</h2>
         <div className="flex items-center gap-4 mb-4">
@@ -134,7 +155,9 @@ function AdminSettingsPage() {
         </div>
       </div>
       <div className="bg-white rounded-2xl border border-soot/8 p-6">
-        <button onClick={logout} className="px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium">Log out</button>
+        <button onClick={logout} className="px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium">
+          Log out
+        </button>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { Check, ArrowRight } from 'lucide-react';
-import { useApp } from '../store';
+import { useApp } from './store';
 
 const plans = [
   {

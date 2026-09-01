@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import { useApp } from '../store';
+import { useApp } from '@/app/store';
 import Logo from './logo';
 
 export default function GuestNav() {

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, SlidersHorizontal, X, MapPin, ChevronDown } from 'lucide-react';
-import { useApp } from '../store';
-import SpaceCard from '../components/space/SpaceCard';
+import { useApp } from '@/app/store';
+import SpaceCard from '@/components/spaces/spaceCard';
 
 const CITIES = ['Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah', 'Makkah'];
 const TYPES = ['all', 'hot-desk', 'private-office', 'meeting-room', 'mixed'];

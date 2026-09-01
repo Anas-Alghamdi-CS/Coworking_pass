@@ -1,4 +1,5 @@
-import { subscription, user, workspace } from './types';
+import { Space, User, Booking } from '@/types/types';
+
 export const INITIAL_SPACES: Space[] = [
   {
     id: 'space-1',

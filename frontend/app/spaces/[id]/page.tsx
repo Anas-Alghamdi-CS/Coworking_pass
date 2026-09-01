@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
@@ -13,15 +15,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
-  Info 
+  Info
 } from 'lucide-react';
-import { useApp } from '../store';
-import Modal from '../components/Modal';
+import { useApp } from '@/app/store';
+import Modal from '@/components/ui/Modal';
 
 export default function SpaceDetails() {
   const { nav, navigate, goBack, spaces, currentUser, favorites, toggleFavorite, waitlist, autobooking, joinWaitlist, toggleAutoBooking } = useApp();
-  const spaceId = nav.params?.spaceId;
+  
+  // استخراج المعرّف مع دعم الـ fallback
+  const spaceId = nav?.params?.spaceId || '';
   const space = spaces.find(s => s.id === spaceId);
+
   const [imgIndex, setImgIndex] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<'daily' | 'monthly' | 'yearly'>('monthly');
   const [waitlistModal, setWaitlistModal] = useState(false);
@@ -31,7 +36,9 @@ export default function SpaceDetails() {
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [whatsappAlerts, setWhatsappAlerts] = useState(false);
 
-  useEffect(() => { setImgIndex(0); }, [spaceId]);
+  useEffect(() => { 
+    setImgIndex(0); 
+  }, [spaceId]);
 
   if (!space) {
     return (
@@ -72,9 +79,14 @@ export default function SpaceDetails() {
   const planPrice = space.pricing[selectedPlan];
   const planLabel = selectedPlan === 'daily' ? '/day' : selectedPlan === 'monthly' ? '/month' : '/year';
 
+  // معالجة مرنة لساعات العمل وتفاصيل التواصل لتجنب انهيار الصفحة
+  const hoursDisplay = (space as any).openHours || (space as any).hours || '8:00 AM - 10:00 PM';
+  const phoneDisplay = space.phone || '+966 50 000 0000';
+  const emailDisplay = space.email || 'info@coworkingpass.sa';
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      {/* Back */}
+      {/* Back Button */}
       <button onClick={goBack} className="flex items-center gap-2 text-moss hover:text-soot text-sm font-medium mb-6 transition-colors">
         <ArrowLeft size={15} />
         Back
@@ -86,19 +98,21 @@ export default function SpaceDetails() {
           {/* Image carousel */}
           <div className="relative h-72 sm:h-96 rounded-2xl overflow-hidden bg-soot/5">
             <img
-              src={space.images[imgIndex]}
+              src={space.images[imgIndex] || '/placeholder.jpg'}
               alt={`${space.name} ${imgIndex + 1}`}
               className="w-full h-full object-cover"
             />
             {space.images.length > 1 && (
               <>
                 <button
+                  type="button"
                   onClick={() => setImgIndex(i => (i - 1 + space.images.length) % space.images.length)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow hover:bg-white transition-colors"
                 >
                   <ChevronLeft size={16} className="text-soot" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setImgIndex(i => (i + 1) % space.images.length)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow hover:bg-white transition-colors"
                 >
@@ -106,7 +120,10 @@ export default function SpaceDetails() {
                 </button>
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {space.images.map((_, i) => (
-                    <button key={i} onClick={() => setImgIndex(i)}
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setImgIndex(i)}
                       className={`w-1.5 h-1.5 rounded-full transition-all ${i === imgIndex ? 'bg-white w-4' : 'bg-white/50'}`}
                     />
                   ))}
@@ -116,6 +133,7 @@ export default function SpaceDetails() {
             <div className="absolute top-4 right-4 flex gap-2">
               {currentUser && (
                 <button
+                  type="button"
                   onClick={() => toggleFavorite(space.id)}
                   className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow hover:bg-white transition-colors"
                 >
@@ -129,7 +147,7 @@ export default function SpaceDetails() {
           <div>
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <h1 className="text-3xl text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>{space.name}</h1>
+                <h1 className="text-3xl text-soot font-bold">{space.name}</h1>
                 <div className="flex items-center gap-2 mt-2 text-sm text-moss">
                   <MapPin size={13} />
                   <span>{space.address}</span>
@@ -175,16 +193,16 @@ export default function SpaceDetails() {
           {/* Contact & Hours */}
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: Clock, label: 'Hours', value: space.openHours },
-              { icon: Phone, label: 'Phone', value: space.phone },
-              { icon: Mail, label: 'Email', value: space.email },
+              { icon: Clock, label: 'Hours', value: hoursDisplay },
+              { icon: Phone, label: 'Phone', value: phoneDisplay },
+              { icon: Mail, label: 'Email', value: emailDisplay },
             ].map(item => (
               <div key={item.label} className="bg-mist/15 rounded-xl p-4 border border-mist/40">
                 <div className="flex items-center gap-2 mb-2">
                   <item.icon size={14} className="text-moss" />
                   <span className="text-xs font-medium text-moss uppercase tracking-wide">{item.label}</span>
                 </div>
-                <div className="text-sm text-soot">{item.value}</div>
+                <div className="text-sm text-soot truncate">{item.value}</div>
               </div>
             ))}
           </div>
@@ -207,6 +225,7 @@ export default function SpaceDetails() {
                 {(['daily', 'monthly', 'yearly'] as const).map(plan => (
                   <button
                     key={plan}
+                    type="button"
                     onClick={() => setSelectedPlan(plan)}
                     className={`py-2 px-1 rounded-xl text-center border transition-all text-xs font-medium ${
                       selectedPlan === plan
@@ -247,17 +266,16 @@ export default function SpaceDetails() {
                 <div className="mist-accent rounded-xl p-4 text-center border border-[#B3C9D6]">
                   <div className="flex justify-center mb-2">
                     <div className="w-10 h-10 rounded-full bg-[#B3C9D6] flex items-center justify-center">
-                     <Bell size={18} className="text-[#1F2933]" />
+                      <Bell size={18} className="text-[#1F2933]" />
                     </div>
                   </div>
                   <div className="text-[#344955] font-semibold text-sm mb-1">
-                   Space is fully booked
+                    Space is fully booked
                   </div>
-
                   <div className="text-[#64748B] text-xs">
-                   Next availability will be notified
+                    Next availability will be notified
                   </div>
-                 </div>
+                </div>
 
                 {inWaitlist ? (
                   <div className="bg-eucalyptus/15 rounded-xl p-3 text-center">
@@ -268,6 +286,7 @@ export default function SpaceDetails() {
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => { if (!currentUser) { navigate('login'); return; } setWaitlistDone(false); setWaitlistModal(true); }}
                     className="w-full py-3 rounded-xl bg-[#B3C9D6] text-[#1F2933] font-semibold text-sm hover:bg-[#9FBAC9] transition-colors flex items-center justify-center gap-2"
                   >
@@ -278,6 +297,7 @@ export default function SpaceDetails() {
 
                 <div>
                   <button
+                    type="button"
                     onClick={() => { if (!currentUser) { navigate('login'); return; } toggleAutoBooking(space.id); }}
                     className={`w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                       autoBookOn ? 'bg-soot text-plaster' : 'bg-eucalyptus/20 text-moss hover:bg-eucalyptus/30'
@@ -295,6 +315,7 @@ export default function SpaceDetails() {
               </div>
             ) : (
               <button
+                type="button"
                 onClick={handleBook}
                 className="w-full py-3 rounded-xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light transition-colors"
               >
@@ -304,215 +325,154 @@ export default function SpaceDetails() {
 
             {!currentUser && (
               <p className="text-center text-xs text-moss mt-3">
-                <button onClick={() => navigate('signup')} className="text-soot font-medium hover:underline">Sign up</button> to start booking
+                <button type="button" onClick={() => navigate('signup')} className="text-soot font-medium hover:underline">Sign up</button> to start booking
               </p>
             )}
           </div>
         </div>
       </div>
 
-{/* Waitlist Modal */}
-<Modal
-  open={waitlistModal}
-  onClose={() => setWaitlistModal(false)}
-  title="Join the Waitlist"
-  size="md"
->
-  <div className="p-6">
-    {waitlistDone ? (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 rounded-full bg-[#EAF1F5] flex items-center justify-center mx-auto mb-5">
-          <Check size={28} className="text-[#344955]" />
+      {/* Waitlist Modal */}
+      <Modal
+        open={waitlistModal}
+        onClose={() => setWaitlistModal(false)}
+        title="Join the Waitlist"
+        size="md"
+      >
+        <div className="p-6">
+          {waitlistDone ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-full bg-[#EAF1F5] flex items-center justify-center mx-auto mb-5">
+                <Check size={28} className="text-[#344955]" />
+              </div>
+              <h3 className="text-2xl text-soot font-bold mb-2">You’re on the list!</h3>
+              <p className="text-sm text-moss leading-relaxed">
+                We’ll notify you as soon as a desk becomes available at {space.name}.
+              </p>
+              <button
+                type="button"
+                onClick={() => setWaitlistModal(false)}
+                className="mt-6 w-full py-3 rounded-xl bg-soot text-plaster text-sm font-semibold"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-5">
+                <h2 className="text-2xl text-soot font-bold mb-2">Join the Waitlist</h2>
+                <p className="text-sm text-moss leading-relaxed">
+                  Secure your spot in line. We’ll alert you the moment a desk becomes available.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EAF1F5] border border-[#B3C9D6] mb-5">
+                <img
+                  src={space.images[0] || '/placeholder.jpg'}
+                  alt={space.name}
+                  className="w-14 h-14 rounded-lg object-cover"
+                />
+                <div>
+                  <div className="font-semibold text-soot text-sm">{space.name}</div>
+                  <div className="flex items-center gap-1 text-xs text-moss mt-1">
+                    <MapPin size={11} />
+                    {space.city}
+                  </div>
+                  <div className="text-xs text-moss mt-1">
+                    {space.type.replace('-', ' ')}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="p-4 rounded-xl bg-[#EAF1F5]">
+                  <div className="text-xs text-moss mb-1">Queue Status</div>
+                  <div className="text-xl text-soot font-semibold">You are #3</div>
+                </div>
+                <div className="p-4 rounded-xl bg-[#EAF1F5]">
+                  <div className="text-xs text-moss mb-1">Est. Wait Time</div>
+                  <div className="text-xl text-soot font-semibold">~25 mins</div>
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-soot mb-2">Preferred Date</label>
+                <input
+                  type="date"
+                  value={preferredDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={e => setPreferredDate(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-[#B3C9D6] focus:ring-2 focus:ring-[#EAF1F5]"
+                />
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-soot mb-3">Notification Preferences</label>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 text-sm text-moss cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={smsAlerts}
+                      onChange={e => setSmsAlerts(e.target.checked)}
+                      className="accent-[#6F8792]"
+                    />
+                    SMS Alerts
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-moss cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={emailAlerts}
+                      onChange={e => setEmailAlerts(e.target.checked)}
+                      className="accent-[#6F8792]"
+                    />
+                    Email Alerts
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-moss cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={whatsappAlerts}
+                      onChange={e => setWhatsappAlerts(e.target.checked)}
+                      className="accent-[#6F8792]"
+                    />
+                    WhatsApp
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 p-4 rounded-xl border border-soot/10 mb-5">
+                <div>
+                  <div className="text-sm font-semibold text-soot">Enable Auto-Booking</div>
+                  <div className="text-xs text-moss mt-1">Automatically book when a spot becomes available</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleAutoBooking(space.id)}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${autoBookOn ? 'bg-[#8FA7B2]' : 'bg-soot/15'}`}
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${autoBookOn ? 'translate-x-6' : 'translate-x-1'}`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-[#F3F5F5] mb-5">
+                <Info size={16} className="text-[#6F8792] mt-0.5 shrink-0" />
+                <p className="text-xs text-moss leading-relaxed">
+                  You’ll have 10 minutes to confirm your reservation after receiving an alert before the desk is offered to the next person in line.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleJoinWaitlist}
+                className="w-full py-3 rounded-xl bg-[#8FA7B2] text-white font-semibold text-sm hover:bg-[#7D98A4] transition-colors"
+              >
+                Join Waitlist
+              </button>
+            </>
+          )}
         </div>
-
-        <h3
-          className="text-2xl text-soot mb-2"
-          style={{ fontFamily: 'DM Serif Display, serif' }}
-        >
-          You’re on the list!
-        </h3>
-
-        <p className="text-sm text-moss leading-relaxed">
-          We’ll notify you as soon as a desk becomes available at {space.name}.
-        </p>
-
-        <button
-          onClick={() => setWaitlistModal(false)}
-          className="mt-6 w-full py-3 rounded-xl bg-soot text-plaster text-sm font-semibold"
-        >
-          Done
-        </button>
-      </div>
-    ) : (
-      <>
-        <div className="mb-5">
-          <h2
-            className="text-2xl text-soot mb-2"
-            style={{ fontFamily: 'DM Serif Display, serif' }}
-          >
-            Join the Waitlist
-          </h2>
-
-          <p className="text-sm text-moss leading-relaxed">
-            Secure your spot in line. We’ll alert you the moment a desk becomes available.
-          </p>
-        </div>
-
-        {/* Space summary */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EAF1F5] border border-[#B3C9D6] mb-5">
-          <img
-            src={space.images[0]}
-            alt={space.name}
-            className="w-14 h-14 rounded-lg object-cover"
-          />
-
-          <div>
-            <div className="font-semibold text-soot text-sm">
-              {space.name}
-            </div>
-
-            <div className="flex items-center gap-1 text-xs text-moss mt-1">
-              <MapPin size={11} />
-              {space.city}
-            </div>
-
-            <div className="text-xs text-moss mt-1">
-              {space.type.replace('-', ' ')}
-            </div>
-          </div>
-        </div>
-
-        {/* Queue information */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="p-4 rounded-xl bg-[#EAF1F5]">
-            <div className="text-xs text-moss mb-1">
-              Queue Status
-            </div>
-
-            <div
-              className="text-xl text-soot"
-              style={{ fontFamily: 'DM Serif Display, serif' }}
-            >
-              You are #3
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#EAF1F5]">
-            <div className="text-xs text-moss mb-1">
-              Est. Wait Time
-            </div>
-
-            <div
-              className="text-xl text-soot"
-              style={{ fontFamily: 'DM Serif Display, serif' }}
-            >
-              ~25 mins
-            </div>
-          </div>
-        </div>
-
-        {/* Preferred date */}
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-soot mb-2">
-            Preferred Date
-          </label>
-
-          <input
-            type="date"
-            value={preferredDate}
-            min={new Date().toISOString().split('T')[0]}
-            onChange={e => setPreferredDate(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-[#B3C9D6] focus:ring-2 focus:ring-[#EAF1F5]"
-          />
-        </div>
-
-        {/* Notification preferences */}
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-soot mb-3">
-            Notification Preferences
-          </label>
-
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-sm text-moss cursor-pointer">
-              <input
-                type="checkbox"
-                checked={smsAlerts}
-                onChange={e => setSmsAlerts(e.target.checked)}
-                className="accent-[#6F8792]"
-              />
-              SMS Alerts
-            </label>
-
-            <label className="flex items-center gap-2 text-sm text-moss cursor-pointer">
-              <input
-                type="checkbox"
-                checked={emailAlerts}
-                onChange={e => setEmailAlerts(e.target.checked)}
-                className="accent-[#6F8792]"
-              />
-              Email Alerts
-            </label>
-
-            <label className="flex items-center gap-2 text-sm text-moss cursor-pointer">
-              <input
-                type="checkbox"
-                checked={whatsappAlerts}
-                onChange={e => setWhatsappAlerts(e.target.checked)}
-                className="accent-[#6F8792]"
-              />
-              WhatsApp
-            </label>
-          </div>
-        </div>
-
-        {/* Auto-booking */}
-        <div className="flex items-center justify-between gap-3 p-4 rounded-xl border border-soot/10 mb-5">
-          <div>
-            <div className="text-sm font-semibold text-soot">
-              Enable Auto-Booking
-            </div>
-
-            <div className="text-xs text-moss mt-1">
-              Automatically book when a spot becomes available
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => toggleAutoBooking(space.id)}
-            className={`relative w-12 h-7 rounded-full transition-colors ${
-              autoBookOn ? 'bg-[#8FA7B2]' : 'bg-soot/15'
-            }`}
-          >
-            <span
-              className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                autoBookOn ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Information note */}
-        <div className="flex items-start gap-2 p-3 rounded-xl bg-[#F3F5F5] mb-5">
-          <Info size={16} className="text-[#6F8792] mt-0.5 shrink-0" />
-
-          <p className="text-xs text-moss leading-relaxed">
-            You’ll have 10 minutes to confirm your reservation after receiving
-            an alert before the desk is offered to the next person in line.
-          </p>
-        </div>
-
-        <button
-          onClick={handleJoinWaitlist}
-          className="w-full py-3 rounded-xl bg-[#8FA7B2] text-white font-semibold text-sm hover:bg-[#7D98A4] transition-colors"
-        >
-          Join Waitlist
-        </button>
-      </>
-    )}
-  </div>
-</Modal>
-
+      </Modal>
     </div>
   );
 }

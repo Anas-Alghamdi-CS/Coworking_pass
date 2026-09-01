@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ArrowRight, MapPin, Star, Users, Zap, Shield, Headphones, ChevronDown } from 'lucide-react';
-import { useApp } from '../store';
-import GuestNav from '../components/GuestNav';
-import LogoImage from '../components/Logo';
+import { useApp } from './store';
+import GuestNav from '@/components/layout/Navbar';
+import LogoImage from '@/components/layout/logo';
 
 const cities = ['All Cities', 'Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah', 'Makkah'];
 

@@ -4,9 +4,9 @@ import {
   Building2, Users, BarChart3, BookOpen, Menu, X, ChevronRight,
   Briefcase
 } from 'lucide-react';
-import { useApp } from '../store';
-import { Screen } from '../types';
-import LogoImage from './Logo';
+import { Screen } from '@/types/types';
+import { useApp } from '@/app/store';
+import LogoImage from '@/components/layout/logo';
 
 interface NavItem {
   label: string;

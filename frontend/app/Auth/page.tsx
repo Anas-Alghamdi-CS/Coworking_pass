@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Building2, User, ArrowRight } from 'lucide-react';
-import { useApp } from '../store';
-import LogoImage from '../components/Logo';
+import { useApp } from '@/app/store';
+import LogoImage from '@/components/layout/logo';
+
 
 function Logo({ onClick }: { onClick: () => void }) {
   return (
