@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   Search,
   Building2,
-  Plus,
   Eye,
   EyeOff,
   Trash2,
@@ -18,8 +17,6 @@ import {
 import { useApp } from '@/app/store';
 import { Booking, Space } from '@/types/types';
 import Modal from '@/components/ui/Modal';
-import AddWorkspace from './AddWorkspace';
-import AddWorkspaceModal from './AddWorkspaceModal';
 
 const SPACE_TYPES = ['All types', 'hot-desk', 'private-office', 'meeting-room', 'mixed'];
 const CITIES = ['All cities', 'Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah', 'Makkah'];
@@ -37,9 +34,7 @@ export default function MyWorkspaces() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [deleteModal, setDeleteModal] = useState<Space | null>(null);
-  const [addModalOpen, setAddModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const filtered = companySpaces.filter((s: Space) => {
     const matchSearch =
@@ -82,13 +77,6 @@ export default function MyWorkspaces() {
             {companySpaces.length} workspace{companySpaces.length !== 1 ? 's' : ''} managed
           </p>
         </div>
-        <button
-          onClick={() => setAddModalOpen(true)}
-          className="btn-primary"
-        >
-          <Plus size={15} />
-          <span>Add workspace</span>
-        </button>
       </div>
 
       {/* Filters */}
@@ -165,20 +153,20 @@ export default function MyWorkspaces() {
         <div className="bg-white rounded-3xl border border-soot/8 p-16 text-center shadow-sm">
           <Building2 size={36} className="text-moss mx-auto mb-4" />
           <h3 className="font-medium text-soot mb-2 text-lg" style={{ fontFamily: 'DM Serif Display, serif' }}>
-            {companySpaces.length === 0 ? 'No workspaces added yet' : 'No workspaces match your filters'}
+            {companySpaces.length === 0 ? 'No workspaces assigned yet' : 'No workspaces match your filters'}
           </h3>
           <p className="text-sm text-moss mb-6 font-normal">
             {companySpaces.length === 0
-              ? 'Add your first workspace to start accepting bookings and team reservations.'
+              ? 'Browse available coworking spaces and corporate passes to assign workspaces to your organization.'
               : 'Try adjusting the filters above to find what you are looking for.'}
           </p>
           {companySpaces.length === 0 && (
             <button
               type="button"
-              onClick={() => setIsAddModalOpen(true)}
-className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#374142] text-[#FAF8F5] text-sm font-medium ring-1 ring-white/15 shadow-sm hover:bg-[#2D3536] transition-all duration-200 active:scale-[0.98] cursor-pointer"            >
-              <Plus size={16} />
-              <span>Add your first workspace</span>
+              onClick={() => navigate('browse')}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] font-medium text-sm transition-all shadow-xs border border-soot/8 cursor-pointer"
+            >
+              <span>Browse Workspaces</span>
             </button>
           )}
         </div>
@@ -398,17 +386,6 @@ className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg
             <p className="text-xs text-moss/70">This action cannot be undone. All workspace data will be permanently removed.</p>
           </div>
         )}
-      </Modal>
-
-      {/* Add Workspace Modal */}
-      <Modal
-        open={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        title="Add New Workspace"
-        subtitle="List a new coworking space or office for your organization."
-        size="2xl"
-      >
-        <AddWorkspace onCloseModal={() => setAddModalOpen(false)} />
       </Modal>
     </div>
   );

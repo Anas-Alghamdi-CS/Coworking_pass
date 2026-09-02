@@ -84,7 +84,7 @@ export default function CompanyBookings() {
           <CalendarDays size={32} className="text-moss mx-auto mb-4" />
           <h3 className="font-semibold text-soot mb-2">No bookings found</h3>
           <p className="text-sm text-moss">
-            {companySpaceIds.length === 0 ? 'Add workspaces to start receiving bookings.' : 'No bookings match the current filters.'}
+            {companySpaceIds.length === 0 ? 'No bookings found for your organization.' : 'No bookings match the current filters.'}
           </p>
         </div>
       ) : (

@@ -1,16 +1,11 @@
 'use client';
 
-import { Building2, CalendarDays, Users, TrendingUp, ArrowRight, Plus, BarChart3, Eye, EyeOff, Check } from 'lucide-react';
+import { Building2, CalendarDays, Users, TrendingUp, ArrowRight, BarChart3, Eye, EyeOff, Check } from 'lucide-react';
 import { useApp } from '@/app/store';
 import { Booking, Space, getEffectiveSpacePrice } from '@/types/types';
 
-import { useState } from 'react';
-import Modal from '@/components/ui/Modal';
-import AddWorkspace from './AddWorkspace';
-
 export default function OrgDashboard() {
   const { currentUser, bookings, spaces, navigate } = useApp();
-  const [addModalOpen, setAddModalOpen] = useState(false);
   if (!currentUser) return null;
 
   const companySpaces = spaces.filter((s: Space) => s.ownerId === currentUser.id);
@@ -194,14 +189,14 @@ export default function OrgDashboard() {
       {/* Quick actions */}
       <div className="mt-8 grid sm:grid-cols-3 gap-4">
         {[
-          { label: 'Add workspace', desc: 'List a new coworking space', action: () => setAddModalOpen(true), icon: Plus },
-          { label: 'View bookings', desc: 'Manage customer reservations', action: () => navigate('company-bookings'), icon: CalendarDays },
+          { label: 'Browse workspaces', desc: 'Find and reserve desks & meeting rooms', action: () => navigate('browse'), icon: Building2 },
+          { label: 'View bookings', desc: 'Manage company reservations and passes', action: () => navigate('company-bookings'), icon: CalendarDays },
           { label: 'Manage team', desc: 'Add and organize team members', action: () => navigate('company-team'), icon: Users },
         ].map(a => (
           <button
             key={a.label}
             onClick={a.action}
-            className="bg-white rounded-2xl border border-soot/8 p-5 text-left hover:border-eucalyptus/40 hover:shadow-sm transition-all group"
+            className="bg-white rounded-2xl border border-soot/8 p-5 text-left hover:border-eucalyptus/40 hover:shadow-sm transition-all group cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-eucalyptus/15 flex items-center justify-center mb-3 group-hover:bg-eucalyptus/25 transition-colors">
               <a.icon size={16} className="text-moss" />
@@ -211,17 +206,6 @@ export default function OrgDashboard() {
           </button>
         ))}
       </div>
-
-      {/* Add Workspace Modal */}
-      <Modal
-        open={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        title="Add New Workspace"
-        subtitle="List a new coworking space or office for your organization."
-        size="2xl"
-      >
-        <AddWorkspace onCloseModal={() => setAddModalOpen(false)} />
-      </Modal>
     </div>
   );
 }
