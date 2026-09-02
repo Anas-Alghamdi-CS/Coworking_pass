@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ArrowRight, MapPin, Star, Users, Zap, Headphones, Shield, ChevronDown, Quote, Check } from 'lucide-react';
-import { useApp } from './store';
+import { useApp } from '@/app/store';
 import { isUserPassHolder, getEffectiveSpacePrice } from '@/types/types';
 import GuestNav from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';

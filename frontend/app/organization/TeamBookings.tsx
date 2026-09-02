@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Calendar, Users, AlertCircle, X } from 'lucide-react';
+import { MapPin, Calendar, Users, AlertCircle, X, Search } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Booking, BookingStatus, Employee } from '@/types';
+import { Booking, BookingStatus, Employee } from '@/types/types';
 import Modal from '@/components/ui/Modal';
 
 const TABS: { label: string; status: BookingStatus }[] = [
@@ -13,8 +13,9 @@ const TABS: { label: string; status: BookingStatus }[] = [
 ];
 
 export default function TeamBookings() {
-  const { bookings, currentUser, navigate, cancelBooking } = useApp();
+  const { bookings, currentUser, navigate, cancelBooking, showToast } = useApp();
   const [activeTab, setActiveTab] = useState<BookingStatus>('active');
+  const [search, setSearch] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [cancelModal, setCancelModal] = useState(false);
   const [detailsModal, setDetailsModal] = useState(false);
@@ -22,7 +23,17 @@ export default function TeamBookings() {
   if (!currentUser) return null;
 
   const orgBookings = bookings.filter((b: Booking) => b.userId === currentUser.id);
-  const filtered = orgBookings.filter((b: Booking) => b.status === activeTab);
+
+  // دمج فلترة التبويب مع البحث النصي
+  const filtered = orgBookings.filter((b: Booking) => {
+    const matchTab = b.status === activeTab;
+    const matchSearch =
+      !search ||
+      b.spaceName.toLowerCase().includes(search.toLowerCase()) ||
+      b.spaceCity.toLowerCase().includes(search.toLowerCase());
+    return matchTab && matchSearch;
+  });
+
   const employees = currentUser.employees || [];
 
   const counts = {
@@ -39,6 +50,7 @@ export default function TeamBookings() {
       setCancelModal(false);
       setDetailsModal(false);
       setSelectedBooking(null);
+      showToast?.('Booking cancelled successfully.', 'info');
     }
   };
 
@@ -50,8 +62,9 @@ export default function TeamBookings() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-3xl text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>Team Bookings</h1>
+        <h1 className="text-3xl text-soot font-serif-display font-normal">Team Bookings</h1>
         <button
           onClick={() => navigate('browse')}
           className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-[#374142] text-[#FAF8F5] text-sm font-medium ring-1 ring-white/15 shadow-sm hover:bg-[#2D3536] transition-all duration-200 active:scale-[0.98] cursor-pointer"
@@ -60,32 +73,60 @@ export default function TeamBookings() {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-white border border-soot/8 rounded-xl p-1 mb-6 w-fit">
-        {TABS.map(tab => (
-          <button
-            key={tab.status}
-            onClick={() => setActiveTab(tab.status)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.status ? 'bg-soot text-plaster' : 'text-moss hover:text-soot'
-            }`}
-          >
-            {tab.label}
-            <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.status ? 'bg-white/20' : 'bg-soot/8'}`}>
-              {counts[tab.status]}
-            </span>
-          </button>
-        ))}
+      {/* Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex gap-1 bg-white border border-soot/8 rounded-xl p-1 w-fit shadow-2xs">
+          {TABS.map(tab => (
+            <button
+              key={tab.status}
+              onClick={() => setActiveTab(tab.status)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+                activeTab === tab.status ? 'bg-soot text-plaster font-semibold' : 'text-moss hover:text-soot'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.status ? 'bg-white/20 text-white' : 'bg-soot/8 text-moss'}`}>
+                {counts[tab.status]}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* حقل البحث المضاف */}
+        <div className="relative w-full sm:w-64">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-moss" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search team bookings..."
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-soot/12 bg-white text-soot text-sm placeholder:text-moss/60 outline-none focus:border-soot transition-all shadow-2xs"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-moss hover:text-soot"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-soot/8 p-12 text-center">
           <Calendar size={32} className="text-moss mx-auto mb-3" />
-          <div className="font-medium text-soot mb-1">No {activeTab} bookings</div>
-          <div className="text-sm text-moss mb-4">
-            {activeTab === 'active' ? "Your team doesn't have any active bookings." : `No ${activeTab} team bookings to show.`}
+          <div className="font-medium text-soot mb-1">
+            {search ? 'No matching bookings found' : `No ${activeTab} bookings`}
           </div>
-          {activeTab === 'active' && (
+          <div className="text-sm text-moss mb-4">
+            {search
+              ? 'Try changing your search terms.'
+              : activeTab === 'active'
+              ? "Your team doesn't have any active bookings."
+              : `No ${activeTab} team bookings to show.`}
+          </div>
+          {activeTab === 'active' && !search && (
             <button onClick={() => navigate('browse')} className="px-4 py-2 rounded-xl bg-eucalyptus text-soot text-sm font-medium">
               Book a space
             </button>
@@ -97,7 +138,7 @@ export default function TeamBookings() {
             <div
               key={booking.id}
               onClick={() => { setSelectedBooking(booking); setDetailsModal(true); }}
-              className="bg-white rounded-2xl border border-soot/8 overflow-hidden hover:border-eucalyptus/30 transition-colors cursor-pointer"
+              className="bg-white rounded-2xl border border-soot/8 overflow-hidden hover:border-eucalyptus/30 transition-all cursor-pointer shadow-xs hover:shadow-sm"
             >
               <div className="flex">
                 <img src={booking.spaceImage} alt={booking.spaceName} className="w-28 object-cover hidden sm:block" />
@@ -118,7 +159,7 @@ export default function TeamBookings() {
                   <div className="flex flex-wrap gap-3 mt-3 text-xs text-moss">
                     <div className="flex items-center gap-1.5">
                       <Calendar size={11} />
-                      {booking.startDate}
+                      {booking.startDate} {booking.endDate && booking.endDate !== booking.startDate ? `→ ${booking.endDate}` : ''}
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Users size={11} />
@@ -128,7 +169,7 @@ export default function TeamBookings() {
                     <span className="capitalize">{booking.type.replace('-', ' ')}</span>
                   </div>
 
-                  {booking.employees.length > 0 && (
+                  {booking.employees && booking.employees.length > 0 && (
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                       {booking.employees.slice(0, 3).map((eId: string) => (
                         <span key={eId} className="text-[11px] bg-eucalyptus/15 text-moss px-2 py-0.5 rounded-full">
@@ -136,7 +177,7 @@ export default function TeamBookings() {
                         </span>
                       ))}
                       {booking.employees.length > 3 && (
-                        <span className="text-[11px] text-moss">+{booking.employees.length - 3}</span>
+                        <span className="text-[11px] text-moss font-semibold">+{booking.employees.length - 3}</span>
                       )}
                     </div>
                   )}
@@ -145,8 +186,8 @@ export default function TeamBookings() {
                     <span className="font-semibold text-soot">SAR {booking.totalPrice.toLocaleString()}</span>
                     {booking.status === 'active' && (
                       <button
-                        onClick={e => { e.stopPropagation(); setSelectedBooking(booking); setCancelModal(true); }}
-                        className="text-xs text-red-500 hover:underline"
+                        onClick={(e) => { e.stopPropagation(); setSelectedBooking(booking); setCancelModal(true); }}
+                        className="text-xs text-red-500 hover:underline cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -190,8 +231,8 @@ export default function TeamBookings() {
                   <span className="text-soot font-medium">{r.v}</span>
                 </div>
               ))}
-              {selectedBooking.employees.length > 0 && (
-                <div>
+              {selectedBooking.employees && selectedBooking.employees.length > 0 && (
+                <div className="pt-1">
                   <div className="text-moss mb-1.5">Assigned team</div>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedBooking.employees.map(eId => (
@@ -211,7 +252,7 @@ export default function TeamBookings() {
             {selectedBooking.status === 'active' && (
               <button
                 onClick={() => { setDetailsModal(false); setCancelModal(true); }}
-                className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-medium flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <X size={14} />
                 Cancel booking

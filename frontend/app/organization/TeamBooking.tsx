@@ -14,7 +14,16 @@ export default function TeamBooking() {
 
   const [step, setStep] = useState(0);
   const [bookingType, setBookingType] = useState<BookingType>('hot-desk');
+  
+  // خاصية حجز الساعات للقاعات وغرف الاجتماعات
+  const isHourlySpace =
+    space?.type === 'theater' ||
+    space?.type === 'meeting-room' ||
+    bookingType === 'meeting-room';
+
   const [plan, setPlan] = useState<BookingPlan>((nav.params?.plan as BookingPlan) || 'monthly');
+  const [selectedPackageId, setSelectedPackageId] = useState(space?.bookingPackages?.[0]?.id || 'default-hourly');
+  const [bookingHours, setBookingHours] = useState(1);
   const [seats, setSeats] = useState(1);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [startDate, setStartDate] = useState('');
@@ -34,13 +43,28 @@ export default function TeamBooking() {
     return d.toISOString().split('T')[0];
   };
 
-  const endDate = plan === 'daily'
-   ? manualEndDate
-   : getEndDate(startDate, plan);
+  const endDate = isHourlySpace
+    ? startDate
+    : plan === 'daily'
+    ? manualEndDate
+    : getEndDate(startDate, plan);
+
+  const availablePackages = isHourlySpace && space.bookingPackages?.length
+    ? space.bookingPackages
+    : isHourlySpace
+      ? [{ id: 'default-hourly', name: 'Hourly booking', period: 'day' as const, hours: 8, price: space.pricing.daily }]
+      : [];
+  const selectedPackage = availablePackages.find(pkg => pkg.id === selectedPackageId) || availablePackages[0];
+
   const planInfo = getEffectiveSpacePrice(currentUser, space, plan, bookingType);
-  const pricePerSeat = planInfo.effectivePrice;
+  const pricePerSeat = isHourlySpace && selectedPackage
+    ? (selectedPackage.price / selectedPackage.hours) * bookingHours
+    : planInfo.effectivePrice;
+
   const totalPrice = pricePerSeat * seats;
-  const planLabel = plan === 'daily' ? '/day' : plan === 'monthly' ? '/month' : '/year';
+  const planLabel = isHourlySpace
+    ? `${bookingHours} hour${bookingHours > 1 ? 's' : ''}`
+    : plan === 'daily' ? '/day' : plan === 'monthly' ? '/month' : '/year';
 
   const toggleEmployee = (id: string) => {
     setSelectedEmployees(prev =>
@@ -60,6 +84,8 @@ export default function TeamBooking() {
         spaceImage: space.images[0],
         type: bookingType,
         plan,
+        bookingPackageId: isHourlySpace ? selectedPackageId : undefined,
+        bookingHours: isHourlySpace ? bookingHours : undefined,
         startDate,
         endDate,
         seats,
@@ -98,10 +124,11 @@ export default function TeamBooking() {
             <div className="space-y-2 text-sm">
               {[
                 { l: 'Type', v: bookingType.replace('-', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) },
-                { l: 'Plan', v: plan.charAt(0).toUpperCase() + plan.slice(1) },
+                { l: 'Plan / Mode', v: isHourlySpace ? 'Hourly Team Package' : `${plan.charAt(0).toUpperCase() + plan.slice(1)} Pass` },
                 { l: 'Team size', v: `${seats} seats` },
                 { l: 'Start', v: startDate },
-                ...(plan !== 'daily' ? [{ l: 'End', v: endDate }] : []),
+                ...(!isHourlySpace && plan !== 'daily' && endDate ? [{ l: 'End', v: endDate }] : []),
+                ...(isHourlySpace ? [{ l: 'Duration', v: `${bookingHours} hour${bookingHours > 1 ? 's' : ''}` }] : []),
               ].map(r => (
                 <div key={r.l} className="flex justify-between">
                   <span className="text-moss">{r.l}</span>
@@ -178,7 +205,7 @@ export default function TeamBooking() {
               <button
                 key={t.type}
                 onClick={() => setBookingType(t.type)}
-                className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${bookingType === t.type ? 'border-eucalyptus bg-eucalyptus/8' : 'border-soot/10 bg-white hover:border-eucalyptus/40'}`}
+                className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left cursor-pointer ${bookingType === t.type ? 'border-eucalyptus bg-eucalyptus/8' : 'border-soot/10 bg-white hover:border-eucalyptus/40'}`}
               >
                 <div>
                   <div className="font-medium text-soot">{t.label}</div>
@@ -189,26 +216,57 @@ export default function TeamBooking() {
             ))}
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-soot mb-3">Select plan</h3>
-            <div className="grid grid-cols-3 gap-2">
-              {(['daily', 'monthly', 'yearly'] as BookingPlan[]).map(p => {
-                const pInfo = getEffectiveSpacePrice(currentUser, space, p, bookingType);
-                return (
+          {/* اختيار الباقة بالساعات أو الخطط الدورية */}
+          {isHourlySpace ? (
+            <div className="mb-6 rounded-xl bg-[#EAF1F5] border border-[#B3C9D6] p-4">
+              <h3 className="text-sm font-semibold text-soot mb-3">Choose hourly package</h3>
+              <div className="space-y-2">
+                {availablePackages.map(pkg => (
                   <button
-                    key={p}
-                    onClick={() => setPlan(p)}
-                    className={`py-3 px-2 rounded-xl border text-center transition-all ${plan === p ? 'bg-soot text-plaster border-soot' : 'border-soot/10 text-moss hover:border-soot/30'}`}
+                    key={pkg.id}
+                    type="button"
+                    onClick={() => { setSelectedPackageId(pkg.id); setBookingHours(1); }}
+                    className={`w-full flex justify-between items-center p-3 rounded-lg border text-left cursor-pointer ${selectedPackageId === pkg.id ? 'border-eucalyptus bg-white shadow-xs' : 'border-soot/10 bg-white/60 hover:bg-white'}`}
                   >
-                    <div className="text-xs font-medium capitalize">{p}</div>
-                    <div className={`text-[10px] mt-0.5 ${plan === p ? 'text-plaster/70' : 'text-moss/60'}`}>
-                      {pInfo.isCovered ? 'Included' : `SAR ${pInfo.effectivePrice.toLocaleString()}/seat`}
-                    </div>
+                    <span>
+                      <span className="block text-sm font-medium text-soot">{pkg.name}</span>
+                      <span className="block text-xs text-moss">Up to {pkg.hours} hours per {pkg.period}</span>
+                    </span>
+                    <span className="text-sm font-semibold text-soot">SAR {pkg.price.toLocaleString()}</span>
                   </button>
-                );
-              })}
+                ))}
+              </div>
+              {selectedPackage && (
+                <div className="flex items-center gap-3 mt-3">
+                  <span className="text-sm text-soot">Hours to book:</span>
+                  <button type="button" onClick={() => setBookingHours(h => Math.max(1, h - 1))} className="w-8 h-8 rounded-lg border border-soot/12 bg-white">−</button>
+                  <span className="font-semibold text-soot">{bookingHours}</span>
+                  <button type="button" onClick={() => setBookingHours(h => Math.min(selectedPackage.hours, h + 1))} className="w-8 h-8 rounded-lg border border-soot/12 bg-white">+</button>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-soot mb-3">Select plan</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {(['daily', 'monthly', 'yearly'] as BookingPlan[]).map(p => {
+                  const pInfo = getEffectiveSpacePrice(currentUser, space, p, bookingType);
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPlan(p)}
+                      className={`py-3 px-2 rounded-xl border text-center transition-all cursor-pointer ${plan === p ? 'bg-soot text-plaster border-soot' : 'border-soot/10 text-moss hover:border-soot/30'}`}
+                    >
+                      <div className="text-xs font-medium capitalize">{p}</div>
+                      <div className={`text-[10px] mt-0.5 ${plan === p ? 'text-plaster/70' : 'text-moss/60'}`}>
+                        {pInfo.isCovered ? 'Included' : `SAR ${pInfo.effectivePrice.toLocaleString()}/seat`}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-medium text-moss mb-2 flex items-center gap-1.5">
@@ -216,9 +274,9 @@ export default function TeamBooking() {
               Number of seats
             </label>
             <div className="flex items-center gap-3">
-              <button onClick={() => setSeats(s => Math.max(1, s - 1))} className="w-9 h-9 rounded-xl border border-soot/12 text-soot hover:bg-soot/5">−</button>
+              <button onClick={() => setSeats(s => Math.max(1, s - 1))} className="w-9 h-9 rounded-xl border border-soot/12 text-soot hover:bg-soot/5 cursor-pointer">−</button>
               <span className="text-soot font-semibold w-8 text-center">{seats}</span>
-              <button onClick={() => setSeats(s => Math.min(space.availableCapacity, s + 1))} className="w-9 h-9 rounded-xl border border-soot/12 text-soot hover:bg-soot/5">+</button>
+              <button onClick={() => setSeats(s => Math.min(space.availableCapacity, s + 1))} className="w-9 h-9 rounded-xl border border-soot/12 text-soot hover:bg-soot/5 cursor-pointer">+</button>
               <span className="text-xs text-moss">max {space.availableCapacity}</span>
             </div>
           </div>
@@ -235,7 +293,7 @@ export default function TeamBooking() {
             <div className="bg-white rounded-2xl border border-soot/8 p-8 text-center">
               <Users size={28} className="text-moss mx-auto mb-3" />
               <div className="text-sm text-moss">No employees added to your organization yet.</div>
-              <button onClick={() => navigate('org-profile')} className="mt-3 text-xs font-medium text-soot hover:underline">Add employees →</button>
+              <button onClick={() => navigate('org-profile')} className="mt-3 text-xs font-medium text-soot hover:underline cursor-pointer">Add employees →</button>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-soot/8 divide-y divide-soot/5">
@@ -247,7 +305,7 @@ export default function TeamBooking() {
                     key={emp.id}
                     onClick={() => { if (!disabled || sel) toggleEmployee(emp.id); }}
                     disabled={disabled && !sel}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${sel ? 'bg-eucalyptus/8' : disabled ? 'opacity-40' : 'hover:bg-soot/3'}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${sel ? 'bg-eucalyptus/8' : disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-soot/3'}`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shrink-0 ${sel ? 'bg-eucalyptus text-soot' : 'bg-eucalyptus/20 text-moss'}`}>
                       {sel ? <Check size={14} /> : emp.name.charAt(0)}
@@ -283,34 +341,49 @@ export default function TeamBooking() {
                 className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
               />
             </div>
-            {startDate && plan === 'daily' && (
-  <div>
-    <label className="block text-xs font-medium text-moss mb-1.5 flex items-center gap-1.5">
-      <Calendar size={13} />
-      End date
-    </label>
 
-    <input
-      type="date"
-      value={manualEndDate}
-      min={startDate}
-      onChange={e => setManualEndDate(e.target.value)}
-      className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
-    />
-  </div>
-)}
+            {startDate && isHourlySpace && (
+              <div>
+                <label className="block text-xs font-medium text-moss mb-1.5 flex items-center gap-1.5">
+                  <Calendar size={13} />
+                  Booking Date (Hourly)
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  disabled
+                  className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/5 text-moss text-sm cursor-not-allowed"
+                />
+                <p className="text-xs text-moss mt-1">Hourly team bookings apply for the chosen date.</p>
+              </div>
+            )}
 
-{startDate && plan !== 'daily' && (
-  <div>
-    <label className="block text-xs font-medium text-moss mb-1.5">
-      End date (auto-calculated)
-    </label>
+            {startDate && !isHourlySpace && plan === 'daily' && (
+              <div>
+                <label className="block text-xs font-medium text-moss mb-1.5 flex items-center gap-1.5">
+                  <Calendar size={13} />
+                  End date
+                </label>
+                <input
+                  type="date"
+                  value={manualEndDate}
+                  min={startDate}
+                  onChange={e => setManualEndDate(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
+                />
+              </div>
+            )}
 
-    <div className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/3 text-soot text-sm">
-      {endDate}
-    </div>
-  </div>
-)}
+            {startDate && !isHourlySpace && plan !== 'daily' && (
+              <div>
+                <label className="block text-xs font-medium text-moss mb-1.5">
+                  End date (auto-calculated)
+                </label>
+                <div className="w-full px-4 py-2.5 rounded-xl border border-soot/8 bg-soot/3 text-soot text-sm">
+                  {endDate}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -322,10 +395,11 @@ export default function TeamBooking() {
           <div className="bg-white rounded-2xl border border-soot/8 p-5 space-y-3 text-sm mb-4">
             {[
               { l: 'Type', v: bookingType.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase()) },
-              { l: 'Plan', v: plan.charAt(0).toUpperCase() + plan.slice(1) },
+              { l: 'Plan / Mode', v: isHourlySpace ? 'Hourly Package' : `${plan.charAt(0).toUpperCase() + plan.slice(1)} Pass` },
               { l: 'Seats', v: seats.toString() },
               { l: 'Start', v: startDate },
-              ...(endDate ? [{ l: 'End', v: endDate }] : []),
+              ...(!isHourlySpace && endDate ? [{ l: 'End', v: endDate }] : []),
+              ...(isHourlySpace ? [{ l: 'Duration', v: `${bookingHours} hour${bookingHours > 1 ? 's' : ''}` }] : []),
               { l: 'Team members', v: selectedEmployees.length > 0 ? `${selectedEmployees.length} assigned` : 'Not specified' },
             ].map(r => (
               <div key={r.l} className="flex justify-between">
@@ -337,14 +411,14 @@ export default function TeamBooking() {
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-soot">Total</span>
                 <div className="text-right">
-                  {planInfo.isCovered ? (
+                  {planInfo.isCovered && !isHourlySpace ? (
                     <>
                       <div className="font-semibold text-soot text-lg">SAR 0</div>
                       <div className="text-xs text-moss font-medium bg-eucalyptus/20 border border-eucalyptus/30 px-2.5 py-0.5 rounded-full inline-block mt-0.5">
                         Corporate Pass Included
                       </div>
                     </>
-                  ) : planInfo.hasDiscount ? (
+                  ) : planInfo.hasDiscount && !isHourlySpace ? (
                     <>
                       <div className="font-semibold text-soot text-lg">SAR {totalPrice.toLocaleString()}</div>
                       <div className="text-xs text-amber-900 font-semibold bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-full inline-block mt-0.5">
@@ -371,44 +445,31 @@ export default function TeamBooking() {
 
       {/* Navigation */}
       <div className="flex gap-3 mt-8">
-        <button onClick={step === 0 ? goBack : () => setStep(s => s - 1)} className="flex-1 py-3 rounded-xl border border-soot/15 text-soot font-medium text-sm">
+        <button onClick={step === 0 ? goBack : () => setStep(s => s - 1)} className="flex-1 py-3 rounded-xl border border-soot/15 text-soot font-medium text-sm cursor-pointer">
           Back
         </button>
         {step < 3 ? (
           <button
-            onClick={() => { if (step === 2 && !startDate) {
-    return;
-  }
-
-  if (step === 2 && plan === 'daily' && !manualEndDate) {
-    return;
-  }
-
-  if (
-    step === 2 &&
-    plan === 'daily' &&
-    manualEndDate < startDate
-  ) {
-    return;
-  }
-
-  setStep(s => s + 1);
-}}
-disabled={
-  step === 2 &&
-  (
-    !startDate ||
-    (plan === 'daily' && !manualEndDate) ||
-    (plan === 'daily' && manualEndDate < startDate)
-  )
-}
-
-            className="btn-primary flex-1 disabled:opacity-50"
+            onClick={() => {
+              if (step === 2 && !startDate) return;
+              if (step === 2 && !isHourlySpace && plan === 'daily' && (!manualEndDate || manualEndDate < startDate)) return;
+              if (step === 2 && isHourlySpace && !selectedPackage) return;
+              setStep(s => s + 1);
+            }}
+            disabled={
+              step === 2 &&
+              (
+                !startDate ||
+                (!isHourlySpace && plan === 'daily' && (!manualEndDate || manualEndDate < startDate)) ||
+                (isHourlySpace && (!selectedPackage || bookingHours > selectedPackage.hours))
+              )
+            }
+            className="btn-primary flex-1 disabled:opacity-50 cursor-pointer"
           >
             Continue
           </button>
         ) : (
-          <button onClick={confirmBooking} disabled={loading} className="btn-primary flex-1 disabled:opacity-60">
+          <button onClick={confirmBooking} disabled={loading} className="btn-primary flex-1 disabled:opacity-60 cursor-pointer">
             {loading ? 'Confirming...' : 'Confirm team booking'}
           </button>
         )}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard } from '@/types/types';
+import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard, Notification } from '@/types/types';
 import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS } from '@/data/data';
 
 interface AppContextType {
@@ -34,6 +34,11 @@ interface AppContextType {
   addBooking: (booking: Omit<Booking, 'id' | 'createdAt'>) => Booking;
   cancelBooking: (id: string) => void;
   updateBookingStatus: (id: string, status: Booking['status']) => void;
+
+  notifications: Notification[];
+  unreadNotificationsCount: number;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
 
   // Users (admin)
   users: User[];
@@ -72,6 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [autobooking, setAutobooking] = useState<Record<string, boolean>>({});
   const [autobookingCard, setAutobookingCard] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<AppContextType['toast']>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Sync state from localStorage after initial client mount to avoid SSR hydration mismatch
   useEffect(() => {
@@ -147,7 +153,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       password,
       role: 'individual',
       phone,
-      avatar: '', // Default generic avatar
+      avatar: '',
       isBlocked: false,
       joinDate: new Date().toISOString().split('T')[0],
       university: '',
@@ -240,7 +246,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString().split('T')[0],
     };
     setBookings(prev => [...prev, newBooking]);
-    // Reduce space capacity
+    
+    setNotifications(prev => [{
+      id: `notification-${Date.now()}`,
+      userId: booking.userId,
+      title: 'Booking confirmed',
+      message: `${booking.spaceName} has been added to your bookings.`,
+      type: 'booking',
+      read: false,
+      createdAt: new Date().toLocaleString(),
+    }, ...prev]);
+
+    // تقليل السعة المتاحة
     setSpaces(prev => prev.map(s =>
       s.id === booking.spaceId
         ? { ...s, availableCapacity: Math.max(0, s.availableCapacity - booking.seats) }
@@ -264,7 +281,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateBookingStatus = (id: string, status: Booking['status']) => {
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+    const booking = bookings.find(b => b.id === id);
+    if (booking) {
+      setNotifications(prev => [{
+        id: `notification-${Date.now()}`,
+        userId: booking.userId,
+        title: `Booking ${status}`,
+        message: `${booking.spaceName} booking status was updated to ${status}.`,
+        type: status === 'cancelled' ? 'cancelled' : 'booking',
+        read: false,
+        createdAt: new Date().toLocaleString(),
+      }, ...prev]);
+    }
   };
+
+  // دوال الإشعارات المشتقة والخاصة بالمستخدم المسجل
+  const userNotifications = currentUser ? notifications.filter(n => n.userId === currentUser.id || currentUser.role === 'admin') : [];
+  const markNotificationRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAllNotificationsRead = () => setNotifications(prev => prev.map(n => userNotifications.some(u => u.id === n.id) ? { ...n, read: true } : n));
 
   const blockUser = (id: string) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, isBlocked: true } : u));
@@ -318,6 +352,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       currentUser, login, signup, logout, setPendingUser, pendingUser,
       spaces, favorites, toggleFavorite, addSpace, updateSpace, toggleSpaceVisibility, deleteSpace,
       bookings, addBooking, cancelBooking, updateBookingStatus,
+      notifications: userNotifications,
+      unreadNotificationsCount: userNotifications.filter(n => !n.read).length,
+      markNotificationRead, markAllNotificationsRead,
       users, blockUser, unblockUser, changeUserRole,
       waitlist, autobooking, autobookingCard, joinWaitlist, enableAutoBooking, disableAutoBooking,
       addPaymentCard,

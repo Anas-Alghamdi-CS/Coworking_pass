@@ -1,7 +1,46 @@
+export type UserRole =
+  | 'individual'
+  | 'organization'
+  | 'provider'
+  | 'admin'
+  | 'B2C'
+  | 'HR_ADMIN'
+  | 'PARTNER_ADMIN'
+  | 'SUPER_ADMIN';
+
 export type BookingStatus = 'active' | 'previous' | 'cancelled';
+
 export type BookingType = 'hot-desk' | 'private-office' | 'meeting-room';
+
 export type BookingPlan = 'daily' | 'monthly' | 'yearly';
-export type SpaceType = 'hot-desk' | 'private-office' | 'meeting-room' | 'mixed';
+
+export type SpaceType =
+  | 'hot-desk'
+  | 'shared-desk'
+  | 'private-office'
+  | 'meeting-room'
+  | 'theater'
+  | 'mixed';
+
+export type BookingMode = 'subscription' | 'hourly';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'booking' | 'cancelled' | 'reminder' | 'info';
+  read: boolean;
+  createdAt: string;
+}
+
+export interface SpaceBookingPackage {
+  id: string;
+  name: string;
+  period: 'day' | 'month';
+  hours: number;
+  price: number;
+}
 
 export interface SpacePricing {
   daily: number;
@@ -23,6 +62,11 @@ export interface Space {
   totalCapacity: number;
   availableCapacity: number;
   pricing: SpacePricing;
+
+  // باقات الحجز بالساعات (من كودهم)
+  bookingMode?: BookingMode;
+  bookingPackages?: SpaceBookingPackage[];
+
   rating: number;
   reviewCount: number;
   isVisible: boolean;
@@ -30,7 +74,7 @@ export interface Space {
   openHours: string;
   phone: string;
   email: string;
-  ownerId?: string; // id of the provider (User with role 'provider') who owns/manages this space
+  ownerId?: string; // id of the provider who owns/manages this space
   status?: 'published' | 'draft' | 'hidden';
 }
 
@@ -49,8 +93,6 @@ export interface PaymentCard {
   expiry: string; // MM/YY
 }
 
-export type UserRole = 'individual' | 'organization' | 'provider' | 'admin' | 'B2C' | 'HR_ADMIN' | 'PARTNER_ADMIN' | 'SUPER_ADMIN';
-
 export interface User {
   id: string;
   name: string;
@@ -65,20 +107,20 @@ export interface User {
   username?: string;
   university?: string;
   bio?: string;
-  companyId?: string; // FK to COMPANIES for B2B employees
-  orgName?: string; // COMPANIES.name
-  orgSize?: number; // total_passes_purchased
+  companyId?: string;
+  orgName?: string;
+  orgSize?: number;
   employees?: Employee[];
   orgDescription?: string;
   website?: string;
   industry?: string;
   savedCards?: PaymentCard[];
-  businessName?: string; // PARTNERS.brand_name
+  businessName?: string;
   crNumber?: string;
   city?: string;
   businessDescription?: string;
-  revenueShare?: number; // PARTNERS.revenue_share_percentage
-  hasActivePass?: boolean; // All-Access Pass membership status
+  revenueShare?: number;
+  hasActivePass?: boolean;
   membershipTier?: 'All-Access Pass' | 'Pro Pass' | 'Basic Pass' | 'Enterprise Pass' | string;
 }
 
@@ -106,7 +148,7 @@ export function getEffectiveSpacePrice(
   deskType?: BookingType | SpaceType
 ): PlanPricingResult {
   const originalPrice = space?.pricing?.[planType] ?? 100;
-  
+
   if (!user) {
     return {
       isCovered: false,
@@ -117,7 +159,6 @@ export function getEffectiveSpacePrice(
     };
   }
 
-  // Determine user's active membership tier
   const tier: MembershipTier = user.membershipTier
     ? (user.membershipTier.toLowerCase().includes('enterprise') ? 'enterprise'
         : user.membershipTier.toLowerCase().includes('all-access') ? 'all-access'
@@ -128,7 +169,6 @@ export function getEffectiveSpacePrice(
 
   const targetType = deskType || space.type;
 
-  // 1. Enterprise / B2B Corporate Pass: All spaces & desk types 100% included
   if (tier === 'enterprise') {
     return {
       isCovered: true,
@@ -140,10 +180,9 @@ export function getEffectiveSpacePrice(
     };
   }
 
-  // 2. All-Access Pass: Hot desks, meeting rooms, mixed covered 100%. Private offices 70% discount / 30% upgrade price.
   if (tier === 'all-access') {
     if (targetType === 'private-office') {
-      const effectivePrice = Math.round(originalPrice * 0.3); // 70% off
+      const effectivePrice = Math.round(originalPrice * 0.3);
       return {
         isCovered: false,
         effectivePrice,
@@ -163,9 +202,8 @@ export function getEffectiveSpacePrice(
     };
   }
 
-  // 3. Pro Pass: Hot desk & mixed covered 100% for daily & monthly. Meeting rooms & private offices get 50% discount.
   if (tier === 'pro') {
-    if (targetType === 'hot-desk' || targetType === 'mixed') {
+    if (targetType === 'hot-desk' || targetType === 'mixed' || targetType === 'shared-desk') {
       if (planType === 'daily' || planType === 'monthly') {
         return {
           isCovered: true,
@@ -177,7 +215,7 @@ export function getEffectiveSpacePrice(
         };
       }
     }
-    const effectivePrice = Math.round(originalPrice * 0.5); // 50% off
+    const effectivePrice = Math.round(originalPrice * 0.5);
     return {
       isCovered: false,
       effectivePrice,
@@ -188,9 +226,8 @@ export function getEffectiveSpacePrice(
     };
   }
 
-  // 4. Basic Pass: Hot desk daily covered 100%.
   if (tier === 'basic') {
-    if (targetType === 'hot-desk' && planType === 'daily') {
+    if ((targetType === 'hot-desk' || targetType === 'shared-desk') && planType === 'daily') {
       return {
         isCovered: true,
         effectivePrice: 0,
@@ -202,7 +239,6 @@ export function getEffectiveSpacePrice(
     }
   }
 
-  // 5. Default / No Pass
   return {
     isCovered: false,
     effectivePrice: originalPrice,
@@ -222,13 +258,18 @@ export interface Booking {
   spaceImage: string;
   type: BookingType;
   plan: BookingPlan;
+
+  // الحقول الخاصة بحجز الساعات
+  bookingPackageId?: string;
+  bookingHours?: number;
+
   startDate: string;
   endDate: string;
   seats: number;
   employees: string[];
   totalPrice: number;
   status: BookingStatus;
-  createdAt: string;
+  createdAt?: string;
   notes?: string;
 }
 
@@ -237,10 +278,11 @@ export type Screen =
   | 'browse'
   | 'space-details'
   | 'pricing'
-  | 'contact' 
+  | 'contact'
   | 'login'
   | 'signup'
   | 'choose-type'
+  | 'forgot-password'
   | 'ind-dashboard'
   | 'booking-flow'
   | 'booking-confirm'
@@ -269,7 +311,8 @@ export type Screen =
   | 'provider-spaces'
   | 'provider-bookings'
   | 'provider-profile'
-  | 'provider-settings';
+  | 'provider-settings'
+  | 'notifications';
 
 export interface NavState {
   screen: Screen;

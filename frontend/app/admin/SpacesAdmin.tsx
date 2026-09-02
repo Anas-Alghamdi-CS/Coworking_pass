@@ -18,7 +18,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Space } from '@/types/types';
+import { Space, SpaceBookingPackage } from '@/types/types';
 
 const AMENITY_OPTIONS = [
   'WiFi',
@@ -36,11 +36,14 @@ const AMENITY_OPTIONS = [
 
 const CITIES = ['Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah', 'Makkah'];
 const TYPES: { value: Space['type']; label: string }[] = [
-  { value: 'hot-desk', label: 'Hot Desk' },
+  { value: 'hot-desk', label: 'Shared Desks / Hot Desks' },
   { value: 'private-office', label: 'Private Office' },
-  { value: 'meeting-room', label: 'Meeting Room' },
+  { value: 'meeting-room', label: 'Meeting Rooms' },
+  { value: 'theater' as Space['type'], label: 'Theaters / Auditoriums' },
   { value: 'mixed', label: 'Mixed Space' },
 ];
+
+const isHourlyType = (type?: string) => type === 'theater' || type === 'meeting-room';
 
 const emptyForm = (): Partial<Space> => ({
   name: '',
@@ -48,6 +51,8 @@ const emptyForm = (): Partial<Space> => ({
   address: '',
   description: '',
   type: 'mixed',
+  bookingMode: 'subscription',
+  bookingPackages: [],
   amenities: [],
   totalCapacity: 20,
   availableCapacity: 20,
@@ -156,6 +161,45 @@ export default function SpacesAdmin() {
     setSaved(false);
   };
 
+  const handleTypeChange = (type: Space['type']) => {
+    const hourly = isHourlyType(type);
+    setForm((prev) => ({
+      ...prev,
+      type,
+      bookingMode: hourly ? 'hourly' : 'subscription',
+      bookingPackages: hourly
+        ? (prev.bookingPackages?.length
+            ? prev.bookingPackages
+            : [{ id: `package-${Date.now()}`, name: '2 hours per day', period: 'day', hours: 2, price: 100 }])
+        : [],
+    }));
+  };
+
+  const updatePackage = (index: number, updates: Partial<SpaceBookingPackage>) => {
+    setForm((prev) => {
+      const packages = [...(prev.bookingPackages || [])];
+      packages[index] = { ...packages[index], ...updates };
+      return { ...prev, bookingPackages: packages };
+    });
+  };
+
+  const addPackage = () => {
+    setForm((prev) => ({
+      ...prev,
+      bookingPackages: [
+        ...(prev.bookingPackages || []),
+        { id: `package-${Date.now()}`, name: '', period: 'day', hours: 2, price: 0 },
+      ],
+    }));
+  };
+
+  const removePackage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      bookingPackages: (prev.bookingPackages || []).filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSave = () => {
     if (!form.name || !form.city || !form.address) return;
     if (editingSpace) {
@@ -229,7 +273,7 @@ export default function SpacesAdmin() {
         </button>
       </div>
 
-      {/* Premium Elevated Stats Cards */}
+      {/* Elevated Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
@@ -354,7 +398,7 @@ export default function SpacesAdmin() {
         </div>
       </div>
 
-      {/* Harmonized Table Layout with Clickable Rows */}
+      {/* Table Layout */}
       <div className="bg-plaster-surface rounded-3xl border border-soot/10 overflow-hidden shadow-2xs relative z-10">
         <div className="hidden md:grid grid-cols-12 gap-6 px-6 py-4 border-b border-soot/10 text-xs font-semibold uppercase tracking-wider text-moss bg-plaster-dark/40 items-center">
           <div className="col-span-5">Space Name</div>
@@ -434,8 +478,14 @@ export default function SpacesAdmin() {
 
                 {/* Daily Price */}
                 <div className="col-span-2 mt-3 md:mt-0 text-sm font-semibold text-soot">
-                  SAR {space.pricing.daily.toLocaleString()}
-                  <span className="text-xs text-moss font-normal ml-1">/ day</span>
+                  {isHourlyType(space.type) ? (
+                    <span className="text-xs text-moss">Flexible hourly</span>
+                  ) : (
+                    <>
+                      SAR {space.pricing.daily.toLocaleString()}
+                      <span className="text-xs text-moss font-normal ml-1">/ day</span>
+                    </>
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -479,7 +529,7 @@ export default function SpacesAdmin() {
         )}
       </div>
 
-      {/* Modern Add / Edit Workspace Modal */}
+      {/* Add / Edit Workspace Modal */}
       {editModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           <div
@@ -574,11 +624,11 @@ export default function SpacesAdmin() {
                     />
                   </div>
 
-                  {/* Expanded Description */}
+                  {/* Description */}
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-soot mb-1.5">Description</label>
                     <textarea
-                      rows={4}
+                      rows={3}
                       value={form.description || ''}
                       onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                       placeholder="Write a comprehensive description about the workspace, ambiance, facilities, and unique perks..."
@@ -586,7 +636,7 @@ export default function SpacesAdmin() {
                     />
                   </div>
 
-                  {/* Custom Styled Workspace Type Dropdown */}
+                  {/* Custom Workspace Type Dropdown */}
                   <div className="relative" ref={modalTypeRef}>
                     <label className="block text-xs font-semibold text-soot mb-1.5">Workspace Type</label>
                     <button
@@ -607,7 +657,7 @@ export default function SpacesAdmin() {
                             key={t.value}
                             type="button"
                             onClick={() => {
-                              setForm((p) => ({ ...p, type: t.value }));
+                              handleTypeChange(t.value);
                               setModalTypeOpen(false);
                             }}
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors ${
@@ -640,28 +690,109 @@ export default function SpacesAdmin() {
                 </div>
               </div>
 
-              {/* Pricing Section */}
-              <div className="space-y-3 pt-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
-                  Pricing Plans (SAR)
+              {/* Booking System / Hourly Packages (الزيادة من كودهم بتصميم متناسق) */}
+              <div className="rounded-2xl border border-soot/12 bg-plaster-dark/40 p-4 space-y-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-moss block">
+                  Booking Mode & Packages
                 </span>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['daily', 'monthly', 'yearly'] as const).map((plan) => (
-                    <div key={plan} className="space-y-1">
-                      <span className="block text-[10px] font-bold text-moss uppercase tracking-wider">{plan}</span>
-                      <input
-                        type="number"
-                        value={form.pricing?.[plan] || 0}
-                        onChange={(e) => setPrice(plan, +e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-soot/15 bg-white text-soot text-sm font-semibold outline-none focus:border-soot shadow-2xs"
-                      />
+                {isHourlyType(form.type) ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-moss">
+                      Theaters and meeting rooms use hourly booking packages.
+                    </p>
+                    <div className="space-y-2">
+                      {(form.bookingPackages || []).map((pkg, index) => (
+                        <div key={pkg.id} className="grid sm:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 items-end bg-white p-2.5 rounded-xl border border-soot/10">
+                          <div>
+                            <label className="block text-[10px] font-medium text-moss mb-1">Package name</label>
+                            <input
+                              value={pkg.name}
+                              onChange={(e) => updatePackage(index, { name: e.target.value })}
+                              placeholder="e.g. 2 hours per day"
+                              className="w-full px-2.5 py-1.5 rounded-lg border border-soot/12 text-xs outline-none focus:border-soot"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-medium text-moss mb-1">Period</label>
+                            <select
+                              value={pkg.period}
+                              onChange={(e) => updatePackage(index, { period: e.target.value as 'day' | 'month' })}
+                              className="w-full px-2 py-1.5 rounded-lg border border-soot/12 text-xs outline-none bg-white"
+                            >
+                              <option value="day">Per day</option>
+                              <option value="month">Per month</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-medium text-moss mb-1">Hours</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={pkg.hours}
+                              onChange={(e) => updatePackage(index, { hours: +e.target.value })}
+                              className="w-full px-2 py-1.5 rounded-lg border border-soot/12 text-xs outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-medium text-moss mb-1">Price SAR</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={pkg.price}
+                              onChange={(e) => updatePackage(index, { price: +e.target.value })}
+                              className="w-full px-2 py-1.5 rounded-lg border border-soot/12 text-xs outline-none"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePackage(index)}
+                            className="p-2 text-moss hover:text-red-600 transition-colors"
+                            title="Remove package"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                    <button
+                      type="button"
+                      onClick={addPackage}
+                      className="text-xs font-semibold text-soot hover:underline cursor-pointer block pt-1"
+                    >
+                      + Add hourly package
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-moss">
+                    Shared desks and private offices support standard subscription pricing (Daily, Monthly, Yearly).
+                  </p>
+                )}
               </div>
 
+              {/* Standard Pricing Section */}
+              {!isHourlyType(form.type) && (
+                <div className="space-y-3 pt-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
+                    Pricing Plans (SAR)
+                  </span>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(['daily', 'monthly', 'yearly'] as const).map((plan) => (
+                      <div key={plan} className="space-y-1">
+                        <span className="block text-[10px] font-bold text-moss uppercase tracking-wider">{plan}</span>
+                        <input
+                          type="number"
+                          value={form.pricing?.[plan] || 0}
+                          onChange={(e) => setPrice(plan, +e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-soot/15 bg-white text-soot text-sm font-semibold outline-none focus:border-soot shadow-2xs"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Amenities */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-1">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
                   Available Amenities
                 </span>
@@ -686,8 +817,8 @@ export default function SpacesAdmin() {
                 </div>
               </div>
 
-              {/* Workspace Photos Section */}
-              <div className="space-y-3 pt-2">
+              {/* Photos Section */}
+              <div className="space-y-3 pt-1">
                 <div className="flex items-center justify-between border-b border-soot/10 pb-1.5">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-moss">
                     Workspace Photos & Images
@@ -709,12 +840,11 @@ export default function SpacesAdmin() {
                   />
                 </div>
 
-                {/* Add Image via URL */}
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={imageUrlInput}
-                    onChange={e => setImageUrlInput(e.target.value)}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
                     placeholder="Or paste image URL (e.g. https://...)"
                     className="flex-1 px-3.5 py-2 rounded-xl border border-soot/15 bg-white text-soot text-xs outline-none focus:border-soot shadow-2xs"
                   />
@@ -727,7 +857,6 @@ export default function SpacesAdmin() {
                   </button>
                 </div>
 
-                {/* Images Preview Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                   {(form.images || []).map((imgUrl, idx) => (
                     <div

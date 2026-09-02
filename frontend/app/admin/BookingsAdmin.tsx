@@ -68,7 +68,11 @@ export default function BookingsAdmin() {
       if (filterPlan && b.plan !== filterPlan) return false;
       return true;
     })
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
 
   const activeCount = bookings.filter((b) => b.status === 'active').length;
   const previousCount = bookings.filter((b) => b.status === 'previous').length;
@@ -113,7 +117,7 @@ export default function BookingsAdmin() {
             badge: 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30',
             pct: `${Math.round((activeCount / (bookings.length || 1)) * 100)}%`,
             icon: Clock,
-            iconBg: 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30',
+            iconBg: 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30',
           },
           {
             label: 'Completed Visits',
