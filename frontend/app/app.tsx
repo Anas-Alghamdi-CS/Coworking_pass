@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard, Search, CalendarDays, User, Settings, LogOut,
-  Building2, Users, BarChart3, BookOpen, Menu, X, ChevronRight,
+  Building2, Users, BarChart3, BookOpen, ChevronRight,
   Briefcase, AlertCircle
 } from 'lucide-react';
 import { Screen, UserRole } from '@/types/types';
@@ -92,24 +92,25 @@ const adminNav: NavItem[] = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, navigate, logout, nav } = useApp();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   if (!currentUser) return <>{children}</>;
 
-  const navItems = currentUser.role === 'admin' ? adminNav
-    : currentUser.role === 'organization' ? orgNav
-    : currentUser.role === 'provider' ? providerNav
+  const role = currentUser.role;
+
+  const navItems = role === 'admin' ? adminNav
+    : role === 'organization' ? orgNav
+    : role === 'provider' ? providerNav
     : individualNav;
 
-  const dashboardScreen: Screen = currentUser.role === 'admin' ? 'admin-dashboard'
-    : currentUser.role === 'organization' ? 'org-dashboard'
-    : currentUser.role === 'provider' ? 'provider-dashboard'
+  const dashboardScreen: Screen = role === 'admin' ? 'admin-dashboard'
+    : role === 'organization' ? 'org-dashboard'
+    : role === 'provider' ? 'provider-dashboard'
     : 'ind-dashboard';
 
-  const profileScreen: Screen = currentUser.role === 'admin' ? 'admin-settings'
-    : currentUser.role === 'organization' ? 'org-profile'
-    : currentUser.role === 'provider' ? 'provider-profile'
+  const profileScreen: Screen = role === 'admin' ? 'admin-settings'
+    : role === 'organization' ? 'org-profile'
+    : role === 'provider' ? 'provider-profile'
     : 'ind-profile';
 
   const isActive = (item: NavItem) => {
@@ -122,169 +123,116 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return false;
   };
 
-  const handleProfileClick = () => {
-    navigate(profileScreen);
-    setMobileOpen(false);
-  };
-
   const handleConfirmLogout = () => {
     setShowLogoutModal(false);
     logout();
   };
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-moss text-plaster select-none">
-      {/* Brand Logo */}
-      <div className="px-6 py-6 border-b border-plaster/15">
-        <button
-          type="button"
-          onClick={() => { navigate(dashboardScreen); setMobileOpen(false); }}
-          className="flex items-center gap-3 group cursor-pointer focus:outline-none w-full text-left"
-        >
-          <LogoImage className="w-8 h-8 rounded-xl ring-1 ring-plaster/25 group-hover:scale-105 transition-transform" />
-          <span className="font-semibold text-plaster text-base tracking-tight font-serif-display group-hover:text-plaster-surface transition-colors">
-            Coworking Pass
-          </span>
-        </button>
-      </div>
-
-      {/* Navigation List */}
-      <nav className="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
-        {navItems.map(item => {
-          const active = isActive(item);
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.screen}
-              type="button"
-              onClick={() => { navigate(item.screen); setMobileOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
-                active
-                  ? 'bg-plaster-surface text-soot font-semibold shadow-sm'
-                  : 'text-plaster/85 hover:bg-eucalyptus/30 hover:text-plaster hover:translate-x-0.5'
-              }`}
-            >
-              <Icon size={18} className={active ? 'text-soot' : 'text-plaster/75'} />
-              <span>{item.label}</span>
-              {active && <ChevronRight size={14} className="ml-auto text-soot" />}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* User Profile Footer */}
-      <div className="px-3.5 pb-5 pt-3 mt-auto border-t border-plaster/15 space-y-1.5 bg-black/10">
-        <button
-          type="button"
-          onClick={handleProfileClick}
-          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-eucalyptus/25 transition-all duration-200 text-left group cursor-pointer"
-          title="Click to view and edit your profile"
-        >
-          <div className="relative">
-            <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-plaster group-hover:ring-plaster-surface transition-all shrink-0"
-            />
-            <div className="absolute inset-0 rounded-full bg-soot/0 group-hover:bg-soot/20 transition-colors flex items-center justify-center">
-              <User size={12} className="text-plaster opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-plaster truncate group-hover:text-plaster-surface transition-colors">
-              {currentUser.name}
-            </div>
-            <div className="text-[11px] text-plaster/75 capitalize truncate">
-              {currentUser.role} Account
-            </div>
-          </div>
-          <ChevronRight size={13} className="text-plaster/60 group-hover:text-plaster group-hover:translate-x-0.5 transition-all" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setShowLogoutModal(true)}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-plaster/80 hover:bg-red-500/20 hover:text-white transition-all duration-200 cursor-pointer"
-        >
-          <LogOut size={15} />
-          <span>Log out</span>
-        </button>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="flex min-h-screen bg-plaster text-soot">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-moss h-screen sticky top-0 border-r border-soot/10 shadow-xs z-30">
-        <SidebarContent />
-      </aside>
-
-      {/* Mobile Sidebar Overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-50 lg:hidden bg-soot/60 backdrop-blur-xs"
-          onClick={() => setMobileOpen(false)}
-        >
-          <aside
-            className="w-64 bg-moss h-full shadow-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="absolute top-4 right-4">
-              <button
-                type="button"
-                onClick={() => setMobileOpen(false)}
-                className="p-2 text-plaster hover:text-white rounded-lg hover:bg-eucalyptus/30 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <SidebarContent />
-          </aside>
-        </div>
-      )}
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden sticky top-0 z-40 bg-plaster/95 backdrop-blur-xs border-b border-soot/10 h-15 flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setMobileOpen(true)}
-              className="p-2 rounded-xl hover:bg-plaster-dark text-soot transition-colors cursor-pointer"
-            >
-              <Menu size={22} />
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(dashboardScreen)}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <LogoImage className="w-7 h-7 rounded-lg" />
-              <span className="font-semibold text-soot text-sm tracking-tight font-serif-display">
-                Coworking Pass
-              </span>
-            </button>
-          </div>
-
+    <div className="min-h-screen flex flex-col bg-plaster text-soot">
+      {/* Top Navbar Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-soot/10 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+          
+          {/* Brand Logo without Border */}
           <button
             type="button"
-            onClick={handleProfileClick}
-            className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-moss transition-all cursor-pointer"
-            title="Go to Profile"
+            onClick={() => navigate(dashboardScreen)}
+            className="flex items-center gap-3 cursor-pointer focus:outline-none shrink-0"
           >
-            <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-soot/15"
-            />
+            <LogoImage className="w-10 h-10 object-contain" />
+            <span className="font-serif-display font-normal text-soot text-2xl tracking-tight hidden sm:block">
+              Coworking Pass
+            </span>
           </button>
-        </header>
 
-        <main className="flex-1 bg-plaster p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {children}
-        </main>
-      </div>
+          {/* Centered Navigation Row at Logo Level */}
+          <nav className="hidden lg:flex items-center justify-center gap-1.5 flex-1 mx-4">
+            {navItems.map(item => {
+              const active = isActive(item);
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.screen}
+                  type="button"
+                  onClick={() => navigate(item.screen)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs xl:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                    active
+                      ? 'bg-[#E2E8E4] text-[#2D3536] ring-1 ring-[#2D3536]/15 shadow-2xs'
+                      : 'text-moss hover:text-soot'
+                  }`}
+                >
+                  <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                    <Icon size={17} className={active ? 'text-[#2D3536]' : 'text-moss'} />
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right Controls: Role Tag, Profile, & Logout */}
+          <div className="flex items-center gap-4 shrink-0">
+            <span className="hidden sm:inline-flex text-xs font-semibold uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-soot/5 text-moss border border-soot/10">
+              {role} portal
+            </span>
+
+            <button
+              type="button"
+              onClick={() => navigate(profileScreen)}
+              className="flex items-center gap-3 p-1 sm:px-3 sm:py-1.5 rounded-2xl hover:bg-[#FAF8F5] border border-transparent hover:border-soot/10 transition-all cursor-pointer"
+            >
+              <img
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                className="w-10 h-10 rounded-full object-cover ring-1 ring-soot/15"
+              />
+              <span className="hidden md:block text-sm font-semibold text-soot">
+                {currentUser.name.split(' ')[0]}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              className="p-2.5 rounded-2xl text-moss hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+              title="Log out"
+            >
+              <LogOut size={19} />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile/Tablet Subnav Row */}
+        <div className="lg:hidden border-t border-soot/8 bg-white py-2 px-4 overflow-x-auto scrollbar-none flex items-center gap-2">
+          {navItems.map(item => {
+            const active = isActive(item);
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.screen}
+                type="button"
+                onClick={() => navigate(item.screen)}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
+                  active
+                    ? 'bg-[#E2E8E4] text-[#2D3536] ring-1 ring-[#2D3536]/15 shadow-2xs'
+                    : 'text-moss hover:text-soot'
+                }`}
+              >
+                <span className="w-4 h-4 flex items-center justify-center shrink-0">
+                  <Icon size={15} className={active ? 'text-[#2D3536]' : 'text-moss'} />
+                </span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        {children}
+      </main>
 
       {/* Logout Confirmation Modal */}
       <Modal
