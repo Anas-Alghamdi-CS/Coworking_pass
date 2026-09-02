@@ -79,7 +79,7 @@ export default function Footer() {
               Top Locations
             </h3>
             <ul className="space-y-2.5 text-sm">
-              {['Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah'].map(city => (
+              {['Riyadh', 'Jeddah', 'Makkah', 'Khobar', 'Madinah'].map(city => (
                 <li key={city}>
                   <button
                     onClick={() => navigate('browse', { city })}
