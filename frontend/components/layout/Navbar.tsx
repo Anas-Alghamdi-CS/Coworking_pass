@@ -59,7 +59,6 @@ export default function Navbar() {
       return [
         { label: 'Dashboard', screen: 'org-dashboard' as const },
         { label: 'Workspaces', screen: 'company-workspaces' as const },
-        { label: 'Reports', screen: 'company-reports' as const },
       ];
     }
 
