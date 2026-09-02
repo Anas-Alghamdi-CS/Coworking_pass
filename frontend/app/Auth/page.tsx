@@ -197,13 +197,13 @@ export function LoginScreen() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl font-semibold text-sm bg-soot text-plaster hover:bg-moss active:scale-[0.99] transition-all duration-200 shadow-md flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-70 focus-visible:ring-2 focus-visible:ring-eucalyptus"
+              className="w-full py-3.5 px-6 rounded-full font-medium text-sm bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] active:scale-[0.99] transition-all duration-200 shadow-xs border border-soot/8 flex items-center justify-center gap-2 cursor-pointer mt-3 disabled:opacity-70"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-plaster/30 border-t-plaster rounded-full animate-spin" />
+                <span>Signing in...</span>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Sign in to Dashboard</span>
                   <ArrowRight size={16} />
                 </>
               )}
@@ -611,7 +611,7 @@ export function SignUpScreen() {
 
               <button
                 type="submit"
-                className="w-full py-3.5 px-4 rounded-xl font-semibold text-sm bg-soot text-plaster hover:bg-moss active:scale-[0.99] transition-all duration-200 shadow-md flex items-center justify-center gap-2 cursor-pointer mt-2 focus-visible:ring-2 focus-visible:ring-eucalyptus"
+                className="w-full py-3.5 px-6 rounded-full font-medium text-sm bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] active:scale-[0.99] transition-all duration-200 shadow-xs border border-soot/8 flex items-center justify-center gap-2 cursor-pointer mt-3"
               >
                 <span>Complete Registration & Sign In</span>
                 <ArrowRight size={16} />

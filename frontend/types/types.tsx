@@ -62,6 +62,9 @@ export interface User {
   avatar: string;
   isBlocked: boolean;
   joinDate: string;
+  username?: string;
+  university?: string;
+  bio?: string;
   companyId?: string; // FK to COMPANIES for B2B employees
   orgName?: string; // COMPANIES.name
   orgSize?: number; // total_passes_purchased

@@ -54,23 +54,23 @@ export default function MyBookings() {
       </div>
 
       {/* Tabs */}
-      <div className="inline-flex items-center gap-1.5 bg-white rounded-2xl p-1.5 border border-soot/8 shadow-sm mb-8">
+      <div className="inline-flex items-center gap-2 bg-white rounded-full p-1.5 border border-soot/8 shadow-xs mb-8">
         {TABS.map(tab => {
           const isSelected = activeTab === tab.status;
           return (
             <button
               key={tab.status}
               onClick={() => setActiveTab(tab.status)}
-              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
                 isSelected
-                  ? 'bg-soot text-plaster font-semibold shadow-sm'
+                  ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/6'
                   : 'text-moss hover:text-soot hover:bg-soot/5'
               }`}
             >
               <span>{tab.label}</span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-soot/5 text-moss'
+                  isSelected ? 'bg-white/60 text-soot' : 'bg-soot/5 text-moss'
                 }`}
               >
                 {tabCounts[tab.status]}
@@ -84,10 +84,10 @@ export default function MyBookings() {
       {filtered.length === 0 ? (
         <div className="bg-white rounded-3xl border border-soot/8 p-16 text-center max-w-4xl shadow-sm">
           <Calendar size={38} className="text-moss stroke-[1.5] mx-auto mb-4" />
-          <h3 className="font-semibold text-soot text-lg mb-1">
+          <h3 className="font-medium text-soot text-lg mb-1">
             No {activeTab} bookings
           </h3>
-          <p className="text-sm text-moss mb-6">
+          <p className="text-sm text-moss mb-6 font-normal">
             {activeTab === 'active'
               ? "You don't have any active bookings yet."
               : `No ${activeTab} bookings found in your account history.`}
@@ -95,7 +95,7 @@ export default function MyBookings() {
           {activeTab === 'active' && (
             <button
               onClick={() => navigate('browse')}
-              className="px-6 py-2.5 rounded-xl bg-eucalyptus text-soot text-sm font-semibold hover:bg-eucalyptus-dark transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#DDE6DF] text-soot text-sm font-medium hover:bg-[#D0DDD3] transition-all shadow-xs border border-soot/8 cursor-pointer"
             >
               Browse spaces
             </button>
@@ -244,7 +244,7 @@ export default function MyBookings() {
                     setDetailsModal(false);
                     navigate('space-details', { spaceId: selectedBooking.spaceId });
                   }}
-                  className="flex-1 py-3 rounded-xl bg-soot text-plaster hover:bg-soot-light text-sm font-medium transition-colors"
+                  className="flex-1 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer"
                 >
                   View space details
                 </button>
@@ -257,27 +257,27 @@ export default function MyBookings() {
       {/* Cancel Confirmation Modal */}
       <Modal open={cancelModal} onClose={() => setCancelModal(false)} title="Cancel Booking" size="sm">
         <div className="p-6">
-          <div className="flex items-start gap-3 mb-5">
-            <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
+          <div className="flex items-start gap-3.5 mb-6">
+            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
               <AlertCircle size={20} className="text-red-500" />
             </div>
             <div>
               <p className="text-sm text-soot font-medium mb-1">Are you sure you want to cancel?</p>
-              <p className="text-xs text-moss leading-relaxed">
-                Your reservation at <strong className="text-soot">{selectedBooking?.spaceName}</strong> will be cancelled. This action cannot be undone.
+              <p className="text-xs text-moss leading-relaxed font-normal">
+                Your reservation at <span className="text-soot font-medium">{selectedBooking?.spaceName}</span> will be cancelled. This action cannot be undone.
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               onClick={() => setCancelModal(false)}
-              className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium hover:bg-soot/5 transition-colors"
+              className="flex-1 py-2.5 px-5 rounded-full border border-soot/15 text-soot text-sm font-medium hover:bg-soot/5 transition-colors cursor-pointer"
             >
               Keep booking
             </button>
             <button
               onClick={handleCancel}
-              className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors shadow-sm"
+              className="flex-1 py-2.5 px-5 rounded-full bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors shadow-xs cursor-pointer"
             >
               Yes, cancel
             </button>

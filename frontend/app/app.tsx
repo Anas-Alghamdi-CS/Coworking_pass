@@ -12,6 +12,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import LogoImage from '@/components/layout/logo';
 import Modal from '@/components/ui/Modal';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 // Guest screens
 import Landing from './Landing';
@@ -158,9 +159,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               key={item.screen}
               type="button"
               onClick={() => { navigate(item.screen); setMobileOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
                 active
-                  ? 'bg-plaster-surface text-soot font-semibold shadow-sm'
+                  ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/5 font-medium'
                   : 'text-plaster/85 hover:bg-eucalyptus/30 hover:text-plaster hover:translate-x-0.5'
               }`}
             >
@@ -180,15 +181,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-eucalyptus/25 transition-all duration-200 text-left group cursor-pointer"
           title="Click to view and edit your profile"
         >
-          <div className="relative">
-            <img
+          <div className="relative shrink-0">
+            <UserAvatar
               src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-plaster group-hover:ring-plaster-surface transition-all shrink-0"
+              name={currentUser.name}
+              size="sm"
             />
-            <div className="absolute inset-0 rounded-full bg-soot/0 group-hover:bg-soot/20 transition-colors flex items-center justify-center">
-              <User size={12} className="text-plaster opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-xs font-semibold text-plaster truncate group-hover:text-plaster-surface transition-colors">
@@ -273,10 +271,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-moss transition-all cursor-pointer"
             title="Go to Profile"
           >
-            <img
+            <UserAvatar
               src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-soot/15"
+              name={currentUser.name}
+              size="sm"
             />
           </button>
         </header>

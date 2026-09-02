@@ -5,6 +5,7 @@ import { Building2, Settings, Users, Globe, Phone, Mail, Plus, Trash2, Camera, C
 import { useApp } from '@/app/store';
 import { Employee } from '@/types/types';
 import Modal from '@/components/ui/Modal';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 export default function OrgProfile() {
   const { currentUser, navigate, nav, updateCurrentUser, showToast } = useApp();
@@ -73,17 +74,17 @@ export default function OrgProfile() {
         <p className="text-moss text-sm font-medium">Manage company information, team members, and preferences</p>
       </div>
 
-      {/* Tab Switcher */}
-      <div className="inline-flex items-center gap-1.5 bg-white rounded-2xl p-1.5 border border-soot/8 shadow-sm mb-8">
+      {/* Tab Navigation */}
+      <div className="inline-flex items-center gap-2 bg-white rounded-full p-1.5 border border-soot/8 shadow-xs mb-8">
         <button
           onClick={() => {
             setActiveTab('profile');
             navigate('org-profile');
           }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
             activeTab === 'profile'
-              ? 'bg-soot text-plaster font-semibold shadow-sm'
-              : 'text-moss hover:text-soot'
+              ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/6'
+              : 'text-moss hover:text-soot hover:bg-soot/5'
           }`}
         >
           <Building2 size={16} />
@@ -94,10 +95,10 @@ export default function OrgProfile() {
             setActiveTab('settings');
             navigate('org-settings');
           }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
             activeTab === 'settings'
-              ? 'bg-soot text-plaster font-semibold shadow-sm'
-              : 'text-moss hover:text-soot'
+              ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/6'
+              : 'text-moss hover:text-soot hover:bg-soot/5'
           }`}
         >
           <Settings size={16} />
@@ -109,28 +110,24 @@ export default function OrgProfile() {
         <div className="space-y-8">
           {/* Organization Info Card */}
           <div className="bg-white rounded-3xl border border-soot/8 p-8 shadow-sm">
-            <h2 className="text-xl font-semibold text-soot mb-6" style={{ fontFamily: 'DM Serif Display, serif' }}>
+            <h2 className="text-xl font-normal text-soot mb-6" style={{ fontFamily: 'DM Serif Display, serif' }}>
               Company Details
             </h2>
 
             <div className="flex items-center gap-6 mb-8 pb-6 border-b border-soot/8">
               <div className="relative">
-                <img
+                <UserAvatar
                   src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-20 h-20 rounded-2xl object-cover ring-4 ring-eucalyptus/30 shadow-sm"
+                  name={currentUser.orgName || currentUser.name}
+                  size="xl"
+                  ring={true}
+                  showCameraBadge={true}
                 />
-                <button
-                  className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-soot text-plaster hover:bg-soot-light flex items-center justify-center shadow-md transition-all active:scale-95"
-                  title="Change company logo"
-                >
-                  <Camera size={13} />
-                </button>
               </div>
               <div>
-                <div className="font-semibold text-soot text-xl">{currentUser.orgName || currentUser.name}</div>
-                <div className="text-sm text-moss">{currentUser.email}</div>
-                <div className="inline-block text-xs font-semibold uppercase tracking-wider text-moss bg-eucalyptus/20 px-2.5 py-0.5 rounded-full mt-1.5">
+                <div className="font-medium text-soot text-xl">{currentUser.orgName || currentUser.name}</div>
+                <div className="text-sm text-moss font-normal">{currentUser.email}</div>
+                <div className="inline-block text-xs font-medium text-soot bg-[#DDE6DF] border border-soot/6 px-3 py-0.5 rounded-full mt-1.5">
                   Organization Account • {employees.length} Team Members
                 </div>
               </div>
@@ -138,67 +135,82 @@ export default function OrgProfile() {
 
             <div className="grid sm:grid-cols-2 gap-5 mb-6">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
+                <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-2">
                   Organization Name
                 </label>
                 <input
+                  type="text"
                   value={orgName}
                   onChange={e => setOrgName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white focus:ring-2 focus:ring-eucalyptus/20 font-medium"
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white font-normal"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
+                <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-2">
                   Industry
                 </label>
                 <input
+                  type="text"
                   value={industry}
                   onChange={e => setIndustry(e.target.value)}
-                  placeholder="e.g. Technology"
-                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white focus:ring-2 focus:ring-eucalyptus/20 font-medium"
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white font-normal"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
-                  Team Size
+                <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-2">
+                  Total Team Size
                 </label>
                 <input
                   type="number"
                   value={orgSize}
                   onChange={e => setOrgSize(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white focus:ring-2 focus:ring-eucalyptus/20 font-medium"
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white font-normal"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2 flex items-center gap-1">
-                  <Globe size={13} /> Website URL
+                <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-2">
+                  Phone Number
                 </label>
                 <input
-                  value={website}
-                  onChange={e => setWebsite(e.target.value)}
-                  placeholder="https://company.sa"
-                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white focus:ring-2 focus:ring-eucalyptus/20 font-medium"
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white font-normal"
                 />
               </div>
+
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
+                <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-2">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={e => setWebsite(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white font-normal"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-2">
                   Company Overview
                 </label>
                 <textarea
                   value={orgDescription}
                   onChange={e => setOrgDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white focus:ring-2 focus:ring-eucalyptus/20 resize-none font-medium"
+                  className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-[#F9F8F5] text-soot text-sm outline-none focus:border-eucalyptus focus:bg-white resize-none font-normal"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-2">
               <button
                 onClick={handleSaveProfile}
-                className={`px-8 py-3 rounded-2xl text-sm font-semibold transition-all shadow-sm ${
-                  saved ? 'bg-eucalyptus text-soot' : 'bg-soot text-plaster hover:bg-soot-light'
-                }`}
+                className="px-8 py-3 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] font-medium text-sm transition-all shadow-xs border border-soot/8 cursor-pointer"
               >
                 {saved ? '✓ Saved Changes' : 'Save Changes'}
               </button>
@@ -209,14 +221,14 @@ export default function OrgProfile() {
           <div className="bg-white rounded-3xl border border-soot/8 p-8 shadow-sm">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-soot/8">
               <div>
-                <h2 className="text-xl font-semibold text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>
+                <h2 className="text-xl font-normal text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>
                   Team Members ({employees.length})
                 </h2>
-                <p className="text-moss text-xs mt-0.5">Manage employees who can access booked workspaces</p>
+                <p className="text-moss text-xs mt-0.5 font-normal">Manage employees who can access booked workspaces</p>
               </div>
               <button
                 onClick={() => setAddEmpModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-eucalyptus text-soot text-xs font-semibold hover:bg-eucalyptus-dark transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#DDE6DF] text-soot text-xs font-medium hover:bg-[#D0DDD3] transition-all shadow-xs border border-soot/8 cursor-pointer"
               >
                 <Plus size={14} /> Add Member
               </button>
@@ -337,16 +349,16 @@ export default function OrgProfile() {
               className="w-full px-4 py-3 rounded-xl border border-soot/12 bg-plaster text-soot text-sm outline-none focus:border-eucalyptus font-medium"
             />
           </div>
-          <div className="flex gap-3 pt-3">
+          <div className="flex gap-4 pt-3">
             <button
               onClick={() => setAddEmpModal(false)}
-              className="flex-1 py-3 rounded-xl border border-soot/15 text-soot text-sm font-semibold hover:bg-soot/5 transition-colors"
+              className="flex-1 py-3 px-6 rounded-full border border-soot/15 text-soot text-sm font-medium hover:bg-soot/5 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleAddEmployee}
-              className="flex-1 py-3 rounded-xl bg-soot text-plaster text-sm font-semibold hover:bg-soot-light transition-colors shadow-sm"
+              className="flex-1 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer"
             >
               Add Member
             </button>

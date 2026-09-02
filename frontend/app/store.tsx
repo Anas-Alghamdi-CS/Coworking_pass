@@ -62,11 +62,31 @@ const AppContext = createContext<AppContextType | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [nav, setNav] = useState<NavState>({ screen: 'landing', params: {} });
   const [history, setHistory] = useState<NavState[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('cp_currentUser');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return null;
+  });
   const [pendingUser, setPendingUser] = useState<Partial<User> | null>(null);
   const [spaces, setSpaces] = useState<Space[]>(INITIAL_SPACES);
   const [bookings, setBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<User[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('cp_users');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return INITIAL_USERS;
+  });
   const [favorites, setFavorites] = useState<string[]>(['space-1', 'space-3']);
   const [waitlist, setWaitlist] = useState<Record<string, boolean>>({});
   const [autobooking, setAutobooking] = useState<Record<string, boolean>>({});
@@ -76,7 +96,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const navigate = (screen: Screen, params: Record<string, any> = {}) => {
     setHistory(prev => [...prev.slice(-9), nav]);
     setNav({ screen, params });
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
   };
 
   const goBack = () => {
@@ -97,6 +119,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return { success: false, error: 'Invalid email or password. Please try again.' };
     if (user.isBlocked) return { success: false, error: 'Your account has been suspended. Please contact support.' };
     setCurrentUser(user);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_currentUser', JSON.stringify(user));
+    }
     if (user.role === 'admin') navigate('admin-dashboard');
     else if (user.role === 'organization') navigate('org-dashboard');
     else if (user.role === 'provider') navigate('provider-dashboard');
@@ -105,19 +130,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = (name: string, email: string, password: string, phone: string) => {
+    const generatedUsername = name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '') || `user_${Date.now().toString().slice(-4)}`;
     const newUser: User = {
       id: `user-${Date.now()}`,
       name,
+      username: generatedUsername,
       email,
       password,
       role: 'individual',
       phone,
-      avatar: `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&auto=format`,
+      avatar: '', // Default generic avatar
       isBlocked: false,
       joinDate: new Date().toISOString().split('T')[0],
+      university: '',
+      bio: '',
     };
-    setUsers(prev => [...prev, newUser]);
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
     setPendingUser(newUser);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_users', JSON.stringify(updatedUsers));
+    }
     return newUser;
   };
 
@@ -126,11 +159,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updated: User = {
       ...(pendingUser as User),
       role,
+      avatar: pendingUser.avatar || '',
       ...(extraData || {}),
     };
-    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+    const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
+    setUsers(updatedUsers);
     setCurrentUser(updated);
     setPendingUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_currentUser', JSON.stringify(updated));
+      localStorage.setItem('cp_users', JSON.stringify(updatedUsers));
+    }
     if (role === 'organization') navigate('org-dashboard');
     else if (role === 'provider') navigate('provider-dashboard');
     else navigate('ind-dashboard');
@@ -141,13 +180,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!currentUser) return;
     const updated = { ...currentUser, ...updates };
     setCurrentUser(updated);
-    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
-    showToast('Profile updated.');
+    const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
+    setUsers(updatedUsers);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_currentUser', JSON.stringify(updated));
+      localStorage.setItem('cp_users', JSON.stringify(updatedUsers));
+    }
+    showToast('Profile updated successfully.');
   };
 
   const logout = () => {
     setCurrentUser(null);
     setPendingUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('cp_currentUser');
+    }
     navigate('landing');
     showToast('You have been logged out.', 'info');
   };

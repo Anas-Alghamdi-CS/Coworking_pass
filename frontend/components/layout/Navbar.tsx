@@ -123,10 +123,10 @@ export default function Navbar() {
               <button
                 key={l.screen}
                 onClick={() => navigate(l.screen)}
-                className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-soot/30 cursor-pointer ${
+                className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 focus:outline-none cursor-pointer ${
                   isActive
-                    ? 'bg-soot text-plaster font-semibold shadow-xs ring-1 ring-soot/20'
-                    : 'text-moss hover:text-soot hover:bg-plaster-dark/50 active:scale-98'
+                    ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/6'
+                    : 'text-moss hover:text-soot hover:bg-soot/5 active:scale-98'
                 }`}
               >
                 {l.label}
@@ -229,13 +229,13 @@ export default function Navbar() {
             <>
               <button
                 onClick={() => navigate('login')}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-soot hover:bg-plaster-dark/50 active:scale-98 transition-all duration-200 focus:outline-none cursor-pointer"
+                className="px-5 py-2.5 rounded-full text-sm font-medium text-soot hover:bg-soot/5 active:scale-98 transition-all duration-200 cursor-pointer"
               >
                 Log in
               </button>
               <button
                 onClick={() => navigate('signup')}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-soot text-plaster hover:bg-moss active:scale-98 transition-all duration-200 focus:outline-none cursor-pointer"
+                className="px-6 py-2.5 rounded-full text-sm font-medium bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] border border-soot/8 shadow-xs active:scale-98 transition-all duration-200 cursor-pointer"
               >
                 Sign up
               </button>
