@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard } from '@/types/types';
 import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS } from '@/data/data';
 
@@ -73,10 +73,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [autobookingCard, setAutobookingCard] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<AppContextType['toast']>(null);
 
+  // Sync state from localStorage after initial client mount to avoid SSR hydration mismatch
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('cp_currentUser');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.avatar && (parsed.avatar.includes('images.unsplash.com') || parsed.avatar.includes('admin-avatar'))) {
+          parsed.avatar = '';
+          localStorage.setItem('cp_currentUser', JSON.stringify(parsed));
+        }
+        setCurrentUser(parsed);
+      }
+      const savedUsers = localStorage.getItem('cp_users');
+      if (savedUsers) {
+        const cleanedUsers = (JSON.parse(savedUsers) as User[]).map(u => {
+          if (u.avatar && (u.avatar.includes('images.unsplash.com') || u.avatar.includes('admin-avatar'))) {
+            return { ...u, avatar: '' };
+          }
+          return u;
+        });
+        setUsers(cleanedUsers);
+        localStorage.setItem('cp_users', JSON.stringify(cleanedUsers));
+      }
+    } catch (e) {
+      console.error('Failed to load storage state:', e);
+    }
+  }, []);
+
   const navigate = (screen: Screen, params: Record<string, any> = {}) => {
     setHistory(prev => [...prev.slice(-9), nav]);
     setNav({ screen, params });
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
   };
 
   const goBack = () => {
@@ -97,6 +127,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return { success: false, error: 'Invalid email or password. Please try again.' };
     if (user.isBlocked) return { success: false, error: 'Your account has been suspended. Please contact support.' };
     setCurrentUser(user);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_currentUser', JSON.stringify(user));
+    }
     if (user.role === 'admin') navigate('admin-dashboard');
     else if (user.role === 'organization') navigate('org-dashboard');
     else if (user.role === 'provider') navigate('provider-dashboard');
@@ -105,19 +138,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = (name: string, email: string, password: string, phone: string) => {
+    const generatedUsername = name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '') || `user_${Date.now().toString().slice(-4)}`;
     const newUser: User = {
       id: `user-${Date.now()}`,
       name,
+      username: generatedUsername,
       email,
       password,
       role: 'individual',
       phone,
-      avatar: `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&auto=format`,
+      avatar: '', // Default generic avatar
       isBlocked: false,
       joinDate: new Date().toISOString().split('T')[0],
+      university: '',
+      bio: '',
     };
-    setUsers(prev => [...prev, newUser]);
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
     setPendingUser(newUser);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_users', JSON.stringify(updatedUsers));
+    }
     return newUser;
   };
 
@@ -126,11 +167,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updated: User = {
       ...(pendingUser as User),
       role,
+      avatar: pendingUser.avatar || '',
       ...(extraData || {}),
     };
-    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+    const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
+    setUsers(updatedUsers);
     setCurrentUser(updated);
     setPendingUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_currentUser', JSON.stringify(updated));
+      localStorage.setItem('cp_users', JSON.stringify(updatedUsers));
+    }
     if (role === 'organization') navigate('org-dashboard');
     else if (role === 'provider') navigate('provider-dashboard');
     else navigate('ind-dashboard');
@@ -141,13 +188,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!currentUser) return;
     const updated = { ...currentUser, ...updates };
     setCurrentUser(updated);
-    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
-    showToast('Profile updated.');
+    const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
+    setUsers(updatedUsers);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cp_currentUser', JSON.stringify(updated));
+      localStorage.setItem('cp_users', JSON.stringify(updatedUsers));
+    }
+    showToast('Profile updated successfully.');
   };
 
   const logout = () => {
     setCurrentUser(null);
     setPendingUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('cp_currentUser');
+    }
     navigate('landing');
     showToast('You have been logged out.', 'info');
   };

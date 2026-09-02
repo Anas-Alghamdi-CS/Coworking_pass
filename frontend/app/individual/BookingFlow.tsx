@@ -181,16 +181,16 @@ export default function BookingFlow() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => navigate('my-bookings')}
-              className="flex-1 py-3 rounded-2xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light transition-all shadow-sm"
+              className="flex-1 py-3.5 px-6 rounded-full bg-[#DDE6DF] text-soot font-medium text-sm hover:bg-[#D0DDD3] transition-all shadow-xs border border-soot/8 cursor-pointer"
             >
               View My Bookings
             </button>
             <button
               onClick={() => navigate('browse')}
-              className="flex-1 py-3 rounded-2xl border border-soot/15 text-soot font-semibold text-sm hover:bg-soot/5 transition-all bg-white"
+              className="flex-1 py-3.5 px-6 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white cursor-pointer"
             >
               Browse More Spaces
             </button>
@@ -240,10 +240,10 @@ export default function BookingFlow() {
               <button
                 key={p}
                 onClick={() => setPlan(p)}
-                className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all text-left cursor-pointer ${
+                className={`w-full p-4 sm:p-5 rounded-2xl border text-left transition-all flex items-center justify-between cursor-pointer ${
                   plan === p
-                    ? 'border-eucalyptus bg-[#E5ECE9]/40 shadow-sm'
-                    : 'border-soot/10 bg-white hover:border-eucalyptus/40'
+                    ? 'border-eucalyptus bg-[#E5ECE9]/60 shadow-sm'
+                    : 'border-soot/8 bg-white hover:border-soot/20'
                 }`}
               >
                 <div>
@@ -292,9 +292,10 @@ export default function BookingFlow() {
 
           <button
             onClick={next}
-            className="w-full py-3.5 rounded-2xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light transition-all flex items-center justify-center gap-2 shadow-sm"
+            className="w-full py-3.5 px-6 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] font-medium text-sm transition-all flex items-center justify-center gap-2 shadow-xs border border-soot/8 cursor-pointer"
           >
-            Continue to Details <ChevronRight size={16} />
+            <span>Continue to Details</span>
+            <ChevronRight size={16} />
           </button>
         </div>
       )}
@@ -389,18 +390,19 @@ export default function BookingFlow() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button
               onClick={back}
-              className="flex-1 py-3.5 rounded-2xl border border-soot/15 text-soot font-semibold text-sm hover:bg-soot/5 transition-all bg-white"
+              className="flex-1 py-3.5 px-6 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white cursor-pointer"
             >
               Back
             </button>
             <button
               onClick={next}
-              className="flex-1 py-3.5 rounded-2xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="flex-1 py-3.5 px-6 rounded-full bg-[#DDE6DF] text-soot font-medium text-sm hover:bg-[#D0DDD3] transition-all flex items-center justify-center gap-2 shadow-xs border border-soot/8 cursor-pointer"
             >
-              Review Booking <ChevronRight size={16} />
+              <span>Review Booking</span>
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
@@ -435,23 +437,24 @@ export default function BookingFlow() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button
               onClick={back}
-              className="flex-1 py-3.5 rounded-2xl border border-soot/15 text-soot font-semibold text-sm hover:bg-soot/5 transition-all bg-white"
+              className="flex-1 py-3.5 px-6 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white cursor-pointer"
             >
               Back
             </button>
             <button
               onClick={confirmBooking}
               disabled={loading}
-              className="flex-1 py-3.5 rounded-2xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              className="flex-1 py-3.5 px-6 rounded-full bg-[#DDE6DF] text-soot font-medium text-sm hover:bg-[#D0DDD3] transition-all flex items-center justify-center gap-2 shadow-xs border border-soot/8 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <span>Processing...</span>
               ) : (
                 <>
-                  <CreditCard size={16} /> Pay & Confirm
+                  <CreditCard size={16} />
+                  <span>Pay & Confirm</span>
                 </>
               )}
             </button>

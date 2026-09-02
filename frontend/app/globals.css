@@ -135,49 +135,53 @@ a:active,
   box-shadow: 0 0 0 3px var(--ring-focus);
 }
 
-/* Primary Button */
+/* Primary Pill Button */
 .ui-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  background-color: var(--color-soot);
-  color: var(--color-plaster);
+  padding: 0.65rem 1.35rem;
+  border-radius: 9999px;
+  background-color: #DDE6DF;
+  color: var(--color-soot);
   font-weight: 500;
   font-size: 0.875rem;
+  border: 1px solid rgba(45, 53, 54, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
   cursor: pointer !important;
-  transition: background-color 200ms ease-in-out, transform 150ms ease-in-out;
+  transition: all 200ms ease-in-out;
 }
 
 .ui-btn-primary:hover {
-  background-color: var(--color-moss);
+  background-color: #D0DDD3;
 }
 
 .ui-btn-primary:active {
   transform: scale(0.98);
 }
 
-/* Secondary Button */
+/* Secondary Pill Button */
 .ui-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  background-color: var(--color-plaster-dark);
+  padding: 0.65rem 1.35rem;
+  border-radius: 9999px;
+  background-color: #FFFFFF;
   color: var(--color-soot);
   font-weight: 500;
   font-size: 0.875rem;
+  border: 1px solid rgba(45, 53, 54, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   cursor: pointer !important;
   transition: all 200ms ease-in-out;
 }
 
 .ui-btn-secondary:hover {
-  background-color: var(--color-soot);
-  color: var(--color-plaster);
+  background-color: #F4F6F4;
+  border-color: rgba(45, 53, 54, 0.25);
 }
 
 .ui-btn-secondary:active {
