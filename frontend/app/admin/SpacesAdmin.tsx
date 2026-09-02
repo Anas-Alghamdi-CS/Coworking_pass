@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Building2,
   X,
+  Upload,
 } from 'lucide-react';
 import { useApp } from '@/app/store';
 import { Space } from '@/types/types';
@@ -82,6 +83,40 @@ export default function SpacesAdmin() {
   const [spaceToDelete, setSpaceToDelete] = useState<Space | null>(null);
   const [form, setForm] = useState<Partial<Space>>(emptyForm());
   const [saved, setSaved] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    setForm((p) => ({
+      ...p,
+      images: [...(p.images || []), imageUrlInput.trim()],
+    }));
+    setImageUrlInput('');
+  };
+
+  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setForm((p) => ({
+          ...p,
+          images: [...(p.images || []), reader.result as string],
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setForm((p) => ({
+      ...p,
+      images: (p.images || []).filter((_, idx) => idx !== indexToRemove),
+    }));
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -648,6 +683,68 @@ export default function SpacesAdmin() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Workspace Photos Section */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between border-b border-soot/10 pb-1.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-moss">
+                    Workspace Photos & Images
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-xs font-semibold border border-soot/8 cursor-pointer shadow-2xs"
+                  >
+                    <Upload size={13} />
+                    <span>Upload Photo</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Add Image via URL */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={imageUrlInput}
+                    onChange={e => setImageUrlInput(e.target.value)}
+                    placeholder="Or paste image URL (e.g. https://...)"
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-soot/15 bg-white text-soot text-xs outline-none focus:border-soot shadow-2xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddImageUrl}
+                    className="btn-secondary text-xs px-3.5 py-2"
+                  >
+                    Add URL
+                  </button>
+                </div>
+
+                {/* Images Preview Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                  {(form.images || []).map((imgUrl, idx) => (
+                    <div
+                      key={idx}
+                      className="relative h-24 rounded-2xl overflow-hidden border border-soot/12 group shadow-2xs"
+                    >
+                      <img src={imgUrl} alt={`workspace ${idx}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 cursor-pointer"
+                        title="Remove image"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
