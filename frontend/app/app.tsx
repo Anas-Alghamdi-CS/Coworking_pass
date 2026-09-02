@@ -33,7 +33,6 @@ import OrgDashboard from './organization/Dashboard';
 import TeamBooking from './organization/TeamBooking';
 import TeamBookings from './organization/TeamBookings';
 import OrgProfile from './organization/OrgProfile';
-import AddWorkspace from './organization/AddWorkspace';
 import CompanyBookings from './organization/CompanyBookings';
 import CompanyReports from './organization/CompanyReports';
 import CompanyTeam from './organization/CompanyTeam';
@@ -396,7 +395,7 @@ export function Router() {
       <DashboardLayout>
         {screen === 'org-dashboard' && <OrgDashboard />}
         {screen === 'company-workspaces' && <MyWorkspaces />}
-        {screen === 'company-add-workspace' && <AddWorkspace />}
+        {screen === 'company-add-workspace' && <MyWorkspaces />}
         {screen === 'company-bookings' && <CompanyBookings />}
         {screen === 'company-team' && <CompanyTeam />}
         {screen === 'company-reports' && <CompanyReports />}

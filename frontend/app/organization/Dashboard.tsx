@@ -32,27 +32,20 @@ export default function OrgDashboard() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
-        <div>
-          <p className="text-moss text-sm mb-1">Company dashboard</p>
-          <h1 className="text-3xl text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>
-            {currentUser.orgName || currentUser.name}
-          </h1>
-          <p className="text-moss text-sm mt-1">{currentUser.industry || 'Technology'} · {currentUser.orgSize || 0} employees</p>
-        </div>
-        <button
-          onClick={() => navigate('company-add-workspace')}
-          className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-[#374142] text-[#FAF8F5] text-sm font-medium ring-1 ring-white/15 shadow-sm hover:bg-[#2D3536] transition-all duration-200 active:scale-[0.98] cursor-pointer"
-        >
-          <Plus size={15} />
-          Add workspace
-        </button>
+      <div className="mb-8">
+        <p className="text-moss text-xs sm:text-sm font-normal mb-1">Company dashboard</p>
+        <h1 className="text-3xl sm:text-4xl text-soot font-normal" style={{ fontFamily: 'DM Serif Display, serif' }}>
+          {currentUser.orgName || currentUser.name}
+        </h1>
+        <p className="text-moss text-xs sm:text-sm mt-1 font-normal">
+          {currentUser.industry || 'Technology'} · {currentUser.orgSize || 0} employees
+        </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map(s => (
-          <div key={s.label} className="bg-white rounded-2xl p-5 border border-soot/8">
+          <div key={s.label} className="bg-white rounded-3xl p-5 border border-soot/8 shadow-sm">
             <div className={`${s.color} mb-3`}><s.icon size={18} /></div>
             <div className="text-xl font-semibold text-soot">{s.value}</div>
             <div className="text-xs text-moss mt-0.5">{s.label}</div>
@@ -63,22 +56,22 @@ export default function OrgDashboard() {
 
       {!hasSpaces ? (
         /* Empty state */
-        <div className="bg-white rounded-2xl border border-soot/8 p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-eucalyptus/15 flex items-center justify-center mx-auto mb-5">
+        <div className="bg-white rounded-3xl border border-soot/8 p-12 text-center shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-[#DDE6DF]/50 flex items-center justify-center mx-auto mb-5 border border-soot/6">
             <Building2 size={28} className="text-moss" />
           </div>
-          <h2 className="text-xl font-semibold text-soot mb-2" style={{ fontFamily: 'DM Serif Display, serif' }}>
+          <h2 className="text-xl font-normal text-soot mb-2" style={{ fontFamily: 'DM Serif Display, serif' }}>
             No workspaces yet
           </h2>
-          <p className="text-moss text-sm mb-6 max-w-sm mx-auto">
-            Add your first workspace to start accepting bookings and managing your coworking business.
+          <p className="text-moss text-xs sm:text-sm mb-6 max-w-sm mx-auto font-normal">
+            Manage your company workspaces and team reservations directly from the Workspaces tab.
           </p>
           <button
-            onClick={() => navigate('company-add-workspace')}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-soot text-plaster font-medium text-sm hover:bg-soot-light transition-colors"
+            type="button"
+            onClick={() => navigate('company-workspaces')}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] font-medium text-sm transition-all shadow-xs border border-soot/8 cursor-pointer"
           >
-            <Plus size={15} />
-            Add your first workspace
+            <span>Go to Workspaces</span>
           </button>
         </div>
       ) : (
