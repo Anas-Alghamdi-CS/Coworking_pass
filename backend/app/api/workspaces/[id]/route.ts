@@ -9,12 +9,12 @@ export async function PUT(
     const { id } = await params;
     const data = await request.json();
 
-    const space = await prisma.space.update({
-      where: { id: Number(id) },
+    const workspace = await prisma.workspace.update({
+      where: { id },
       data,
     });
 
-    return NextResponse.json({ message: "تم تعديل المساحة بنجاح", space });
+    return NextResponse.json({ message: "تم تعديل المساحة بنجاح", workspace });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -31,9 +31,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    await prisma.space.delete({
-      where: { id: Number(id) },
-    });
+    await prisma.workspace.delete({ where: { id } });
 
     return NextResponse.json({ message: "تم حذف المساحة بنجاح" });
   } catch (error) {
