@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ArrowRight, MapPin, Star, Users, Zap, Headphones, Shield, ChevronDown, Quote, Check } from 'lucide-react';
 import { useApp } from './store';
+import { isUserPassHolder, getEffectiveSpacePrice } from '@/types/types';
 import GuestNav from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Button from '@/components/ui/Button';
@@ -11,7 +12,8 @@ import Badge from '@/components/ui/Badge';
 const cities = ['All Cities', 'Riyadh', 'Jeddah', 'Dammam', 'Khobar', 'Madinah', 'Makkah'];
 
 export default function Landing() {
-  const { navigate, spaces } = useApp();
+  const { navigate, spaces, currentUser } = useApp();
+  const passActive = isUserPassHolder(currentUser);
   const [searchCity, setSearchCity] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -196,9 +198,32 @@ export default function Landing() {
                     {space.city} • {space.address}
                   </div>
                 </div>
-                <div className="absolute top-4 right-4 bg-plaster-surface/95 backdrop-blur-md rounded-2xl px-3 py-1.5 text-center border border-soot/12">
-                  <div className="text-soot font-bold text-sm">SAR {space.pricing.daily}</div>
-                  <div className="text-moss text-[10px] font-medium">/ day</div>
+                <div className="absolute top-4 right-4 bg-plaster-surface/95 backdrop-blur-md rounded-2xl px-3 py-1.5 text-center border border-soot/12 shadow-xs">
+                  {(() => {
+                    const planInfo = getEffectiveSpacePrice(currentUser, space, 'daily');
+                    if (planInfo.isCovered) {
+                      return (
+                        <div className="flex items-center gap-1 text-soot font-bold text-xs">
+                          <Check size={12} className="text-moss shrink-0" />
+                          <span>Included</span>
+                        </div>
+                      );
+                    }
+                    if (planInfo.hasDiscount) {
+                      return (
+                        <div>
+                          <div className="text-soot font-bold text-xs">SAR {planInfo.effectivePrice}</div>
+                          <div className="text-moss text-[9px] font-medium">{planInfo.discountPercentage}% Off</div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <>
+                        <div className="text-soot font-bold text-sm">SAR {space.pricing.daily}</div>
+                        <div className="text-moss text-[10px] font-medium">/ day</div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

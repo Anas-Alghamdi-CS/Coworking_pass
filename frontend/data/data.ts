@@ -242,6 +242,8 @@ export const INITIAL_USERS: User[] = [
     orgDescription: 'Leading technology consulting firm specializing in digital transformation for Saudi enterprises.',
     website: 'https://sauditech.sa',
     industry: 'Technology',
+    hasActivePass: true,
+    membershipTier: 'Enterprise Pass',
     employees: [
       { id: 'emp-1', name: 'Fahad Al-Dosari', email: 'fahad@sauditech.sa', department: 'Engineering' },
       { id: 'emp-2', name: 'Lina Hamdan', email: 'lina@sauditech.sa', department: 'Design' },
@@ -249,6 +251,29 @@ export const INITIAL_USERS: User[] = [
       { id: 'emp-4', name: 'Reem Bukhari', email: 'reem@sauditech.sa', department: 'Marketing' },
       { id: 'emp-5', name: 'Tariq Al-Ghamdi', email: 'tariq@sauditech.sa', department: 'Engineering' },
       { id: 'emp-6', name: 'Hessa Al-Sulaiman', email: 'hessa@sauditech.sa', department: 'HR' },
+    ],
+  },
+  {
+    id: 'org-pass-001',
+    name: 'Sarah Al-Mansoor',
+    email: 'corp@aramcodigital.sa',
+    password: 'password',
+    role: 'organization',
+    phone: '+966 50 111 2233',
+    avatar: '',
+    isBlocked: false,
+    joinDate: '2024-01-10',
+    orgName: 'Aramco Digital Corporate',
+    orgSize: 120,
+    orgDescription: 'Global digital innovation & cloud enterprise division with Unlimited Corporate All-Access Pass.',
+    website: 'https://aramcodigital.sa',
+    industry: 'Enterprise Technology',
+    hasActivePass: true,
+    membershipTier: 'Enterprise Pass',
+    employees: [
+      { id: 'emp-101', name: 'Khalid Al-Otaibi', email: 'khalid@aramcodigital.sa', department: 'Cloud Infra' },
+      { id: 'emp-102', name: 'Noura Al-Shehri', email: 'noura@aramcodigital.sa', department: 'AI Lab' },
+      { id: 'emp-103', name: 'Ziyad Al-Zahrani', email: 'ziyad@aramcodigital.sa', department: 'Cybersecurity' },
     ],
   },
   {
@@ -272,6 +297,34 @@ export const INITIAL_USERS: User[] = [
       { id: 'emp-9', name: 'Faris Al-Otaibi', email: 'faris@visionventures.sa', department: 'Research' },
     ],
   },
+  {  id: "user-pass-001",
+  name: "ليان باجندوح",
+  email: "layan@example.com",
+  password: "password",
+  role: "individual",
+  erdRole: "B2C",
+  phone: "+966500000000",
+  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+  isBlocked: false,
+  joinDate: "2026-01-15",
+  username: "layan_b",
+  university: "Umm Al-Qura University",
+  bio: "Software Engineering student & active platform member.",
+  city: "Makkah",
+  hasActivePass: true,
+  membershipTier: "monthly",
+  savedCards: [
+    {
+      id: "card-1",
+      brand: "Visa",
+      last4: "4242",
+      holderName: "Layan Bajandouh",
+      expiry: "12/28"
+    }
+  ]
+}
+
+
 ];
 
 export const INITIAL_BOOKINGS: Booking[] = [

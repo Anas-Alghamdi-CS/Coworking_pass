@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Check, Calendar, Users, CreditCard, MapPin, ChevronRight } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { BookingPlan, BookingType } from '@/types/types';
+import { BookingPlan, BookingType, isUserPassHolder, getEffectiveSpacePrice } from '@/types/types';
 
 const STEPS = ['Plan', 'Details', 'Review', 'Confirm'];
 
@@ -19,19 +19,17 @@ function StepIndicator({ current }: { current: number }) {
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-sm ${
                 i < current
-                  ? 'bg-eucalyptus text-soot'
-                  : i === current
                   ? 'bg-soot text-plaster'
-                  : 'bg-soot/8 text-moss/50'
+                  : i === current
+                  ? 'bg-eucalyptus text-soot ring-4 ring-eucalyptus/20'
+                  : 'bg-plaster-dark text-moss'
               }`}
             >
               {i < current ? <Check size={14} /> : i + 1}
             </div>
-            <span className="text-sm hidden sm:block">{s}</span>
+            <span className="text-sm hidden sm:inline">{s}</span>
           </div>
-          {i < STEPS.length - 1 && (
-            <ChevronRight size={15} className={`mx-1.5 ${i < current ? 'text-eucalyptus' : 'text-soot/20'}`} />
-          )}
+          {i < STEPS.length - 1 && <div className="w-8 h-px bg-soot/15" />}
         </div>
       ))}
     </div>
@@ -49,12 +47,16 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default function BookingFlow() {
   const { nav, navigate, goBack, spaces, currentUser, addBooking, showToast } = useApp();
-  const spaceId = nav.params?.spaceId;
-  const space = spaces.find(s => s.id === spaceId);
-  const [step, setStep] = useState(0);
-  const [plan, setPlan] = useState<BookingPlan>((nav.params?.plan as BookingPlan) || 'monthly');
+  
+  const urlId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '';
+  const spaceId = nav?.params?.spaceId || (urlId && urlId !== 'page' && urlId !== 'booking-flow' ? urlId : '') || 'space-1';
+  const space = spaces.find(s => s.id === spaceId) || spaces[0];
+
+  const initialPlan = (nav?.params?.plan as BookingPlan) || 'daily';
+  const [step, setStep] = useState(0); 
+  const [plan, setPlan] = useState<BookingPlan>(initialPlan);
   const [deskType, setDeskType] = useState<BookingType>('hot-desk');
-  const [startDate, setStartDate] = useState('');
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [manualEndDate, setManualEndDate] = useState('');
   const [seats, setSeats] = useState(1);
   const [notes, setNotes] = useState('');
@@ -63,6 +65,7 @@ export default function BookingFlow() {
 
   if (!space || !currentUser) return null;
 
+  const passActive = isUserPassHolder(currentUser);
   const getEndDate = (start: string, p: BookingPlan) => {
     if (!start) return '';
     const d = new Date(start);
@@ -73,8 +76,9 @@ export default function BookingFlow() {
 
   const endDate = plan === 'daily'
     ? manualEndDate
-    : getEndDate(startDate, plan)
-  const planPrice = space.pricing[plan];
+    : getEndDate(startDate, plan);
+  const planInfo = getEffectiveSpacePrice(currentUser, space, plan, deskType);
+  const planPrice = planInfo.effectivePrice;
   const totalPrice = planPrice * seats;
   const priceLabel = plan === 'daily' ? '/day' : plan === 'monthly' ? '/month' : '/year';
 
@@ -236,39 +240,58 @@ export default function BookingFlow() {
           <p className="text-moss text-sm mb-6">Select how long you'd like to access {space.name}</p>
 
           <div className="space-y-3 mb-8">
-            {(['daily', 'monthly', 'yearly'] as BookingPlan[]).map(p => (
-              <button
-                key={p}
-                onClick={() => setPlan(p)}
-                className={`w-full p-4 sm:p-5 rounded-2xl border text-left transition-all flex items-center justify-between cursor-pointer ${
-                  plan === p
-                    ? 'border-eucalyptus bg-[#E5ECE9]/60 shadow-sm'
-                    : 'border-soot/8 bg-white hover:border-soot/20'
-                }`}
-              >
-                <div>
-                  <div className="font-semibold text-soot text-base capitalize">{p} Pass</div>
-                  <div className="text-xs text-moss mt-1">
-                    {p === 'daily'
-                      ? 'Flexibility for single or intermittent work days'
-                      : p === 'monthly'
-                      ? 'Best for steady ongoing monthly access'
-                      : 'Dedicated full-year workspace with maximum savings'}
-                  </div>
-                </div>
-                <div className="text-right shrink-0 pl-4">
-                  <div className="font-semibold text-soot text-lg">SAR {space.pricing[p].toLocaleString()}</div>
-                  <div className="text-xs text-moss">
-                    /{p === 'daily' ? 'day' : p === 'monthly' ? 'month' : 'year'}
-                  </div>
-                  {p === 'yearly' && (
-                    <div className="text-[10px] text-moss font-semibold bg-eucalyptus/20 border border-eucalyptus/30 px-2 py-0.5 rounded-full mt-1">
-                      Save {Math.round((1 - space.pricing.yearly / (space.pricing.monthly * 12)) * 100)}%
+            {(['daily', 'monthly', 'yearly'] as BookingPlan[]).map(p => {
+              const pInfo = getEffectiveSpacePrice(currentUser, space, p, deskType);
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPlan(p)}
+                  className={`w-full p-4 sm:p-5 rounded-2xl border text-left transition-all flex items-center justify-between cursor-pointer ${
+                    plan === p
+                      ? 'border-eucalyptus bg-[#E5ECE9]/60 shadow-sm'
+                      : 'border-soot/8 bg-white hover:border-soot/20'
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold text-soot text-base capitalize">{p} Pass</div>
+                    <div className="text-xs text-moss mt-1">
+                      {p === 'daily'
+                        ? 'Flexibility for single or intermittent work days'
+                        : p === 'monthly'
+                        ? 'Best for steady ongoing monthly access'
+                        : 'Dedicated full-year workspace with maximum savings'}
                     </div>
-                  )}
-                </div>
-              </button>
-            ))}
+                  </div>
+                  <div className="text-right shrink-0 pl-4">
+                    {pInfo.isCovered ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-eucalyptus/30 text-soot font-semibold text-xs border border-eucalyptus/40 shadow-2xs">
+                        <Check size={11} className="text-moss shrink-0" />
+                        <span>Included in Pass</span>
+                      </span>
+                    ) : pInfo.hasDiscount ? (
+                      <div>
+                        <div className="font-semibold text-soot text-base">SAR {pInfo.effectivePrice.toLocaleString()}</div>
+                        <div className="text-[10px] text-amber-900 font-semibold bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full mt-0.5">
+                          {pInfo.discountPercentage}% Pass Discount
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="font-semibold text-soot text-lg">SAR {space.pricing[p].toLocaleString()}</div>
+                        <div className="text-xs text-moss">
+                          /{p === 'daily' ? 'day' : p === 'monthly' ? 'month' : 'year'}
+                        </div>
+                      </>
+                    )}
+                    {p === 'yearly' && !pInfo.isCovered && !pInfo.hasDiscount && (
+                      <div className="text-[10px] text-moss font-semibold bg-eucalyptus/20 border border-eucalyptus/30 px-2 py-0.5 rounded-full mt-1">
+                        Save {Math.round((1 - space.pricing.yearly / (space.pricing.monthly * 12)) * 100)}%
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           <div className="mb-8">
@@ -432,7 +455,23 @@ export default function BookingFlow() {
               <Row label="VAT (15% included)" value={`SAR ${(totalPrice * 0.15).toFixed(0)}`} />
               <div className="pt-3 flex justify-between items-center font-semibold text-lg text-soot">
                 <span>Total Amount</span>
-                <span>SAR {totalPrice.toLocaleString()}</span>
+                {planInfo.isCovered ? (
+                  <div className="text-right">
+                    <span className="text-soot">SAR 0</span>
+                    <div className="text-xs text-moss font-semibold bg-eucalyptus/25 border border-eucalyptus/30 px-2.5 py-0.5 rounded-full inline-block ml-2">
+                      Included in Pass
+                    </div>
+                  </div>
+                ) : planInfo.hasDiscount ? (
+                  <div className="text-right">
+                    <span className="text-soot">SAR {totalPrice.toLocaleString()}</span>
+                    <div className="text-xs text-amber-900 font-semibold bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-full inline-block ml-2">
+                      {planInfo.discountPercentage}% Pass Discount Applied
+                    </div>
+                  </div>
+                ) : (
+                  <span>SAR {totalPrice.toLocaleString()}</span>
+                )}
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Check, Users, Calendar, ChevronRight, MapPin, CreditCard } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { BookingPlan, BookingType, Employee, Space } from '@/types';
+import { BookingPlan, BookingType, Employee, Space, getEffectiveSpacePrice } from '@/types/types';
 
 const STEPS = ['Type', 'Team', 'Schedule', 'Review'];
 
@@ -37,7 +37,8 @@ export default function TeamBooking() {
   const endDate = plan === 'daily'
    ? manualEndDate
    : getEndDate(startDate, plan);
-  const pricePerSeat = space.pricing[plan];
+  const planInfo = getEffectiveSpacePrice(currentUser, space, plan, bookingType);
+  const pricePerSeat = planInfo.effectivePrice;
   const totalPrice = pricePerSeat * seats;
   const planLabel = plan === 'daily' ? '/day' : plan === 'monthly' ? '/month' : '/year';
 
@@ -191,18 +192,21 @@ export default function TeamBooking() {
           <div className="mb-6">
             <h3 className="text-sm font-medium text-soot mb-3">Select plan</h3>
             <div className="grid grid-cols-3 gap-2">
-              {(['daily', 'monthly', 'yearly'] as BookingPlan[]).map(p => (
-                <button
-                  key={p}
-                  onClick={() => setPlan(p)}
-                  className={`py-3 px-2 rounded-xl border text-center transition-all ${plan === p ? 'bg-soot text-plaster border-soot' : 'border-soot/10 text-moss hover:border-soot/30'}`}
-                >
-                  <div className="text-xs font-medium capitalize">{p}</div>
-                  <div className={`text-[10px] mt-0.5 ${plan === p ? 'text-plaster/70' : 'text-moss/60'}`}>
-                    SAR {space.pricing[p].toLocaleString()}/seat
-                  </div>
-                </button>
-              ))}
+              {(['daily', 'monthly', 'yearly'] as BookingPlan[]).map(p => {
+                const pInfo = getEffectiveSpacePrice(currentUser, space, p, bookingType);
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPlan(p)}
+                    className={`py-3 px-2 rounded-xl border text-center transition-all ${plan === p ? 'bg-soot text-plaster border-soot' : 'border-soot/10 text-moss hover:border-soot/30'}`}
+                  >
+                    <div className="text-xs font-medium capitalize">{p}</div>
+                    <div className={`text-[10px] mt-0.5 ${plan === p ? 'text-plaster/70' : 'text-moss/60'}`}>
+                      {pInfo.isCovered ? 'Included' : `SAR ${pInfo.effectivePrice.toLocaleString()}/seat`}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -333,8 +337,26 @@ export default function TeamBooking() {
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-soot">Total</span>
                 <div className="text-right">
-                  <div className="font-semibold text-soot text-lg">SAR {totalPrice.toLocaleString()}</div>
-                  <div className="text-xs text-moss">{planLabel} ({seats} seats × SAR {pricePerSeat.toLocaleString()})</div>
+                  {planInfo.isCovered ? (
+                    <>
+                      <div className="font-semibold text-soot text-lg">SAR 0</div>
+                      <div className="text-xs text-moss font-medium bg-eucalyptus/20 border border-eucalyptus/30 px-2.5 py-0.5 rounded-full inline-block mt-0.5">
+                        Corporate Pass Included
+                      </div>
+                    </>
+                  ) : planInfo.hasDiscount ? (
+                    <>
+                      <div className="font-semibold text-soot text-lg">SAR {totalPrice.toLocaleString()}</div>
+                      <div className="text-xs text-amber-900 font-semibold bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-full inline-block mt-0.5">
+                        {planInfo.discountPercentage}% Corporate Discount
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-semibold text-soot text-lg">SAR {totalPrice.toLocaleString()}</div>
+                      <div className="text-xs text-moss">{planLabel} ({seats} seats × SAR {pricePerSeat.toLocaleString()})</div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

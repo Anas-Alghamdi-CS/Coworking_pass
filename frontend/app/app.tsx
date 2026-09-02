@@ -50,6 +50,7 @@ import SpacesAdmin from './admin/SpacesAdmin';
 import UsersAdmin from './admin/UsersAdmin';
 import BookingsAdmin from './admin/BookingsAdmin';
 import Reports from './admin/Reports';
+import AdminSettings from './admin/AdminSettings';
 
 interface NavItem {
   label: string;
@@ -183,7 +184,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </button>
 
           {/* Centered Navigation Row */}
-          <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-1.5 flex-1 min-w-0 mx-1 xl:mx-3">
+          <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-0.5 flex-1 min-w-0 mx-1 xl:mx-3">
             {navItems.map(item => {
               const active = isActive(item);
               const Icon = item.icon;
@@ -220,7 +221,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     e.stopPropagation();
                     setMoreOpen(prev => !prev);
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 xl:py-2 rounded-full text-xs xl:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 xl:py-2 rounded-full text-xs xl:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                     isMoreActive || moreOpen
                       ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/10 font-semibold'
                       : 'text-moss hover:text-soot hover:bg-soot/5'
@@ -263,19 +264,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Right Controls: Role Tag, Profile, & Logout */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <span
-              className={`hidden xl:inline-flex text-[11px] xl:text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border shadow-2xs shrink-0 ${
-                role === 'organization'
-                  ? 'bg-soot text-plaster border-soot/20'
-                  : role === 'admin'
-                  ? 'bg-red-500/10 text-red-700 border-red-500/20'
+              className={`hidden xl:inline-flex text-[11px] xl:text-xs font-semibold uppercase tracking-wider px-3.5 py-1 rounded-full border shadow-2xs shrink-0 ${
+                role === 'organization' || role === 'admin'
+                  ? 'bg-[#DDE6DF] text-soot border-soot/10'
                   : role === 'provider'
                   ? 'bg-mist/30 text-soot border-mist/50'
                   : 'bg-eucalyptus/20 text-soot border-eucalyptus/30'
               }`}
             >
-              {role === 'organization' ? 'HR Admin (B2B)' : `${role} portal`}
+              {role === 'organization' ? 'HR Admin (B2B)' : role === 'admin' ? 'Admin Portal' : `${role} portal`}
             </span>
 
             <button
@@ -488,7 +487,7 @@ export function Router() {
         {screen === 'admin-users' && <UsersAdmin />}
         {screen === 'admin-bookings' && <BookingsAdmin />}
         {screen === 'admin-reports' && <Reports />}
-        {screen === 'admin-settings' && <AdminSettingsPage />}
+        {screen === 'admin-settings' && <AdminSettings />}
         {screen === 'browse' && <Browse />}
         {screen === 'space-details' && <SpaceDetails />}
         {screen === 'pricing' && <Pricing />}

@@ -193,7 +193,7 @@ export default function Pricing() {
             const isFeatured = plan.featured;
             return (
               <div
-                key={plan.name}
+                key={plan.id || plan.name}
                 className={`rounded-3xl p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative bg-white ${
                   isFeatured
                     ? 'border-2 border-soot shadow-xl ring-2 ring-eucalyptus/30'

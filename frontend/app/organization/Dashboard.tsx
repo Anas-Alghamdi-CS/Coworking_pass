@@ -1,8 +1,8 @@
 'use client';
 
-import { Building2, CalendarDays, Users, TrendingUp, ArrowRight, Plus, BarChart3, Eye, EyeOff } from 'lucide-react';
+import { Building2, CalendarDays, Users, TrendingUp, ArrowRight, Plus, BarChart3, Eye, EyeOff, Check } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Booking, Space } from '@/types/types';
+import { Booking, Space, getEffectiveSpacePrice } from '@/types/types';
 
 import { useState } from 'react';
 import Modal from '@/components/ui/Modal';
@@ -121,8 +121,31 @@ export default function OrgDashboard() {
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-xs font-medium text-soot">SAR {space.pricing.daily}</div>
-                        <div className="text-[10px] text-moss">/day</div>
+                        {(() => {
+                          const pInfo = getEffectiveSpacePrice(currentUser, space, 'daily');
+                          if (pInfo.isCovered) {
+                            return (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-eucalyptus/30 text-soot font-semibold text-[11px] border border-eucalyptus/40 shadow-2xs">
+                                <Check size={11} className="text-moss shrink-0" />
+                                <span>Corporate Pass</span>
+                              </span>
+                            );
+                          }
+                          if (pInfo.hasDiscount) {
+                            return (
+                              <div>
+                                <div className="text-xs font-semibold text-soot">SAR {pInfo.effectivePrice}</div>
+                                <div className="text-[9px] text-amber-900 font-semibold">{pInfo.discountPercentage}% Discount</div>
+                              </div>
+                            );
+                          }
+                          return (
+                            <>
+                              <div className="text-xs font-medium text-soot">SAR {space.pricing.daily}</div>
+                              <div className="text-[10px] text-moss">/day</div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

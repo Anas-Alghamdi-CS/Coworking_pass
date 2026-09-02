@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Heart, MapPin, Star, Users } from 'lucide-react';
-import { Space } from '@/types/types';
+import { Heart, MapPin, Star, Users, Check } from 'lucide-react';
+import { Space, getEffectiveSpacePrice } from '@/types/types';
 import { useApp } from '@/app/store';
 import Badge from '@/components/ui/Badge';
 
@@ -14,6 +13,7 @@ interface SpaceCardProps {
 export default function SpaceCard({ space, onSelect }: SpaceCardProps) {
   const { favorites, toggleFavorite, currentUser } = useApp();
   const isFav = favorites.includes(space.id);
+  const planInfo = getEffectiveSpacePrice(currentUser, space, 'daily');
 
   const availability = space.availableCapacity === 0
     ? { label: 'Fully Booked', variant: 'danger' as const }
@@ -23,14 +23,14 @@ export default function SpaceCard({ space, onSelect }: SpaceCardProps) {
 
   return (
     <div
-      className="bg-plaster-dark/40 hover:bg-plaster-dark/80 rounded-3xl overflow-hidden shadow-xs transition-colors duration-200 cursor-pointer group border border-soot/12 flex flex-col justify-between active:scale-[0.99]"
+      className="bg-plaster-dark/40 hover:bg-plaster-dark/80 rounded-3xl overflow-hidden shadow-xs transition-colors duration-200 cursor-pointer group border border-soot/12 flex flex-col justify-between active:scale-[0.99] w-full"
       onClick={() => onSelect(space)}
     >
       {/* Image Thumbnail */}
       <div className="relative overflow-hidden h-48 sm:h-52">
         <img
-          src={space.images[0]}
-          alt={space.name}
+          src={space.images?.[0] ? space.images[0] : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'}
+          alt={space.name || 'Workspace'}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-soot/60 via-transparent to-black/10" />
@@ -69,16 +69,30 @@ export default function SpaceCard({ space, onSelect }: SpaceCardProps) {
       </div>
 
       {/* Card Details */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Title and Price */}
-          <div className="flex items-start justify-between gap-3 mb-1.5">
-            <h3 className="font-semibold text-soot text-base leading-snug group-hover:text-moss transition-colors">
+          <div className="flex items-start justify-between gap-2.5 mb-1.5">
+            <h3 className="font-semibold text-soot text-sm sm:text-base leading-snug group-hover:text-moss transition-colors line-clamp-1 flex-1 min-w-0">
               {space.name}
             </h3>
             <div className="text-right shrink-0">
-              <div className="text-soot font-semibold text-sm">SAR {space.pricing.daily}</div>
-              <div className="text-moss text-[11px] font-normal">/ day</div>
+              {planInfo.isCovered ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-eucalyptus/30 text-soot font-semibold text-[11px] border border-eucalyptus/40 shadow-2xs whitespace-nowrap">
+                  <Check size={11} className="text-moss shrink-0" />
+                  <span>Included in Pass</span>
+                </span>
+              ) : planInfo.hasDiscount ? (
+                <div>
+                  <div className="text-soot font-semibold text-xs sm:text-sm">SAR {planInfo.effectivePrice}</div>
+                  <div className="text-moss text-[10px] font-medium font-mono">{planInfo.discountPercentage}% Pass Discount</div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-soot font-semibold text-xs sm:text-sm">SAR {space.pricing.daily}</div>
+                  <div className="text-moss text-[10px] sm:text-[11px] font-normal">/ day</div>
+                </>
+              )}
             </div>
           </div>
 

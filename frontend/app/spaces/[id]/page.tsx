@@ -20,11 +20,13 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useApp } from '@/app/store';
+import { isUserPassHolder, getEffectiveSpacePrice } from '@/types/types';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 
 export default function SpaceDetails() {
   const { nav, navigate, goBack, spaces, currentUser, favorites, toggleFavorite, waitlist, autobooking, joinWaitlist } = useApp();
+  const passActive = isUserPassHolder(currentUser);
 
   const urlId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '';
   const spaceId = nav?.params?.spaceId || (urlId && urlId !== 'page' && urlId !== '[id]' ? urlId : '') || 'space-1';
@@ -121,7 +123,7 @@ export default function SpaceDetails() {
             {/* Carousel Frame */}
             <div className="relative h-80 sm:h-[420px] rounded-3xl overflow-hidden border border-soot/12 shadow-xl bg-soot">
               <img
-                src={space.images[imgIndex] || '/placeholder.jpg'}
+                src={space.images?.[imgIndex] ? space.images[imgIndex] : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'}
                 alt={`${space.name} view ${imgIndex + 1}`}
                 className="w-full h-full object-cover saturate-105"
               />
@@ -283,17 +285,52 @@ export default function SpaceDetails() {
           {/* Right Column: Static Stable Booking Card */}
           <div className="w-full">
             <div className="bg-plaster-surface rounded-3xl border border-soot/12 p-6 sm:p-7 shadow-xl">
-              {/* Price Tag */}
+              {/* Price Tag / Pass Badge */}
               <div className="mb-6 pb-5 border-b border-soot/10">
-                <span className="text-xs font-semibold uppercase tracking-wider text-moss block mb-1">
-                  Membership Rate
-                </span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-semibold text-soot tracking-tight">
-                    SAR {planPrice.toLocaleString()}
-                  </span>
-                  <span className="text-sm font-medium text-moss">{planLabel}</span>
-                </div>
+                {(() => {
+                  const currentPlanInfo = getEffectiveSpacePrice(currentUser, space, selectedPlan);
+                  return (
+                    <>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-moss block mb-1.5">
+                        {currentPlanInfo.isCovered ? 'Pass Access' : currentPlanInfo.hasDiscount ? 'Plan Upgrade Rate' : 'Membership Rate'}
+                      </span>
+                      {currentPlanInfo.isCovered ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl sm:text-3xl font-semibold text-soot tracking-tight">
+                              SAR 0
+                            </span>
+                            <span className="text-xs font-medium text-moss">with pass</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-eucalyptus/30 text-soot font-semibold text-xs border border-eucalyptus/40 shadow-2xs">
+                            <Check size={13} className="text-moss shrink-0" />
+                            <span>Included in Pass</span>
+                          </div>
+                        </div>
+                      ) : currentPlanInfo.hasDiscount ? (
+                        <div className="space-y-1.5">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-semibold text-soot tracking-tight">
+                              SAR {currentPlanInfo.effectivePrice.toLocaleString()}
+                            </span>
+                            <span className="text-sm font-medium text-moss">{planLabel}</span>
+                            <span className="line-through text-xs text-moss/50">SAR {planPrice.toLocaleString()}</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-900 font-semibold text-xs border border-amber-500/30">
+                            <span>{currentPlanInfo.discountPercentage}% Pass Discount</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-3xl font-semibold text-soot tracking-tight">
+                            SAR {planPrice.toLocaleString()}
+                          </span>
+                          <span className="text-sm font-medium text-moss">{planLabel}</span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Plan Choice Selectors */}
@@ -304,6 +341,7 @@ export default function SpaceDetails() {
                 <div className="grid grid-cols-3 gap-2">
                   {(['daily', 'monthly', 'yearly'] as const).map(plan => {
                     const isSelected = selectedPlan === plan;
+                    const planP = getEffectiveSpacePrice(currentUser, space, plan);
                     return (
                       <button
                         key={plan}
@@ -317,13 +355,13 @@ export default function SpaceDetails() {
                       >
                         <div className="capitalize text-xs font-semibold">{plan}</div>
                         <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-soot/80 font-medium' : 'text-moss/70'}`}>
-                          SAR {space.pricing[plan].toLocaleString()}
+                          {planP.isCovered ? 'Included' : `SAR ${planP.effectivePrice.toLocaleString()}`}
                         </div>
                       </button>
                     );
                   })}
                 </div>
-                {selectedPlan === 'yearly' && (
+                {selectedPlan === 'yearly' && !passActive && (
                   <div className="mt-2.5 text-[11px] text-moss bg-eucalyptus/20 border border-eucalyptus/30 rounded-xl px-3 py-1.5 flex items-center gap-1.5">
                     <Sparkles size={12} className="text-soot shrink-0" />
                     <span>Save {Math.round((1 - space.pricing.yearly / (space.pricing.monthly * 12)) * 100)}% with annual commitment</span>
@@ -446,7 +484,7 @@ export default function SpaceDetails() {
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-plaster-dark/30 border border-soot/12">
                 <img
-                  src={space.images[0] || '/placeholder.jpg'}
+                  src={space.images?.[0] ? space.images[0] : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'}
                   alt={space.name}
                   className="w-12 h-12 rounded-xl object-cover"
                 />

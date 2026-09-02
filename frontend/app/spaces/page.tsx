@@ -395,7 +395,7 @@ export default function Browse() {
             <button
               type="button"
               onClick={clearFilters}
-              className="px-6 py-2.5 rounded-xl bg-soot text-plaster text-xs sm:text-sm font-semibold hover:bg-moss transition-colors shadow-sm cursor-pointer"
+              className="btn-primary"
             >
               Reset Filters
             </button>

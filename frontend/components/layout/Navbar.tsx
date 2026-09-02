@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, User as UserIcon, LogOut, ChevronDown, Calendar, Building2, MoreHorizontal, Users, BarChart3, Settings } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, ChevronDown, Calendar, Building2, MoreHorizontal, Users, Settings } from 'lucide-react';
 import { useApp } from '@/app/store';
 import Logo from './logo';
-import Badge from '@/components/ui/Badge';
 
 export default function Navbar() {
   const { navigate, nav, currentUser, logout } = useApp();
@@ -103,17 +102,9 @@ export default function Navbar() {
 
   const profileScreen = getProfileScreen();
 
-  const getRoleBadgeVariant = () => {
-    if (!currentUser) return 'eucalyptus';
-    if (currentUser.role === 'admin') return 'danger';
-    if (currentUser.role === 'organization') return 'soot';
-    if (currentUser.role === 'provider') return 'mist';
-    return 'eucalyptus';
-  };
-
   const getRoleLabel = () => {
     if (!currentUser) return '';
-    if (currentUser.role === 'admin') return 'Super Admin';
+    if (currentUser.role === 'admin') return 'Admin Portal';
     if (currentUser.role === 'organization') return 'HR Admin (B2B)';
     if (currentUser.role === 'provider') return 'Space Partner';
     return 'Individual Member';
@@ -125,7 +116,7 @@ export default function Navbar() {
         {/* Brand Logo & Name */}
         <button
           onClick={() => navigate(currentUser ? (currentUser.role === 'admin' ? 'admin-dashboard' : currentUser.role === 'organization' ? 'org-dashboard' : currentUser.role === 'provider' ? 'provider-dashboard' : 'ind-dashboard') : 'landing')}
-          className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-soot/30 rounded-xl p-1 transition-all shrink-0"
+          className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-soot/30 rounded-xl p-1 transition-all shrink-0 cursor-pointer"
         >
           <Logo className="h-9 sm:h-11 w-auto" />
           <span className="font-serif-display font-normal text-soot text-xl sm:text-2xl lg:text-3xl tracking-tight group-hover:text-soot-light transition-colors hidden sm:block">
@@ -228,7 +219,7 @@ export default function Navbar() {
                 />
                 <div className="text-left hidden lg:block">
                   <div className="text-xs font-semibold text-soot leading-tight">{currentUser.name}</div>
-                  <div className="text-[10px] text-moss font-medium capitalize">{currentUser.role}</div>
+                  <div className="text-[10px] text-moss font-medium">{getRoleLabel()}</div>
                 </div>
                 <ChevronDown size={14} className={`text-moss transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -240,9 +231,10 @@ export default function Navbar() {
                     <div className="font-semibold text-soot text-sm">{currentUser.name}</div>
                     <div className="text-xs text-moss truncate mt-0.5">{currentUser.email}</div>
                     <div className="mt-2">
-                      <Badge variant={getRoleBadgeVariant()} className="text-[10px] px-2.5 py-0.5 font-bold">
+                      {/* Unified Badge style for all roles */}
+                      <span className="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-semibold bg-[#DDE6DF] text-soot border border-soot/6 shadow-2xs">
                         {getRoleLabel()}
-                      </Badge>
+                      </span>
                     </div>
                   </div>
 
@@ -343,9 +335,9 @@ export default function Navbar() {
                 <div className="text-sm font-semibold text-soot truncate">{currentUser.name}</div>
                 <div className="text-xs text-moss truncate">{currentUser.email}</div>
               </div>
-              <Badge variant={getRoleBadgeVariant()} className="text-[10px] px-2 py-0.5">
-                {currentUser.role}
-              </Badge>
+              <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-semibold bg-[#DDE6DF] text-soot border border-soot/6">
+                {getRoleLabel()}
+              </span>
             </div>
           )}
 

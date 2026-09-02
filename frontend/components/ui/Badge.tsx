@@ -13,11 +13,11 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const styles = {
     eucalyptus: 'bg-eucalyptus/20 text-soot border-eucalyptus/30 font-semibold',
-    soot: 'bg-soot text-plaster border-soot-light/30 font-medium',
+    soot: 'bg-[#DDE6DF] text-soot border border-soot/6 font-semibold',
     mist: 'bg-mist-light text-soot border-mist font-medium',
     success: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold',
     warning: 'bg-amber-50 text-amber-900 border-amber-300 font-semibold',
-    danger: 'bg-rose-50 text-rose-800 border-rose-300 font-semibold',
+    danger: 'bg-[#DDE6DF] text-soot border border-soot/6 font-semibold',
     info: 'bg-mist/30 text-soot border-mist font-semibold',
   };
 

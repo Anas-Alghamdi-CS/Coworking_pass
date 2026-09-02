@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { CalendarDays, MapPin, Star, Clock, ArrowRight, Bookmark } from 'lucide-react';
+import { CalendarDays, MapPin, Star, Clock, ArrowRight, Bookmark, Check } from 'lucide-react';
 import { useApp } from '@/app/store';
+import { isUserPassHolder, getEffectiveSpacePrice } from '@/types/types';
 
 export default function IndividualDashboard() {
   const { currentUser, bookings, spaces, navigate, favorites } = useApp();
+  const passActive = isUserPassHolder(currentUser);
   if (!currentUser) return null;
 
   const myBookings = bookings.filter(b => b.userId === currentUser.id);
@@ -192,7 +194,26 @@ export default function IndividualDashboard() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-sm font-semibold text-soot">SAR {space.pricing.daily}/day</div>
+                    {(() => {
+                      const planInfo = getEffectiveSpacePrice(currentUser, space, 'daily');
+                      if (planInfo.isCovered) {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-eucalyptus/30 text-soot font-semibold text-[11px] border border-eucalyptus/40 shadow-2xs">
+                            <Check size={11} className="text-moss shrink-0" />
+                            <span>Included in Pass</span>
+                          </span>
+                        );
+                      }
+                      if (planInfo.hasDiscount) {
+                        return (
+                          <div>
+                            <div className="text-sm font-semibold text-soot">SAR {planInfo.effectivePrice}/day</div>
+                            <div className="text-[10px] text-amber-900 font-semibold">{planInfo.discountPercentage}% Pass Discount</div>
+                          </div>
+                        );
+                      }
+                      return <div className="text-sm font-semibold text-soot">SAR {space.pricing.daily}/day</div>;
+                    })()}
                   </div>
                 </div>
               ))}

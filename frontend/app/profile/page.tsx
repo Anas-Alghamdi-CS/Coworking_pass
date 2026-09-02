@@ -6,6 +6,7 @@ import { DashboardLayout } from '@/app/app';
 import ProfileSettings from '@/app/individual/ProfileSettings';
 import OrgProfile from '@/app/organization/OrgProfile';
 import ProviderProfileSettings from '@/app/provider/ProfileSettings';
+import AdminSettings from '@/app/admin/AdminSettings';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
@@ -48,9 +49,10 @@ export default function ProfilePage() {
 
   return (
     <DashboardLayout>
+      {currentUser.role === 'admin' && <AdminSettings />}
       {currentUser.role === 'organization' && <OrgProfile />}
       {currentUser.role === 'provider' && <ProviderProfileSettings />}
-      {(currentUser.role === 'individual' || currentUser.role === 'admin' || !currentUser.role) && (
+      {(currentUser.role === 'individual' || !currentUser.role) && (
         <ProfileSettings mode="profile" />
       )}
     </DashboardLayout>
