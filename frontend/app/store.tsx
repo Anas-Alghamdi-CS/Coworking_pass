@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard } from '@/types/types';
 import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS } from '@/data/data';
 
@@ -62,36 +62,33 @@ const AppContext = createContext<AppContextType | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [nav, setNav] = useState<NavState>({ screen: 'landing', params: {} });
   const [history, setHistory] = useState<NavState[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('cp_currentUser');
-        if (saved) return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return null;
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [pendingUser, setPendingUser] = useState<Partial<User> | null>(null);
   const [spaces, setSpaces] = useState<Space[]>(INITIAL_SPACES);
   const [bookings, setBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
-  const [users, setUsers] = useState<User[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('cp_users');
-        if (saved) return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return INITIAL_USERS;
-  });
+  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [favorites, setFavorites] = useState<string[]>(['space-1', 'space-3']);
   const [waitlist, setWaitlist] = useState<Record<string, boolean>>({});
   const [autobooking, setAutobooking] = useState<Record<string, boolean>>({});
   const [autobookingCard, setAutobookingCard] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<AppContextType['toast']>(null);
+
+  // Sync state from localStorage after initial client mount to avoid SSR hydration mismatch
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('cp_currentUser');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        setCurrentUser(parsed);
+      }
+      const savedUsers = localStorage.getItem('cp_users');
+      if (savedUsers) {
+        setUsers(JSON.parse(savedUsers));
+      }
+    } catch (e) {
+      console.error('Failed to load storage state:', e);
+    }
+  }, []);
 
   const navigate = (screen: Screen, params: Record<string, any> = {}) => {
     setHistory(prev => [...prev.slice(-9), nav]);

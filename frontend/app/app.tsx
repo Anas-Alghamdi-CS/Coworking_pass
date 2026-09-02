@@ -12,6 +12,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import LogoImage from '@/components/layout/logo';
 import Modal from '@/components/ui/Modal';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 // Guest screens
 import Landing from './Landing';
@@ -156,14 +157,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   key={item.screen}
                   type="button"
                   onClick={() => navigate(item.screen)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs xl:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs xl:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                     active
-                      ? 'bg-[#E2E8E4] text-[#2D3536] ring-1 ring-[#2D3536]/15 shadow-2xs'
-                      : 'text-moss hover:text-soot'
+                      ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/6'
+                      : 'text-moss hover:text-soot hover:bg-soot/5'
                   }`}
                 >
                   <span className="w-5 h-5 flex items-center justify-center shrink-0">
-                    <Icon size={17} className={active ? 'text-[#2D3536]' : 'text-moss'} />
+                    <Icon size={17} className={active ? 'text-soot' : 'text-moss'} />
                   </span>
                   <span>{item.label}</span>
                 </button>
@@ -172,22 +173,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Right Controls: Role Tag, Profile, & Logout */}
-          <div className="flex items-center gap-4 shrink-0">
-            <span className="hidden sm:inline-flex text-xs font-semibold uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-soot/5 text-moss border border-soot/10">
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="hidden sm:inline-flex text-xs font-medium uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-[#DDE6DF]/70 text-soot border border-soot/6">
               {role} portal
             </span>
 
             <button
               type="button"
               onClick={() => navigate(profileScreen)}
-              className="flex items-center gap-3 p-1 sm:px-3 sm:py-1.5 rounded-2xl hover:bg-[#FAF8F5] border border-transparent hover:border-soot/10 transition-all cursor-pointer"
+              className="flex items-center gap-2.5 p-1 sm:px-3 sm:py-1.5 rounded-full hover:bg-soot/5 border border-transparent hover:border-soot/10 transition-all cursor-pointer"
             >
-              <img
+              <UserAvatar
                 src={currentUser.avatar}
-                alt={currentUser.name}
-                className="w-10 h-10 rounded-full object-cover ring-1 ring-soot/15"
+                name={currentUser.name}
+                size="sm"
               />
-              <span className="hidden md:block text-sm font-semibold text-soot">
+              <span className="hidden md:block text-sm font-medium text-soot">
                 {currentUser.name.split(' ')[0]}
               </span>
             </button>
