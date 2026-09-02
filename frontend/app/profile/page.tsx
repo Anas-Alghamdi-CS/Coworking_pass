@@ -33,7 +33,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => navigate('login')}
-              className="w-full py-3.5 px-6 rounded-xl font-semibold text-sm bg-soot text-plaster hover:bg-moss active:scale-[0.99] transition-all duration-200 shadow-md flex items-center justify-center gap-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-eucalyptus"
+              className="btn-primary w-full"
             >
               <span>Sign In to Continue</span>
               <ArrowRight size={16} />

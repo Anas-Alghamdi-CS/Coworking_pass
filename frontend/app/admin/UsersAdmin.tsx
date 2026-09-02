@@ -193,7 +193,7 @@ export default function UsersAdmin() {
         <button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-[#374142] text-[#FAF8F5] text-sm font-medium ring-1 ring-white/15 shadow-sm hover:bg-[#2D3536] transition-all duration-200 active:scale-[0.98] cursor-pointer"
+          className="btn-primary"
         >
           <Plus size={17} className="text-[#FAF8F5]/80" />
           <span>Add User</span>
@@ -657,14 +657,14 @@ export default function UsersAdmin() {
               <button
                 type="button"
                 onClick={() => setAddEditModal(false)}
-                className="px-5 py-2.5 rounded-xl border border-soot/20 text-soot text-sm font-semibold hover:bg-soot/8 transition-colors cursor-pointer"
+                className="btn-secondary"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSaveUser}
-                className="px-6 py-2.5 rounded-xl bg-[#374142] text-[#FAF8F5] text-sm font-semibold hover:bg-[#2D3536] transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                className="btn-primary"
               >
                 {editingUser ? 'Save Changes' : 'Create User'}
               </button>
@@ -815,16 +815,14 @@ export default function UsersAdmin() {
               <button
                 type="button"
                 onClick={() => setBlockModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-soot/20 text-soot text-sm font-medium hover:bg-soot/8 transition-colors cursor-pointer"
+                className="btn-secondary flex-1"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleBlockAction}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold shadow-xs transition-all cursor-pointer ${
-                  selectedUser.isBlocked ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-red-600 text-white hover:bg-red-700'
-                }`}
+                className={`flex-1 ${selectedUser.isBlocked ? 'btn-primary' : 'btn-danger'}`}
               >
                 {selectedUser.isBlocked ? 'Yes, Unblock' : 'Yes, Block'}
               </button>

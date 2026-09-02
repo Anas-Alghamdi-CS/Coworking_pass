@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, User as UserIcon, LogOut, ChevronDown, Calendar, Building2 } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, ChevronDown, Calendar, Building2, MoreHorizontal, Users, BarChart3, Settings } from 'lucide-react';
 import { useApp } from '@/app/store';
 import Logo from './logo';
 import Badge from '@/components/ui/Badge';
@@ -10,17 +10,37 @@ export default function Navbar() {
   const { navigate, nav, currentUser, logout } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const moreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Close dropdown on click outside
+  const handleMoreMouseEnter = () => {
+    if (moreTimeoutRef.current) clearTimeout(moreTimeoutRef.current);
+    setMoreOpen(true);
+  };
+
+  const handleMoreMouseLeave = () => {
+    moreTimeoutRef.current = setTimeout(() => {
+      setMoreOpen(false);
+    }, 250);
+  };
+
+  // Close dropdowns on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (moreTimeoutRef.current) clearTimeout(moreTimeoutRef.current);
+    };
   }, []);
 
   // Determine navigation links based on user role
@@ -40,9 +60,7 @@ export default function Navbar() {
       return [
         { label: 'Dashboard', screen: 'org-dashboard' as const },
         { label: 'Workspaces', screen: 'company-workspaces' as const },
-        { label: 'Team Bookings', screen: 'company-bookings' as const },
-        { label: 'Team Members', screen: 'company-team' as const },
-        { label: 'Browse', screen: 'browse' as const },
+        { label: 'Reports', screen: 'company-reports' as const },
       ];
     }
 
@@ -102,30 +120,30 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-plaster-surface/95 backdrop-blur-md border-b border-soot/12 shadow-xs transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full bg-plaster-surface/95 backdrop-blur-md border-b border-soot/12 shadow-xs transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo & Name */}
         <button
           onClick={() => navigate(currentUser ? (currentUser.role === 'admin' ? 'admin-dashboard' : currentUser.role === 'organization' ? 'org-dashboard' : currentUser.role === 'provider' ? 'provider-dashboard' : 'ind-dashboard') : 'landing')}
-          className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-soot/30 rounded-xl p-1 transition-all"
+          className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-soot/30 rounded-xl p-1 transition-all shrink-0"
         >
-          <Logo className="h-11 sm:h-12 w-auto" />
-          <span className="font-semibold text-soot text-lg sm:text-xl tracking-tight group-hover:text-soot-light transition-colors">
+          <Logo className="h-9 sm:h-11 w-auto" />
+          <span className="font-serif-display font-normal text-soot text-xl sm:text-2xl lg:text-3xl tracking-tight group-hover:text-soot-light transition-colors hidden sm:block">
             Coworking Pass
           </span>
         </button>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1.5 lg:gap-2">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 flex-1 justify-center mx-2 min-w-0">
           {links.map(l => {
             const isActive = nav.screen === l.screen;
             return (
               <button
                 key={l.screen}
                 onClick={() => navigate(l.screen)}
-                className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 focus:outline-none cursor-pointer ${
+                className={`relative px-3 xl:px-4 py-2 rounded-full text-xs xl:text-sm font-medium transition-all duration-200 focus:outline-none cursor-pointer whitespace-nowrap shrink-0 ${
                   isActive
-                    ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/6'
+                    ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/10 font-semibold'
                     : 'text-moss hover:text-soot hover:bg-soot/5 active:scale-98'
                 }`}
               >
@@ -133,10 +151,68 @@ export default function Navbar() {
               </button>
             );
           })}
+
+          {currentUser?.role === 'organization' && (
+            <div
+              className="relative shrink-0"
+              ref={moreRef}
+              onMouseEnter={handleMoreMouseEnter}
+              onMouseLeave={handleMoreMouseLeave}
+            >
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMoreOpen(prev => !prev);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs xl:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
+                  ['company-bookings', 'company-team', 'browse', 'org-settings', 'team-bookings'].includes(nav.screen) || moreOpen
+                    ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/10 font-semibold'
+                    : 'text-moss hover:text-soot hover:bg-soot/5'
+                }`}
+              >
+                <MoreHorizontal size={16} />
+                <span>Management</span>
+                <ChevronDown size={14} className={`text-moss transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {moreOpen && (
+                <div className="absolute right-0 mt-1 w-52 bg-plaster-surface rounded-2xl border border-soot/15 shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  {[
+                    { label: 'Team Bookings', screen: 'company-bookings' as const, icon: Calendar },
+                    { label: 'Team Members', screen: 'company-team' as const, icon: Users },
+                    { label: 'Browse Spaces', screen: 'browse' as const, icon: Building2 },
+                    { label: 'Settings', screen: 'org-settings' as const, icon: Settings },
+                  ].map(item => {
+                    const active = nav.screen === item.screen;
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.screen}
+                        type="button"
+                        onClick={() => {
+                          navigate(item.screen);
+                          setMoreOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer ${
+                          active
+                            ? 'bg-[#DDE6DF] text-soot shadow-2xs'
+                            : 'text-soot hover:bg-soot/5'
+                        }`}
+                      >
+                        <Icon size={15} className="text-moss shrink-0" />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Desktop Auth / User Profile Menu */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3 shrink-0">
           {currentUser ? (
             /* Logged-In User Profile Dropdown Menu */
             <div className="relative" ref={dropdownRef}>
@@ -245,7 +321,7 @@ export default function Navbar() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2 rounded-xl text-soot hover:bg-plaster-dark/50 active:scale-95 transition-all focus:outline-none cursor-pointer"
+          className="lg:hidden p-2 rounded-xl text-soot hover:bg-plaster-dark/50 active:scale-95 transition-all focus:outline-none cursor-pointer shrink-0"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle Navigation Menu"
         >
@@ -255,7 +331,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-soot/10 bg-plaster-surface/98 backdrop-blur-md px-4 pt-3 pb-6 space-y-3 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="lg:hidden border-t border-soot/10 bg-plaster-surface/98 backdrop-blur-md px-4 pt-3 pb-6 space-y-3 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
           {currentUser && (
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-plaster-dark/30 border border-soot/10 mb-2">
               <img

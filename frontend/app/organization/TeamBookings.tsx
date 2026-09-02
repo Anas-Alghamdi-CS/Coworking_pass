@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { MapPin, Calendar, Users, AlertCircle, X } from 'lucide-react';
 import { useApp } from '@/app/store';
 import { Booking, BookingStatus, Employee } from '@/types';
-import Modal from '@/components/Modal';
+import Modal from '@/components/ui/Modal';
 
 const TABS: { label: string; status: BookingStatus }[] = [
   { label: 'Active', status: 'active' },
@@ -222,23 +222,30 @@ export default function TeamBookings() {
       </Modal>
 
       {/* Cancel modal */}
-      <Modal open={cancelModal} onClose={() => setCancelModal(false)} title="Cancel Booking" size="sm">
-        <div className="p-6">
-          <div className="flex items-start gap-3 mb-5">
+      <Modal
+        open={cancelModal}
+        onClose={() => setCancelModal(false)}
+        title="Cancel Booking"
+        size="sm"
+        footer={
+          <>
+            <button onClick={() => setCancelModal(false)} className="btn-secondary flex-1">
+              Keep booking
+            </button>
+            <button onClick={handleCancel} className="btn-danger flex-1">
+              Yes, cancel
+            </button>
+          </>
+        }
+      >
+        <div className="py-2">
+          <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
               <AlertCircle size={18} className="text-red-500" />
             </div>
             <p className="text-sm text-moss leading-relaxed">
               Cancel this team booking at <strong className="text-soot">{selectedBooking?.spaceName}</strong>? All assigned team members will be notified.
             </p>
-          </div>
-          <div className="flex gap-3">
-            <button onClick={() => setCancelModal(false)} className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium">
-              Keep booking
-            </button>
-            <button onClick={handleCancel} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold">
-              Yes, cancel
-            </button>
           </div>
         </div>
       </Modal>

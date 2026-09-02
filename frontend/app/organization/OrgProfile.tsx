@@ -305,7 +305,7 @@ export default function OrgProfile() {
               <button
                 type="button"
                 onClick={handleOpenEdit}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-xs sm:text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer active:scale-98"
+                className="btn-secondary"
               >
                 <Edit3 size={15} />
                 <span>Edit Profile</span>
@@ -439,7 +439,7 @@ export default function OrgProfile() {
               <button
                 type="button"
                 onClick={() => setAddEmpModal(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-xs sm:text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer active:scale-98"
+                className="btn-primary"
               >
                 <Plus size={15} />
                 <span>Add Member</span>
@@ -588,7 +588,7 @@ export default function OrgProfile() {
             <button
               type="button"
               onClick={() => showToast('To delete your organization account, please contact enterprise support.', 'error')}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-red-300 text-red-600 text-xs sm:text-sm font-medium hover:bg-red-50 transition-colors cursor-pointer"
+              className="btn-danger"
             >
               <AlertCircle size={15} />
               <span>Delete Organization</span>
@@ -637,7 +637,7 @@ export default function OrgProfile() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-10 px-5 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-xs sm:text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
+                  className="btn-secondary"
                 >
                   <Upload size={14} className="shrink-0" />
                   <span>Upload Logo</span>
@@ -647,7 +647,7 @@ export default function OrgProfile() {
                   <button
                     type="button"
                     onClick={handleRemovePhoto}
-                    className="h-10 px-5 rounded-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-xs inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
+                    className="btn-danger"
                   >
                     <Trash2 size={14} className="shrink-0" />
                     <span>Reset to Default</span>
@@ -830,14 +830,14 @@ export default function OrgProfile() {
             <button
               type="button"
               onClick={() => setIsEditModalOpen(false)}
-              className="flex-1 h-12 py-3 px-6 rounded-full border border-soot/15 hover:bg-soot/5 text-soot text-sm font-medium transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
+              className="btn-secondary flex-1"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 h-12 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] disabled:opacity-60 text-sm font-medium transition-all shadow-xs border border-soot/8 inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+              className="btn-primary flex-1 disabled:opacity-60"
             >
               {isSaving ? (
                 <span>Saving...</span>
@@ -895,13 +895,13 @@ export default function OrgProfile() {
             <button
               type="button"
               onClick={() => setAddEmpModal(false)}
-              className="flex-1 h-12 py-3 px-6 rounded-full border border-soot/15 text-soot text-sm font-medium hover:bg-soot/5 transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
+              className="btn-secondary flex-1"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 h-12 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap"
+              className="btn-primary flex-1"
             >
               <Plus size={16} />
               <span>Add Member</span>

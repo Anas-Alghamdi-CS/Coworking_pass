@@ -229,13 +229,13 @@ export default function MyBookings() {
             </div>
 
             {selectedBooking.status === 'active' && (
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 pt-4 border-t border-soot/10">
                 <button
                   onClick={() => {
                     setDetailsModal(false);
                     setCancelModal(true);
                   }}
-                  className="flex-1 py-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium transition-colors"
+                  className="btn-danger flex-1"
                 >
                   Cancel booking
                 </button>
@@ -244,7 +244,7 @@ export default function MyBookings() {
                     setDetailsModal(false);
                     navigate('space-details', { spaceId: selectedBooking.spaceId });
                   }}
-                  className="flex-1 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer"
+                  className="btn-primary flex-1"
                 >
                   View space details
                 </button>
@@ -255,32 +255,37 @@ export default function MyBookings() {
       </Modal>
 
       {/* Cancel Confirmation Modal */}
-      <Modal open={cancelModal} onClose={() => setCancelModal(false)} title="Cancel Booking" size="sm">
-        <div className="p-6">
-          <div className="flex items-start gap-3.5 mb-6">
-            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-              <AlertCircle size={20} className="text-red-500" />
-            </div>
-            <div>
-              <p className="text-sm text-soot font-medium mb-1">Are you sure you want to cancel?</p>
-              <p className="text-xs text-moss leading-relaxed font-normal">
-                Your reservation at <span className="text-soot font-medium">{selectedBooking?.spaceName}</span> will be cancelled. This action cannot be undone.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3 pt-2">
+      <Modal
+        open={cancelModal}
+        onClose={() => setCancelModal(false)}
+        title="Cancel Booking"
+        size="sm"
+        footer={
+          <>
             <button
               onClick={() => setCancelModal(false)}
-              className="flex-1 py-2.5 px-5 rounded-full border border-soot/15 text-soot text-sm font-medium hover:bg-soot/5 transition-colors cursor-pointer"
+              className="btn-secondary flex-1"
             >
               Keep booking
             </button>
             <button
               onClick={handleCancel}
-              className="flex-1 py-2.5 px-5 rounded-full bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors shadow-xs cursor-pointer"
+              className="btn-danger flex-1"
             >
               Yes, cancel
             </button>
+          </>
+        }
+      >
+        <div className="flex items-start gap-3.5 py-2">
+          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+            <AlertCircle size={20} className="text-red-500" />
+          </div>
+          <div>
+            <p className="text-sm text-soot font-medium mb-1">Are you sure you want to cancel?</p>
+            <p className="text-xs text-moss leading-relaxed font-normal">
+              Your reservation at <span className="text-soot font-medium">{selectedBooking?.spaceName}</span> will be cancelled. This action cannot be undone.
+            </p>
           </div>
         </div>
       </Modal>

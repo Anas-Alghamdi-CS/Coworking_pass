@@ -381,12 +381,12 @@ disabled={
   )
 }
 
-            className="flex-1 py-3 rounded-xl bg-soot text-plaster font-semibold text-sm hover:bg-soot-light disabled:opacity-50"
+            className="btn-primary flex-1 disabled:opacity-50"
           >
             Continue
           </button>
         ) : (
-          <button onClick={confirmBooking} disabled={loading} className="flex-1 py-3 rounded-xl bg-eucalyptus text-soot font-semibold text-sm hover:bg-eucalyptus-dark disabled:opacity-60">
+          <button onClick={confirmBooking} disabled={loading} className="btn-primary flex-1 disabled:opacity-60">
             {loading ? 'Confirming...' : 'Confirm team booking'}
           </button>
         )}

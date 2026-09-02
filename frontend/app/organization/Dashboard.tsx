@@ -4,8 +4,13 @@ import { Building2, CalendarDays, Users, TrendingUp, ArrowRight, Plus, BarChart3
 import { useApp } from '@/app/store';
 import { Booking, Space } from '@/types/types';
 
+import { useState } from 'react';
+import Modal from '@/components/ui/Modal';
+import AddWorkspace from './AddWorkspace';
+
 export default function OrgDashboard() {
   const { currentUser, bookings, spaces, navigate } = useApp();
+  const [addModalOpen, setAddModalOpen] = useState(false);
   if (!currentUser) return null;
 
   const companySpaces = spaces.filter((s: Space) => s.ownerId === currentUser.id);
@@ -166,7 +171,7 @@ export default function OrgDashboard() {
       {/* Quick actions */}
       <div className="mt-8 grid sm:grid-cols-3 gap-4">
         {[
-          { label: 'Add workspace', desc: 'List a new coworking space', action: () => navigate('company-add-workspace'), icon: Plus },
+          { label: 'Add workspace', desc: 'List a new coworking space', action: () => setAddModalOpen(true), icon: Plus },
           { label: 'View bookings', desc: 'Manage customer reservations', action: () => navigate('company-bookings'), icon: CalendarDays },
           { label: 'Manage team', desc: 'Add and organize team members', action: () => navigate('company-team'), icon: Users },
         ].map(a => (
@@ -183,6 +188,17 @@ export default function OrgDashboard() {
           </button>
         ))}
       </div>
+
+      {/* Add Workspace Modal */}
+      <Modal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        title="Add New Workspace"
+        subtitle="List a new coworking space or office for your organization."
+        size="2xl"
+      >
+        <AddWorkspace onCloseModal={() => setAddModalOpen(false)} />
+      </Modal>
     </div>
   );
 }

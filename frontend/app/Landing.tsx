@@ -472,14 +472,14 @@ export default function Landing() {
               <button
                 type="button"
                 onClick={() => navigate('signup')}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm bg-eucalyptus text-soot hover:bg-eucalyptus/90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-soot active:scale-[0.98] transition-all shadow-lg cursor-pointer"
+                className="btn-primary w-full sm:w-auto px-8 py-3.5"
               >
                 Get started free
               </button>
               <button
                 type="button"
                 onClick={() => navigate('browse')}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm bg-white/10 hover:bg-white/15 text-plaster border border-white/15 focus-visible:ring-2 focus-visible:ring-white active:scale-[0.98] transition-all cursor-pointer"
+                className="btn-secondary w-full sm:w-auto px-8 py-3.5 border-white/20 text-plaster hover:bg-white/10"
               >
                 Browse spaces
               </button>

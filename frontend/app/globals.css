@@ -74,7 +74,7 @@ a,
 button:active,
 a:active,
 .ui-hover-card:active {
-  transform: scale(0.99) !important;
+  transform: scale(0.98) !important;
 }
 
 /* Custom Scrollbar */
@@ -135,55 +135,93 @@ a:active,
   box-shadow: 0 0 0 3px var(--ring-focus);
 }
 
-/* Primary Pill Button */
+/* Global Button Design System Matching SpacesAdmin Design Tokens */
+
+/* Primary Button: bg-[#374142] text-[#FAF8F5] with subtle ring & hover */
+.btn-primary,
 .ui-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.35rem;
-  border-radius: 9999px;
-  background-color: #DDE6DF;
-  color: var(--color-soot);
-  font-weight: 500;
+  gap: 0.625rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 1rem; /* rounded-2xl */
+  background-color: #374142;
+  color: #FAF8F5 !important;
   font-size: 0.875rem;
-  border: 1px solid rgba(45, 53, 54, 0.08);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   cursor: pointer !important;
   transition: all 200ms ease-in-out;
 }
 
+.btn-primary:hover,
 .ui-btn-primary:hover {
-  background-color: #D0DDD3;
+  background-color: #2D3536;
+  color: #FAF8F5 !important;
 }
 
+.btn-primary:active,
 .ui-btn-primary:active {
   transform: scale(0.98);
 }
 
-/* Secondary Pill Button */
+/* Secondary Button: border border-soot/20 text-soot */
+.btn-secondary,
 .ui-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.65rem 1.35rem;
-  border-radius: 9999px;
-  background-color: #FFFFFF;
-  color: var(--color-soot);
-  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: transparent;
+  color: var(--color-soot) !important;
   font-size: 0.875rem;
-  border: 1px solid rgba(45, 53, 54, 0.15);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  font-weight: 600;
+  border: 1px solid rgba(45, 53, 54, 0.2);
   cursor: pointer !important;
   transition: all 200ms ease-in-out;
 }
 
+.btn-secondary:hover,
 .ui-btn-secondary:hover {
-  background-color: #F4F6F4;
-  border-color: rgba(45, 53, 54, 0.25);
+  background-color: rgba(45, 53, 54, 0.08);
+  color: var(--color-soot) !important;
 }
 
+.btn-secondary:active,
 .ui-btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* Danger Button: bg-red-600 text-white */
+.btn-danger,
+.ui-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem; /* rounded-xl */
+  background-color: #DC2626;
+  color: #FFFFFF !important;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer !important;
+  transition: all 200ms ease-in-out;
+}
+
+.btn-danger:hover,
+.ui-btn-danger:hover {
+  background-color: #B91C1C;
+  color: #FFFFFF !important;
+}
+
+.btn-danger:active,
+.ui-btn-danger:active {
   transform: scale(0.98);
 }

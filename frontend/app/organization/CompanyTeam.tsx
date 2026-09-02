@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Users, Plus, Search, Trash2, Edit2, Mail, Phone, Shield } from 'lucide-react';
 import { useApp } from '@/app/store';
 import { Employee } from '@/types';
-import Modal from '@/components/Modal';
+import Modal from '@/components/ui/Modal';
 
 type CompanyRole = 'Company Owner' | 'Company Manager' | 'Booking Manager' | 'Team Member';
 
@@ -174,8 +174,19 @@ export default function CompanyTeam() {
       </div>
 
       {/* Add member modal */}
-      <Modal open={addModal} onClose={() => setAddModal(false)} title="Invite team member" size="sm">
-        <div className="p-6 space-y-4">
+      <Modal
+        open={addModal}
+        onClose={() => setAddModal(false)}
+        title="Invite team member"
+        size="sm"
+        footer={
+          <>
+            <button onClick={() => setAddModal(false)} className="btn-secondary flex-1">Cancel</button>
+            <button onClick={handleAdd} className="btn-primary flex-1">Send invite</button>
+          </>
+        }
+      >
+        <div className="space-y-4 py-2">
           {[
             { label: 'Full name', key: 'name', placeholder: 'Ahmed Al-Dosari', type: 'text' },
             { label: 'Email address', key: 'email', placeholder: 'ahmed@company.sa', type: 'email' },
@@ -199,17 +210,24 @@ export default function CompanyTeam() {
             </select>
             <p className="text-[10px] text-moss mt-1">{ROLE_DESC[newMember.role]}</p>
           </div>
-          <div className="flex gap-3 pt-1">
-            <button onClick={() => setAddModal(false)} className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium">Cancel</button>
-            <button onClick={handleAdd} className="flex-1 py-2.5 rounded-xl bg-eucalyptus text-soot text-sm font-semibold">Send invite</button>
-          </div>
         </div>
       </Modal>
 
       {/* Edit member modal */}
-      <Modal open={!!editModal} onClose={() => setEditModal(null)} title="Edit team member" size="sm">
+      <Modal
+        open={!!editModal}
+        onClose={() => setEditModal(null)}
+        title="Edit team member"
+        size="sm"
+        footer={
+          <>
+            <button onClick={() => setEditModal(null)} className="btn-secondary flex-1">Cancel</button>
+            <button onClick={handleEditSave} className="btn-primary flex-1">Save changes</button>
+          </>
+        }
+      >
         {editModal && (
-          <div className="p-6 space-y-4">
+          <div className="space-y-4 py-2">
             <div>
               <label className="block text-xs font-medium text-moss mb-1.5">Full name</label>
               <input value={editModal.name} onChange={e => setEditModal(m => m ? { ...m, name: e.target.value } : m)} className="w-full px-4 py-2.5 rounded-xl border border-soot/12 bg-plaster text-soot text-sm outline-none focus:border-eucalyptus" />
@@ -224,24 +242,27 @@ export default function CompanyTeam() {
                 {COMPANY_ROLES.filter(r => r !== 'Company Owner').map(r => <option key={r}>{r}</option>)}
               </select>
             </div>
-            <div className="flex gap-3 pt-1">
-              <button onClick={() => setEditModal(null)} className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium">Cancel</button>
-              <button onClick={handleEditSave} className="flex-1 py-2.5 rounded-xl bg-soot text-plaster text-sm font-semibold">Save changes</button>
-            </div>
           </div>
         )}
       </Modal>
 
       {/* Delete confirmation */}
-      <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Remove member" size="sm">
+      <Modal
+        open={!!deleteModal}
+        onClose={() => setDeleteModal(null)}
+        title="Remove member"
+        size="sm"
+        footer={
+          <>
+            <button onClick={() => setDeleteModal(null)} className="btn-secondary flex-1">Cancel</button>
+            <button onClick={() => handleDelete(deleteModal!)} className="btn-danger flex-1">Remove</button>
+          </>
+        }
+      >
         {deleteModal && (
-          <div className="p-6">
+          <div className="py-2">
             <p className="text-sm text-moss mb-1">Remove <span className="font-semibold text-soot">{deleteModal.name}</span> from the team?</p>
-            <p className="text-xs text-moss/70 mb-6">They will lose access to all company workspaces and data.</p>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteModal(null)} className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium">Cancel</button>
-              <button onClick={() => handleDelete(deleteModal)} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold">Remove</button>
-            </div>
+            <p className="text-xs text-moss/70">They will lose access to all company workspaces and data.</p>
           </div>
         )}
       </Modal>

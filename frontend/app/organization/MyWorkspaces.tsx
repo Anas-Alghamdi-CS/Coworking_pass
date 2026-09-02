@@ -18,6 +18,7 @@ import {
 import { useApp } from '@/app/store';
 import { Booking, Space } from '@/types/types';
 import Modal from '@/components/ui/Modal';
+import AddWorkspace from './AddWorkspace';
 import AddWorkspaceModal from './AddWorkspaceModal';
 
 const SPACE_TYPES = ['All types', 'hot-desk', 'private-office', 'meeting-room', 'mixed'];
@@ -36,6 +37,7 @@ export default function MyWorkspaces() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [deleteModal, setDeleteModal] = useState<Space | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -80,9 +82,13 @@ export default function MyWorkspaces() {
             {companySpaces.length} workspace{companySpaces.length !== 1 ? 's' : ''} managed
           </p>
         </div>
-
-        {/* Add Workspace Button (Opens Modal) */}
-        
+        <button
+          onClick={() => setAddModalOpen(true)}
+          className="btn-primary"
+        >
+          <Plus size={15} />
+          <span>Add workspace</span>
+        </button>
       </div>
 
       {/* Filters */}
@@ -367,40 +373,42 @@ className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg
         </div>
       )}
 
-      {/* Add Workspace Modal */}
-      <AddWorkspaceModal
-        open={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Delete workspace" size="sm">
+      {/* Delete confirmation */}
+      <Modal
+        open={!!deleteModal}
+        onClose={() => setDeleteModal(null)}
+        title="Delete workspace"
+        size="sm"
+        footer={
+          <>
+            <button onClick={() => setDeleteModal(null)} className="btn-secondary flex-1">
+              Cancel
+            </button>
+            <button onClick={() => deleteModal && handleDelete(deleteModal)} className="btn-danger flex-1">
+              Delete workspace
+            </button>
+          </>
+        }
+      >
         {deleteModal && (
-          <div className="space-y-4">
-            <p className="text-sm text-moss font-normal">
-              Are you sure you want to delete <span className="font-medium text-soot">{deleteModal.name}</span>?
+          <div className="py-2">
+            <p className="text-sm text-moss mb-1">
+              Are you sure you want to delete <span className="font-semibold text-soot">{deleteModal.name}</span>?
             </p>
-            <p className="text-xs text-moss/80 font-normal">
-              This action cannot be undone. All workspace listings and associated details will be permanently removed.
-            </p>
-            <div className="flex gap-3 pt-3 border-t border-soot/8">
-              <button
-                type="button"
-                onClick={() => setDeleteModal(null)}
-                className="flex-1 py-2.5 rounded-full border border-soot/15 text-soot text-sm font-medium hover:bg-soot/5 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(deleteModal)}
-                className="flex-1 py-2.5 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors shadow-xs cursor-pointer"
-              >
-                Delete workspace
-              </button>
-            </div>
+            <p className="text-xs text-moss/70">This action cannot be undone. All workspace data will be permanently removed.</p>
           </div>
         )}
+      </Modal>
+
+      {/* Add Workspace Modal */}
+      <Modal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        title="Add New Workspace"
+        subtitle="List a new coworking space or office for your organization."
+        size="2xl"
+      >
+        <AddWorkspace onCloseModal={() => setAddModalOpen(false)} />
       </Modal>
     </div>
   );

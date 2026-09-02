@@ -10,12 +10,10 @@ import {
   Shield,
   Edit3,
   Check,
-  Camera,
   Trash2,
   Upload,
   Lock,
-  GraduationCap,
-  FileText
+  GraduationCap
 } from 'lucide-react';
 import { useApp } from '@/app/store';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -142,10 +140,11 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
               setActiveTab('profile');
               navigate('ind-profile');
             }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all ${activeTab === 'profile'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
+              activeTab === 'profile'
                 ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/5'
                 : 'text-moss hover:text-soot'
-              }`}
+            }`}
           >
             <User size={15} />
             <span>Profile</span>
@@ -156,10 +155,11 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
               setActiveTab('settings');
               navigate('ind-settings');
             }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all ${activeTab === 'settings'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
+              activeTab === 'settings'
                 ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/5'
                 : 'text-moss hover:text-soot'
-              }`}
+            }`}
           >
             <Settings size={15} />
             <span>Settings</span>
@@ -186,7 +186,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
             <div className="px-6 sm:px-8 pb-8 pt-0 relative">
               {/* Header Row: Avatar */}
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 -mt-16 sm:-mt-20 mb-6">
-                {/* Avatar with Ring */}
                 <div className="relative inline-block self-start">
                   <UserAvatar
                     src={currentUser.avatar}
@@ -204,7 +203,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                     {currentUser.name}
                   </h2>
 
-                  {/* Account Role Badge */}
                   <span className="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-medium bg-[#DDE6DF] text-soot border border-soot/6 capitalize">
                     {currentUser.role === 'individual' ? 'Individual' : currentUser.role}
                   </span>
@@ -229,7 +227,7 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
               <button
                 type="button"
                 onClick={handleOpenEdit}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-xs sm:text-sm font-medium transition-all shadow-xs border border-soot/8 cursor-pointer active:scale-98"
+                className="btn-secondary text-xs sm:text-sm px-5 py-2"
               >
                 <Edit3 size={15} />
                 <span>Edit Profile</span>
@@ -238,7 +236,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
 
             {/* Information Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              {/* Full Name */}
               <div className="bg-[#F9F8F5] rounded-2xl p-4 border border-soot/6 transition-all hover:border-soot/12">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-moss mb-1 flex items-center gap-1.5">
                   <User size={13} className="text-moss/80" />
@@ -249,7 +246,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                 </div>
               </div>
 
-              {/* Username */}
               <div className="bg-[#F9F8F5] rounded-2xl p-4 border border-soot/6 transition-all hover:border-soot/12">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-moss mb-1 flex items-center gap-1.5">
                   <span className="font-mono text-xs">@</span>
@@ -260,7 +256,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                 </div>
               </div>
 
-              {/* Email Address */}
               <div className="bg-[#F9F8F5] rounded-2xl p-4 border border-soot/6 transition-all hover:border-soot/12">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-moss mb-1 flex items-center gap-1.5">
                   <Mail size={13} className="text-moss/80" />
@@ -271,7 +266,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                 </div>
               </div>
 
-              {/* Phone Number */}
               <div className="bg-[#F9F8F5] rounded-2xl p-4 border border-soot/6 transition-all hover:border-soot/12">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-moss mb-1 flex items-center gap-1.5">
                   <Phone size={13} className="text-moss/80" />
@@ -282,7 +276,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                 </div>
               </div>
 
-              {/* Account Type */}
               <div className="bg-[#F9F8F5] rounded-2xl p-4 border border-soot/6 transition-all hover:border-soot/12">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-moss mb-1 flex items-center gap-1.5">
                   <Shield size={13} className="text-moss/80" />
@@ -293,7 +286,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                 </div>
               </div>
 
-              {/* University / Organization */}
               <div className="bg-[#F9F8F5] rounded-2xl p-4 border border-soot/6 transition-all hover:border-soot/12">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-moss mb-1 flex items-center gap-1.5">
                   <GraduationCap size={13} className="text-moss/80" />
@@ -304,7 +296,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                 </div>
               </div>
 
-              {/* Member Since */}
               <div className="bg-[#F9F8F5] rounded-2xl p-4 border border-soot/6 sm:col-span-2 transition-all hover:border-soot/12">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-moss mb-1 flex items-center gap-1.5">
                   <Calendar size={13} className="text-moss/80" />
@@ -320,7 +311,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
       ) : (
         /* Settings Tab */
         <div className="space-y-6">
-          {/* Notification Preferences */}
           <div className="bg-white rounded-3xl border border-soot/8 p-6 sm:p-8 shadow-sm">
             <h3 className="text-xl font-normal text-soot mb-1" style={{ fontFamily: 'DM Serif Display, serif' }}>
               Notification Preferences
@@ -347,12 +337,14 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                         [item.key]: !prev[item.key as keyof typeof notifications],
                       }))
                     }
-                    className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${notifications[item.key as keyof typeof notifications] ? 'bg-soot' : 'bg-soot/15'
-                      }`}
+                    className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${
+                      notifications[item.key as keyof typeof notifications] ? 'bg-soot' : 'bg-soot/15'
+                    }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full bg-white transition-transform ${notifications[item.key as keyof typeof notifications] ? 'translate-x-7' : 'translate-x-1'
-                        }`}
+                      className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                        notifications[item.key as keyof typeof notifications] ? 'translate-x-7' : 'translate-x-1'
+                      }`}
                     />
                   </button>
                 </div>
@@ -360,7 +352,6 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
             </div>
           </div>
 
-          {/* Privacy & Account Actions */}
           <div className="bg-white rounded-3xl border border-soot/8 p-6 sm:p-8 shadow-sm">
             <h3 className="text-xl font-normal text-soot mb-1" style={{ fontFamily: 'DM Serif Display, serif' }}>
               Privacy & Security
@@ -376,12 +367,14 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
                 <button
                   type="button"
                   onClick={() => setPrivacy(p => ({ ...p, profileVisible: !p.profileVisible }))}
-                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${privacy.profileVisible ? 'bg-soot' : 'bg-soot/15'
-                    }`}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer shrink-0 ${
+                    privacy.profileVisible ? 'bg-soot' : 'bg-soot/15'
+                  }`}
                 >
                   <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform ${privacy.profileVisible ? 'translate-x-7' : 'translate-x-1'
-                      }`}
+                    className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                      privacy.profileVisible ? 'translate-x-7' : 'translate-x-1'
+                    }`}
                   />
                 </button>
               </div>
@@ -395,206 +388,176 @@ export default function ProfileSettings({ mode = 'profile' }: { mode?: 'profile'
         open={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         title="Edit Profile Information"
+        subtitle="Update your display name, photo, university, and personal bio."
         size="lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(false)}
+              className="btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleSaveProfile(e as any)}
+              disabled={isSaving}
+              className="btn-primary flex-1 disabled:opacity-60"
+            >
+              {isSaving ? (
+                <span>Saving...</span>
+              ) : (
+                <>
+                  <Check size={16} className="shrink-0 text-eucalyptus" />
+                  <span>Save Changes</span>
+                </>
+              )}
+            </button>
+          </>
+        }
       >
-        <form onSubmit={handleSaveProfile} className="space-y-6">
-          {/* Profile Picture Section */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 rounded-2xl bg-[#F9F8F5] border border-soot/8">
-            <div className="relative shrink-0">
-              <UserAvatar
-                src={editAvatar}
-                name={editName || currentUser.name}
-                size="xl"
-                ring={true}
-              />
-            </div>
-
-            <div className="flex-1 min-w-0 text-center sm:text-left space-y-2.5">
-              <div>
-                <div className="text-sm font-medium text-soot">Profile Photo</div>
-                <p className="text-xs text-moss font-normal mt-0.5">
-                  Upload a custom personal photo or use the clean default silhouette avatar.
-                </p>
-              </div>
-
-              {/* Action Buttons strictly next to each other on the same line */}
-              <div className="flex flex-row items-center justify-center sm:justify-start gap-3 pt-1 flex-nowrap">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  className="hidden"
-                />
-
+        <form onSubmit={handleSaveProfile} className="space-y-4 py-2">
+          {/* Avatar Photo Section */}
+          <div className="flex items-center gap-4 pb-4 border-b border-soot/10">
+            <UserAvatar
+              src={editAvatar}
+              name={editName || 'User'}
+              size="lg"
+            />
+            <div className="space-y-1.5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-moss">Profile Photo</div>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-9 px-3 py-3 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] text-xs font-medium transition-all cursor-pointer shadow-xs inline-flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="btn-secondary text-xs px-3 py-1.5"
                 >
-                  <Upload size={14} className="shrink-0" />
+                  <Upload size={13} />
                   <span>Upload Photo</span>
                 </button>
                 {editAvatar && (
                   <button
                     type="button"
                     onClick={handleRemovePhoto}
-                    className="h-9 px-3 py-3 rounded-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs  font-medium transition-all cursor-pointer shadow-xs inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-3"
+                    className="btn-danger text-xs px-3 py-1.5"
                   >
-                    <Trash2 size={15} className="shrink-0" />
-                    <span>Reset to Default</span>
+                    <Trash2 size={13} />
+                    <span>Remove</span>
                   </button>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Form Fields with generous spacing and clear distinction */}
-          <div className="space-y-5">
-            {/* Full Name (Editable) */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
-                <span>Full Name <span className="text-red-500">*</span></span>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
-              </label>
               <input
-                type="text"
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-                placeholder="e.g. Hadel Turki"
-                className={`w-full px-4 py-3 rounded-2xl border text-sm text-soot outline-none transition-all font-normal ${errors.name ? 'border-red-400 bg-red-50/20 focus:ring-2 focus:ring-red-200' : 'border-soot/12 bg-white focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20'
-                  }`}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1 font-normal">{errors.name}</p>}
-            </div>
-
-            {/* Username (Editable) */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
-                <span>Username <span className="text-red-500">*</span></span>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-moss font-normal text-sm">@</span>
-                <input
-                  type="text"
-                  value={editUsername}
-                  onChange={e => setEditUsername(e.target.value)}
-                  placeholder="username"
-                  className={`w-full pl-8 pr-4 py-3 rounded-2xl border text-sm text-soot outline-none transition-all font-normal ${errors.username ? 'border-red-400 bg-red-50/20 focus:ring-2 focus:ring-red-200' : 'border-soot/12 bg-white focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20'
-                    }`}
-                />
-              </div>
-              {errors.username && <p className="text-red-500 text-xs mt-1 font-normal">{errors.username}</p>}
-            </div>
-
-            {/* Email Address (Non-Editable / Read-Only with distinction) */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Mail size={12} />
-                  <span>Email Address</span>
-                </span>
-                <span className="text-[10px] text-moss/80 bg-soot/5 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Lock size={10} /> Read-only
-                </span>
-              </label>
-              <input
-                type="email"
-                value={currentUser.email}
-                disabled
-                className="w-full px-4 py-3 rounded-2xl border border-soot/8 bg-soot/5 text-moss text-sm cursor-not-allowed font-normal"
-              />
-            </div>
-
-            {/* Phone Number (Editable) */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
-                <span>Phone Number</span>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
-              </label>
-              <input
-                type="tel"
-                value={editPhone}
-                onChange={e => setEditPhone(e.target.value)}
-                placeholder="+966 55 123 4567"
-                className="w-full px-4 py-3 rounded-2xl border border-soot/12 bg-white text-sm text-soot outline-none focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20 font-normal"
-              />
-            </div>
-
-            {/* Role / Account Type (Non-Editable distinction) */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Shield size={12} />
-                  <span>Account Role</span>
-                </span>
-                <span className="text-[10px] text-moss/80 bg-soot/5 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Lock size={10} /> Read-only
-                </span>
-              </label>
-              <input
-                type="text"
-                value={`${currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} Account`}
-                disabled
-                className="w-full px-4 py-3 rounded-2xl border border-soot/8 bg-soot/5 text-moss text-sm cursor-not-allowed font-normal capitalize"
-              />
-            </div>
-
-            {/* University / Organization (Editable) */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
-                <span>University / Organization</span>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
-              </label>
-              <input
-                type="text"
-                value={editUniversity}
-                onChange={e => setEditUniversity(e.target.value)}
-                placeholder="e.g. Umm Al-Qura University (UQU)"
-                className="w-full px-4 py-3 rounded-2xl border border-soot/12 bg-white text-sm text-soot outline-none focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20 font-normal"
-              />
-            </div>
-
-            {/* Bio / Description (Editable) */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
-                <span>About / Bio</span>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
-              </label>
-              <textarea
-                value={editBio}
-                onChange={e => setEditBio(e.target.value)}
-                rows={3}
-                placeholder="A brief introduction about yourself or your work..."
-                className="w-full px-4 py-3 rounded-2xl border border-soot/12 bg-white text-sm text-soot outline-none focus:border-eucalyptus focus:ring-2 focus:ring-eucalyptus/20 font-normal resize-none"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
             </div>
           </div>
 
-          {/* Modal Actions: Same sizes, matching heights, consistent gaps, and no text wrapping */}
-          <div className="flex items-center gap-4 pt-4 border-t border-soot/8">
-            <button
-              type="button"
-              onClick={() => setIsEditModalOpen(false)}
-              className="flex-1 h-10 py-3 px-6 rounded-full border border-soot/15 hover:bg-soot/5 text-soot text-sm font-medium transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="flex-1 h-10 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] disabled:opacity-60 text-sm font-medium transition-all shadow-xs border border-soot/8 inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
-            >
-              {isSaving ? (
-                <span>Saving...</span>
-              ) : (
-                <>
-                  <Check size={16} className="shrink-0" />
-                  <span>Save Changes</span>
-                </>
-              )}
-            </button>
+          {/* Full Name */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
+              <span>Full Name *</span>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
+            </label>
+            <input
+              type="text"
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              placeholder="e.g. Faisal Al-Otaibi"
+              className={`w-full px-4 py-3 rounded-2xl border text-sm text-soot outline-none transition-all font-normal ${
+                errors.name ? 'border-red-400 bg-red-50/20' : 'border-soot/12 bg-white focus:border-eucalyptus'
+              }`}
+            />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+          </div>
+
+          {/* Username */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
+              <span>Username *</span>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-moss font-semibold text-sm">@</span>
+              <input
+                type="text"
+                value={editUsername}
+                onChange={e => setEditUsername(e.target.value)}
+                placeholder="username"
+                className={`w-full pl-8 pr-4 py-3 rounded-2xl border text-sm text-soot outline-none transition-all font-normal ${
+                  errors.username ? 'border-red-400 bg-red-50/20' : 'border-soot/12 bg-white focus:border-eucalyptus'
+                }`}
+              />
+            </div>
+            {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+          </div>
+
+          {/* Email Address */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Mail size={12} />
+                <span>Email Address</span>
+              </span>
+              <span className="text-[10px] text-moss/80 bg-soot/5 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Lock size={10} /> Read-only
+              </span>
+            </label>
+            <input
+              type="email"
+              value={currentUser.email}
+              disabled
+              className="w-full px-4 py-3 rounded-2xl border border-soot/8 bg-soot/5 text-moss text-sm cursor-not-allowed font-normal"
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
+              <span>Phone Number</span>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
+            </label>
+            <input
+              type="tel"
+              value={editPhone}
+              onChange={e => setEditPhone(e.target.value)}
+              placeholder="+966 55 123 4567"
+              className="w-full px-4 py-3 rounded-2xl border border-soot/12 bg-white text-sm text-soot outline-none focus:border-eucalyptus font-normal"
+            />
+          </div>
+
+          {/* University / Organization */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
+              <span>University / Organization</span>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
+            </label>
+            <input
+              type="text"
+              value={editUniversity}
+              onChange={e => setEditUniversity(e.target.value)}
+              placeholder="e.g. Umm Al-Qura University (UQU)"
+              className="w-full px-4 py-3 rounded-2xl border border-soot/12 bg-white text-sm text-soot outline-none focus:border-eucalyptus font-normal"
+            />
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wider text-moss mb-1.5 flex items-center justify-between">
+              <span>About / Bio</span>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Editable</span>
+            </label>
+            <textarea
+              value={editBio}
+              onChange={e => setEditBio(e.target.value)}
+              rows={3}
+              placeholder="A brief introduction about yourself or your work..."
+              className="w-full px-4 py-3 rounded-2xl border border-soot/12 bg-white text-sm text-soot outline-none focus:border-eucalyptus font-normal resize-none"
+            />
           </div>
         </form>
       </Modal>

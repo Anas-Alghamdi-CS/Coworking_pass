@@ -187,7 +187,7 @@ export default function SpacesAdmin() {
         <button
           type="button"
           onClick={openAdd}
-          className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-[#374142] text-[#FAF8F5] text-sm font-medium ring-1 ring-white/15 shadow-sm hover:bg-[#2D3536] transition-all duration-200 active:scale-[0.98] cursor-pointer"
+          className="btn-primary"
         >
           <Plus size={17} className="text-[#FAF8F5]/80" />
           <span>Add space</span>
@@ -680,14 +680,14 @@ export default function SpacesAdmin() {
               <button
                 type="button"
                 onClick={() => setEditModal(false)}
-                className="px-5 py-2.5 rounded-xl border border-soot/20 text-soot text-sm font-semibold hover:bg-soot/8 transition-colors cursor-pointer"
+                className="btn-secondary"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                className="px-6 py-2.5 rounded-xl bg-[#374142] text-[#FAF8F5] text-sm font-semibold hover:bg-[#2D3536] transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                className="btn-primary"
               >
                 {editingSpace ? 'Save Changes' : 'Publish Space'}
               </button>
@@ -719,7 +719,7 @@ export default function SpacesAdmin() {
               <button
                 type="button"
                 onClick={() => setDeleteModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-soot/20 text-soot text-sm font-medium hover:bg-soot/8 transition-colors cursor-pointer"
+                className="btn-secondary flex-1"
               >
                 Cancel
               </button>
@@ -730,7 +730,7 @@ export default function SpacesAdmin() {
                   setDeleteModal(false);
                   setSpaceToDelete(null);
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-xs cursor-pointer"
+                className="btn-danger flex-1"
               >
                 Delete
               </button>

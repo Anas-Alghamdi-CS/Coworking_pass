@@ -544,7 +544,7 @@ export default function ProviderProfileSettings() {
             <button
               type="button"
               onClick={() => showToast('To close your space provider account, please contact provider support.', 'error')}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-red-300 text-red-600 text-xs sm:text-sm font-medium hover:bg-red-50 transition-colors cursor-pointer"
+              className="btn-danger"
             >
               <AlertCircle size={15} />
               <span>Delete Provider Account</span>

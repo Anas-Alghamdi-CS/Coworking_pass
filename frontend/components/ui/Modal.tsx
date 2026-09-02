@@ -7,11 +7,13 @@ export interface ModalProps {
   open: boolean;
   onClose: () => void;
   title?: string;
+  subtitle?: string;
   children: ReactNode;
+  footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
-export default function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+export default function Modal({ open, onClose, title, subtitle, children, footer, size = 'md' }: ModalProps) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -35,38 +37,51 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-soot/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-soot/70 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className={`bg-plaster-surface rounded-3xl border border-soot/12 shadow-2xl w-full ${widths[size]} max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200`}
-        onClick={e => e.stopPropagation()}
+        className={`bg-plaster-surface rounded-3xl border border-soot/15 shadow-2xl w-full ${widths[size]} max-h-[90vh] flex flex-col overflow-hidden relative z-10 animate-in zoom-in-95 duration-200`}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* Header Section */}
         {title ? (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-soot/10 sticky top-0 bg-plaster-surface/95 backdrop-blur-sm z-10">
-            <h3 className="text-xl font-normal text-soot tracking-tight font-serif-display">{title}</h3>
+          <div className="px-6 sm:px-8 py-5 border-b border-soot/10 flex items-center justify-between bg-plaster-dark/30 shrink-0 rounded-t-3xl">
+            <div>
+              <h3 className="text-xl font-serif-display font-normal text-soot tracking-tight">{title}</h3>
+              {subtitle && <p className="text-xs text-moss mt-0.5">{subtitle}</p>}
+            </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl hover:bg-soot/8 transition-colors text-moss hover:text-soot focus:outline-none focus:ring-2 focus:ring-soot/20"
+              className="p-2 rounded-full text-moss hover:text-soot hover:bg-soot/8 transition-colors cursor-pointer focus:outline-none"
               aria-label="Close modal"
             >
               <X size={18} />
             </button>
           </div>
         ) : (
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-4 right-4 z-20">
             <button
               onClick={onClose}
-              className="p-2 rounded-xl hover:bg-soot/8 transition-colors text-moss hover:text-soot focus:outline-none focus:ring-2 focus:ring-soot/20"
+              className="p-2 rounded-full text-moss hover:text-soot hover:bg-soot/8 transition-colors cursor-pointer focus:outline-none"
               aria-label="Close modal"
             >
               <X size={18} />
             </button>
           </div>
         )}
-        <div className="p-6">
+
+        {/* Scrollable Body Section */}
+        <div className="p-6 sm:p-8 overflow-y-auto space-y-4 flex-1">
           {children}
         </div>
+
+        {/* Footer Section */}
+        {footer && (
+          <div className="px-6 sm:px-8 py-4 border-t border-soot/10 bg-plaster-dark/30 flex items-center justify-end gap-3 shrink-0 rounded-b-3xl">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

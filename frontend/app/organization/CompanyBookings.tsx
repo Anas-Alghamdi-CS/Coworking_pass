@@ -59,9 +59,9 @@ export default function CompanyBookings() {
           <h1 className="text-3xl text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>Bookings</h1>
           <p className="text-moss text-sm mt-1">{filtered.length} bookings · SAR {totalRevenue.toLocaleString()} revenue</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-soot/15 text-moss text-sm font-medium hover:bg-soot/5 transition-colors">
+        <button className="btn-secondary">
           <Download size={14} />
-          Export
+          <span>Export</span>
         </button>
       </div>
 

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   LayoutDashboard, Search, CalendarDays, User, Settings, LogOut,
-  Building2, Users, BarChart3, BookOpen, ChevronRight,
-  Briefcase, AlertCircle
+  Building2, Users, BarChart3, BookOpen, ChevronRight, ChevronDown,
+  Briefcase, AlertCircle, MoreHorizontal
 } from 'lucide-react';
 import { Screen, UserRole } from '@/types/types';
 import { useApp } from './store';
@@ -67,12 +67,17 @@ const individualNav: NavItem[] = [
 const orgNav: NavItem[] = [
   { label: 'Dashboard', screen: 'org-dashboard', icon: LayoutDashboard },
   { label: 'Workspaces', screen: 'company-workspaces', icon: Building2 },
-  { label: 'Browse Spaces', screen: 'browse', icon: Search },
+  { label: 'Reports', screen: 'company-reports', icon: BarChart3 },
+];
+
+const orgMoreNav: NavItem[] = [
   { label: 'Team Bookings', screen: 'team-bookings', icon: Briefcase },
   { label: 'Team Members', screen: 'company-team', icon: Users },
-  { label: 'Reports', screen: 'company-reports', icon: BarChart3 },
+  { label: 'Browse Spaces', screen: 'browse', icon: Search },
   { label: 'Settings', screen: 'org-settings', icon: Settings },
 ];
+
+const orgFullNav: NavItem[] = [...orgNav, ...orgMoreNav];
 
 const providerNav: NavItem[] = [
   { label: 'Dashboard', screen: 'provider-dashboard', icon: LayoutDashboard },
@@ -93,6 +98,33 @@ const adminNav: NavItem[] = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, navigate, logout, nav } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const moreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMoreMouseEnter = () => {
+    if (moreTimeoutRef.current) clearTimeout(moreTimeoutRef.current);
+    setMoreOpen(true);
+  };
+
+  const handleMoreMouseLeave = () => {
+    moreTimeoutRef.current = setTimeout(() => {
+      setMoreOpen(false);
+    }, 250);
+  };
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (moreTimeoutRef.current) clearTimeout(moreTimeoutRef.current);
+    };
+  }, []);
 
   if (!currentUser) return <>{children}</>;
 
@@ -102,6 +134,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     : role === 'organization' ? orgNav
     : role === 'provider' ? providerNav
     : individualNav;
+
+  const mobileNavItems = role === 'organization' ? orgFullNav : navItems;
+
+  const isMoreActive = role === 'organization' && orgMoreNav.some(m => m.screen === nav.screen);
 
   const dashboardScreen: Screen = role === 'admin' ? 'admin-dashboard'
     : role === 'organization' ? 'org-dashboard'
@@ -131,23 +167,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-plaster text-soot">
       {/* Top Navbar Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-soot/10 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 w-full bg-plaster-surface/95 backdrop-blur-md border-b border-soot/12 shadow-xs transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4 w-full">
           
-          {/* Brand Logo without Border */}
+          {/* Brand Logo & Serif Title */}
           <button
             type="button"
             onClick={() => navigate(dashboardScreen)}
-            className="flex items-center gap-3 cursor-pointer focus:outline-none shrink-0"
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer focus:outline-none shrink-0 group"
           >
-            <LogoImage className="w-10 h-10 object-contain" />
-            <span className="font-serif-display font-normal text-soot text-2xl tracking-tight hidden sm:block">
+            <LogoImage className="w-9 h-9 sm:w-10 sm:h-10 object-contain group-hover:scale-105 transition-transform" />
+            <span className="font-serif-display font-normal text-soot text-xl sm:text-2xl lg:text-3xl tracking-tight hidden sm:block">
               Coworking Pass
             </span>
           </button>
 
-          {/* Centered Navigation Row at Logo Level */}
-          <nav className="hidden lg:flex items-center justify-center gap-1.5 flex-1 mx-4">
+          {/* Centered Navigation Row */}
+          <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-1.5 flex-1 min-w-0 mx-1 xl:mx-3">
             {navItems.map(item => {
               const active = isActive(item);
               const Icon = item.icon;
@@ -156,38 +192,103 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   key={item.screen}
                   type="button"
                   onClick={() => navigate(item.screen)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs xl:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
+                  className={`flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full text-xs xl:text-sm font-medium transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                     active
-                      ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/6'
+                      ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/10 font-semibold'
                       : 'text-moss hover:text-soot hover:bg-soot/5'
                   }`}
                 >
-                  <span className="w-5 h-5 flex items-center justify-center shrink-0">
-                    <Icon size={17} className={active ? 'text-soot' : 'text-moss'} />
+                  <span className="w-4 h-4 xl:w-5 xl:h-5 flex items-center justify-center shrink-0">
+                    <Icon size={16} className={active ? 'text-soot' : 'text-moss'} />
                   </span>
                   <span>{item.label}</span>
                 </button>
               );
             })}
+
+            {/* Organization Role 'Management' Dropdown Menu */}
+            {role === 'organization' && (
+              <div
+                className="relative shrink-0"
+                ref={moreRef}
+                onMouseEnter={handleMoreMouseEnter}
+                onMouseLeave={handleMoreMouseLeave}
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMoreOpen(prev => !prev);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 xl:py-2 rounded-full text-xs xl:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isMoreActive || moreOpen
+                      ? 'bg-[#DDE6DF] text-soot shadow-xs border border-soot/10 font-semibold'
+                      : 'text-moss hover:text-soot hover:bg-soot/5'
+                  }`}
+                >
+                  <MoreHorizontal size={16} className={isMoreActive ? 'text-soot' : 'text-moss'} />
+                  <span>Management</span>
+                  <ChevronDown size={14} className={`text-moss transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* More Dropdown Container */}
+                {moreOpen && (
+                  <div className="absolute right-0 mt-1 w-52 bg-plaster-surface rounded-2xl border border-soot/15 shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    {orgMoreNav.map(item => {
+                      const active = isActive(item);
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.screen}
+                          type="button"
+                          onClick={() => {
+                            navigate(item.screen);
+                            setMoreOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer ${
+                            active
+                              ? 'bg-[#DDE6DF] text-soot shadow-2xs'
+                              : 'text-soot hover:bg-soot/5'
+                          }`}
+                        >
+                          <Icon size={15} className="text-moss shrink-0" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
 
           {/* Right Controls: Role Tag, Profile, & Logout */}
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="hidden sm:inline-flex text-xs font-medium uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-[#DDE6DF]/70 text-soot border border-soot/6">
-              {role} portal
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span
+              className={`hidden xl:inline-flex text-[11px] xl:text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border shadow-2xs shrink-0 ${
+                role === 'organization'
+                  ? 'bg-soot text-plaster border-soot/20'
+                  : role === 'admin'
+                  ? 'bg-red-500/10 text-red-700 border-red-500/20'
+                  : role === 'provider'
+                  ? 'bg-mist/30 text-soot border-mist/50'
+                  : 'bg-eucalyptus/20 text-soot border-eucalyptus/30'
+              }`}
+            >
+              {role === 'organization' ? 'HR Admin (B2B)' : `${role} portal`}
             </span>
 
             <button
               type="button"
               onClick={() => navigate(profileScreen)}
-              className="flex items-center gap-2.5 p-1 sm:px-3 sm:py-1.5 rounded-full hover:bg-soot/5 border border-transparent hover:border-soot/10 transition-all cursor-pointer"
+              className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1 rounded-full hover:bg-soot/5 border border-transparent hover:border-soot/10 transition-all cursor-pointer shrink-0"
             >
               <UserAvatar
                 src={currentUser.avatar}
                 name={currentUser.name}
                 size="sm"
               />
-              <span className="hidden md:block text-sm font-medium text-soot">
+              <span className="hidden md:block text-xs sm:text-sm font-semibold text-soot">
                 {currentUser.name.split(' ')[0]}
               </span>
             </button>
@@ -195,17 +296,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setShowLogoutModal(true)}
-              className="p-2.5 rounded-2xl text-moss hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+              className="p-2 sm:p-2.5 rounded-2xl text-moss hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
               title="Log out"
             >
-              <LogOut size={19} />
+              <LogOut size={18} />
             </button>
           </div>
         </div>
 
         {/* Mobile/Tablet Subnav Row */}
-        <div className="lg:hidden border-t border-soot/8 bg-white py-2 px-4 overflow-x-auto scrollbar-none flex items-center gap-2">
-          {navItems.map(item => {
+        <div className="lg:hidden border-t border-soot/10 bg-plaster-surface py-2 px-4 overflow-x-auto scrollbar-none flex items-center gap-2">
+          {mobileNavItems.map(item => {
             const active = isActive(item);
             const Icon = item.icon;
             return (
@@ -234,43 +335,45 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
+      {/* Global Footer rendered on all authenticated layouts */}
+      <Footer />
+
       {/* Logout Confirmation Modal */}
       <Modal
         open={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         title="Confirm Logout"
         size="sm"
-      >
-        <div className="p-6 bg-plaster-surface rounded-3xl">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-11 h-11 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-              <AlertCircle size={22} className="text-red-600" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-soot mb-1 font-serif-display">
-                Are you sure you want to log out?
-              </h3>
-              <p className="text-xs text-moss leading-relaxed">
-                You will need to sign in again to access your active bookings and workspace dashboard.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
+        footer={
+          <>
             <button
               type="button"
               onClick={() => setShowLogoutModal(false)}
-              className="flex-1 py-2.5 rounded-xl border border-soot/15 text-soot text-sm font-medium hover:bg-plaster-dark transition-colors cursor-pointer"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirmLogout}
-              className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-xs cursor-pointer"
+              className="btn-danger"
             >
               Log Out
             </button>
+          </>
+        }
+      >
+        <div className="flex items-start gap-4 py-2">
+          <div className="w-11 h-11 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+            <AlertCircle size={22} className="text-red-600" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-soot mb-1 font-serif-display">
+              Are you sure you want to log out?
+            </h3>
+            <p className="text-xs text-moss leading-relaxed">
+              You will need to sign in again to access your active bookings and workspace dashboard.
+            </p>
           </div>
         </div>
       </Modal>
@@ -325,20 +428,25 @@ function AdminSettingsPage() {
         <button
           type="button"
           onClick={() => setShowLogoutModal(true)}
-          className="px-5 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-xs cursor-pointer"
+          className="btn-danger"
         >
           Log Out
         </button>
       </div>
 
-      <Modal open={showLogoutModal} onClose={() => setShowLogoutModal(false)} title="Confirm Logout" size="sm">
-        <div className="p-6 bg-plaster-surface rounded-3xl">
-          <p className="text-sm text-soot mb-6">Are you sure you want to log out of admin account?</p>
-          <div className="flex gap-3">
-            <button type="button" onClick={() => setShowLogoutModal(false)} className="flex-1 py-2 rounded-xl border border-soot/15 text-soot text-sm font-medium hover:bg-plaster-dark cursor-pointer">Cancel</button>
-            <button type="button" onClick={() => { setShowLogoutModal(false); logout(); }} className="flex-1 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 cursor-pointer">Log Out</button>
-          </div>
-        </div>
+      <Modal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        title="Confirm Logout"
+        size="sm"
+        footer={
+          <>
+            <button type="button" onClick={() => setShowLogoutModal(false)} className="btn-secondary">Cancel</button>
+            <button type="button" onClick={() => { setShowLogoutModal(false); logout(); }} className="btn-danger">Log Out</button>
+          </>
+        }
+      >
+        <p className="text-sm text-soot py-2">Are you sure you want to log out of admin account?</p>
       </Modal>
     </div>
   );

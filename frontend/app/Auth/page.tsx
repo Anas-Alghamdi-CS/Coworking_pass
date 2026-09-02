@@ -197,7 +197,7 @@ export function LoginScreen() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-6 rounded-full font-medium text-sm bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] active:scale-[0.99] transition-all duration-200 shadow-xs border border-soot/8 flex items-center justify-center gap-2 cursor-pointer mt-3 disabled:opacity-70"
+              className="btn-primary w-full py-3.5 mt-3 disabled:opacity-70"
             >
               {loading ? (
                 <span>Signing in...</span>
@@ -611,7 +611,7 @@ export function SignUpScreen() {
 
               <button
                 type="submit"
-                className="w-full py-3.5 px-6 rounded-full font-medium text-sm bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] active:scale-[0.99] transition-all duration-200 shadow-xs border border-soot/8 flex items-center justify-center gap-2 cursor-pointer mt-3"
+                className="btn-primary w-full py-3.5 mt-3"
               >
                 <span>Complete Registration & Sign In</span>
                 <ArrowRight size={16} />
@@ -846,7 +846,7 @@ export function ChooseAccountType() {
             type="button"
             onClick={handleContinue}
             disabled={!selected || (selected === 'organization' && !orgName.trim()) || (selected === 'provider' && !businessName.trim())}
-            className="w-full py-3.5 px-6 rounded-xl bg-soot text-plaster font-semibold text-sm hover:bg-moss disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-md active:scale-[0.98] cursor-pointer"
+            className="btn-primary w-full py-3.5 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check size={17} className="text-eucalyptus" />
             <span>Complete Setup</span>
