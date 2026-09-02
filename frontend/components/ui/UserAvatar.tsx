@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Camera, User } from 'lucide-react';
+import { Camera } from 'lucide-react';
 
 export const DEFAULT_AVATAR_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%"><circle cx="64" cy="64" r="64" fill="%23E2E8F0"/><circle cx="64" cy="46" r="22" fill="%2394A3B8"/><path d="M26 106c0-21 17-38 38-38s38 17 38 38v10H26v-10z" fill="%2394A3B8"/></svg>`;
 
@@ -41,7 +41,11 @@ export default function UserAvatar({
   const [imgError, setImgError] = useState(false);
 
   // Check if src is valid custom image or empty / default
-  const isDefaultOrEmpty = !src || src === DEFAULT_AVATAR_SVG || src === '/default-avatar.svg' || src.trim() === '';
+  const isDefaultOrEmpty =
+    !src ||
+    src === DEFAULT_AVATAR_SVG ||
+    src === '/default-avatar.svg' ||
+    src.trim() === '';
   const sizeClass = sizeClasses[size] || sizeClasses.md;
 
   return (
@@ -61,7 +65,7 @@ export default function UserAvatar({
             className="w-full h-full object-cover rounded-full"
           />
         ) : (
-          /* High-res minimal silhouette avatar matching the reference */
+          /* High-res minimal gray silhouette avatar matching the individual profile */
           <svg
             viewBox="0 0 128 128"
             className="w-full h-full"
@@ -91,7 +95,7 @@ export default function UserAvatar({
         <button
           type="button"
           onClick={onCameraClick || onClick}
-          className="absolute bottom-0 right-0 p-2 rounded-full bg-soot text-plaster hover:bg-soot-light shadow-md transition-all active:scale-90 border-2 border-white cursor-pointer"
+          className="absolute bottom-0 right-0 p-2 rounded-full bg-[#DDE6DF] text-soot hover:bg-[#D0DDD3] shadow-md transition-all active:scale-90 border-2 border-white cursor-pointer"
           title="Change photo"
         >
           <Camera size={14} />

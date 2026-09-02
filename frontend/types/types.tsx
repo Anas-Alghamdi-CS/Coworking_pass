@@ -75,6 +75,7 @@ export interface User {
   savedCards?: PaymentCard[];
   businessName?: string; // PARTNERS.brand_name
   crNumber?: string;
+  city?: string;
   businessDescription?: string;
   revenueShare?: number; // PARTNERS.revenue_share_percentage
 }

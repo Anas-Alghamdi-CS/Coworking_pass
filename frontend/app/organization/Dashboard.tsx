@@ -42,7 +42,7 @@ export default function OrgDashboard() {
         </div>
         <button
           onClick={() => navigate('company-add-workspace')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-eucalyptus text-soot font-medium text-sm hover:bg-eucalyptus-dark transition-colors"
+          className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-[#374142] text-[#FAF8F5] text-sm font-medium ring-1 ring-white/15 shadow-sm hover:bg-[#2D3536] transition-all duration-200 active:scale-[0.98] cursor-pointer"
         >
           <Plus size={15} />
           Add workspace

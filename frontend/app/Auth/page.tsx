@@ -670,7 +670,7 @@ export function ChooseAccountType() {
         password: 'password',
         role: selected,
         phone: '+966 50 123 4567',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&auto=format',
+        avatar: '',
         isBlocked: false,
         joinDate: new Date().toISOString().split('T')[0],
       };

@@ -102,7 +102,7 @@ export default function CompanyTeam() {
           <h1 className="text-3xl text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>Team Members</h1>
           <p className="text-moss text-sm mt-1">{members.length} member{members.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={() => setAddModal(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-eucalyptus text-soot font-medium text-sm hover:bg-eucalyptus-dark transition-colors">
+        <button onClick={() => setAddModal(true)} className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-2xl bg-[#374142] text-[#FAF8F5] text-sm font-medium ring-1 ring-white/15 shadow-sm hover:bg-[#2D3536] transition-all duration-200 active:scale-[0.98] cursor-pointer">
           <Plus size={15} />
           Invite member
         </button>

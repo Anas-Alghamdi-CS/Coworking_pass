@@ -79,11 +79,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const savedUser = localStorage.getItem('cp_currentUser');
       if (savedUser) {
         const parsed = JSON.parse(savedUser);
+        if (parsed.avatar && (parsed.avatar.includes('images.unsplash.com') || parsed.avatar.includes('admin-avatar'))) {
+          parsed.avatar = '';
+          localStorage.setItem('cp_currentUser', JSON.stringify(parsed));
+        }
         setCurrentUser(parsed);
       }
       const savedUsers = localStorage.getItem('cp_users');
       if (savedUsers) {
-        setUsers(JSON.parse(savedUsers));
+        const cleanedUsers = (JSON.parse(savedUsers) as User[]).map(u => {
+          if (u.avatar && (u.avatar.includes('images.unsplash.com') || u.avatar.includes('admin-avatar'))) {
+            return { ...u, avatar: '' };
+          }
+          return u;
+        });
+        setUsers(cleanedUsers);
+        localStorage.setItem('cp_users', JSON.stringify(cleanedUsers));
       }
     } catch (e) {
       console.error('Failed to load storage state:', e);
