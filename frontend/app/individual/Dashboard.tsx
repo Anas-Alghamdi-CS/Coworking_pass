@@ -3,16 +3,29 @@
 import React from 'react';
 import { CalendarDays, MapPin, Star, Clock, ArrowRight, Bookmark, Check } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { isUserPassHolder, getEffectiveSpacePrice } from '@/types/types';
+import { Space, isUserPassHolder, getEffectiveSpacePrice, Booking, getHourlyPriceForDuration } from '@/types/types';
 
-export default function IndividualDashboard() {
-  const { currentUser, bookings, spaces, navigate, favorites } = useApp();
-  const passActive = isUserPassHolder(currentUser);
+export default function Dashboard() {
+  const { currentUser, spaces, bookings, favorites, navigate } = useApp();
+
   if (!currentUser) return null;
 
   const myBookings = bookings.filter(b => b.userId === currentUser.id);
   const activeBookings = myBookings.filter(b => b.status === 'active');
   const favoriteSpaces = spaces.filter(s => favorites.includes(s.id) && s.isVisible);
+
+  const getBookingPrice = (b: Booking) => {
+    if (typeof b.totalPrice === 'number' && b.totalPrice > 0) return b.totalPrice;
+    const sp = spaces.find(s => s.id === b.spaceId || s.name.toLowerCase() === b.spaceName.toLowerCase());
+    if (sp) {
+      if (b.plan === 'hourly') {
+        return getHourlyPriceForDuration(sp, b.durationHours || 1) * (b.seats || 1);
+      }
+      const rate = (b.plan === 'daily' ? sp.pricing?.daily : b.plan === 'monthly' ? sp.pricing?.monthly : b.plan === 'yearly' ? sp.pricing?.yearly : 150) || 150;
+      return rate * (b.seats || 1);
+    }
+    return b.totalPrice || 0;
+  };
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -133,7 +146,7 @@ export default function IndividualDashboard() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-base font-semibold text-soot">SAR {b.totalPrice.toLocaleString()}</div>
+                    <div className="text-base font-semibold text-soot">SAR {getBookingPrice(b).toLocaleString()}</div>
                     <span className="text-xs text-moss">Confirmed</span>
                   </div>
                 </div>

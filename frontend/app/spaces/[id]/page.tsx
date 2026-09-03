@@ -20,7 +20,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { isUserPassHolder, getEffectiveSpacePrice } from '@/types/types';
+import { isUserPassHolder, getEffectiveSpacePrice, BookingPlan } from '@/types/types';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 
@@ -33,7 +33,8 @@ export default function SpaceDetails() {
   const space = spaces.find(s => s.id === spaceId) || spaces[0];
 
   const [imgIndex, setImgIndex] = useState(0);
-  const [selectedPlan, setSelectedPlan] = useState<'daily' | 'monthly' | 'yearly'>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<BookingPlan>('hourly');
+  const [durationHours, setDurationHours] = useState(2);
   const [waitlistModal, setWaitlistModal] = useState(false);
   const [waitlistDone, setWaitlistDone] = useState(false);
   const [preferredDate, setPreferredDate] = useState('');
@@ -70,9 +71,9 @@ export default function SpaceDetails() {
   const handleBook = () => {
     if (!currentUser) { navigate('login'); return; }
     if (currentUser.role === 'organization') {
-      navigate('team-booking', { spaceId: space.id, plan: selectedPlan });
+      navigate('team-booking', { spaceId: space.id, plan: selectedPlan, durationHours });
     } else {
-      navigate('booking-flow', { spaceId: space.id, plan: selectedPlan });
+      navigate('booking-flow', { spaceId: space.id, plan: selectedPlan, durationHours });
     }
   };
 
@@ -87,8 +88,9 @@ export default function SpaceDetails() {
     ? { label: `${space.availableCapacity} spots left`, color: 'text-amber-800 bg-amber-500/15 border-amber-500/25' }
     : { label: `${space.availableCapacity} spots available`, color: 'text-soot bg-eucalyptus/25 border-eucalyptus/30' };
 
-  const planPrice = space.pricing[selectedPlan];
-  const planLabel = selectedPlan === 'daily' ? '/day' : selectedPlan === 'monthly' ? '/month' : '/year';
+  const currentPlanInfo = getEffectiveSpacePrice(currentUser, space, selectedPlan, undefined, durationHours);
+  const planPrice = currentPlanInfo.effectivePrice;
+  const planLabel = selectedPlan === 'hourly' ? `for ${durationHours} hour${durationHours > 1 ? 's' : ''}` : selectedPlan === 'daily' ? '/day' : selectedPlan === 'monthly' ? '/month' : '/year';
 
   const hoursDisplay = (space as any).openHours || (space as any).hours || 'Sun–Thu: 8am–10pm | Fri: 2pm–10pm';
   const phoneDisplay = space.phone || '+966 11 234 5678';
@@ -287,84 +289,108 @@ export default function SpaceDetails() {
             <div className="bg-plaster-surface rounded-3xl border border-soot/12 p-6 sm:p-7 shadow-xl">
               {/* Price Tag / Pass Badge */}
               <div className="mb-6 pb-5 border-b border-soot/10">
-                {(() => {
-                  const currentPlanInfo = getEffectiveSpacePrice(currentUser, space, selectedPlan);
-                  return (
-                    <>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-moss block mb-1.5">
-                        {currentPlanInfo.isCovered ? 'Pass Access' : currentPlanInfo.hasDiscount ? 'Plan Upgrade Rate' : 'Membership Rate'}
+                <span className="text-xs font-semibold uppercase tracking-wider text-moss block mb-1.5">
+                  {currentPlanInfo.isCovered ? 'Pass Access' : currentPlanInfo.hasDiscount ? 'Plan Upgrade Rate' : 'Membership Rate'}
+                </span>
+                {currentPlanInfo.isCovered ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl sm:text-3xl font-semibold text-soot tracking-tight">
+                        SAR 0
                       </span>
-                      {currentPlanInfo.isCovered ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl sm:text-3xl font-semibold text-soot tracking-tight">
-                              SAR 0
-                            </span>
-                            <span className="text-xs font-medium text-moss">with pass</span>
-                          </div>
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-eucalyptus/30 text-soot font-semibold text-xs border border-eucalyptus/40 shadow-2xs">
-                            <Check size={13} className="text-moss shrink-0" />
-                            <span>Included in Pass</span>
-                          </div>
-                        </div>
-                      ) : currentPlanInfo.hasDiscount ? (
-                        <div className="space-y-1.5">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-semibold text-soot tracking-tight">
-                              SAR {currentPlanInfo.effectivePrice.toLocaleString()}
-                            </span>
-                            <span className="text-sm font-medium text-moss">{planLabel}</span>
-                            <span className="line-through text-xs text-moss/50">SAR {planPrice.toLocaleString()}</span>
-                          </div>
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-900 font-semibold text-xs border border-amber-500/30">
-                            <span>{currentPlanInfo.discountPercentage}% Pass Discount</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-3xl font-semibold text-soot tracking-tight">
-                            SAR {planPrice.toLocaleString()}
-                          </span>
-                          <span className="text-sm font-medium text-moss">{planLabel}</span>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
+                      <span className="text-xs font-medium text-moss">with pass</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-eucalyptus/30 text-soot font-semibold text-xs border border-eucalyptus/40 shadow-2xs">
+                      <Check size={13} className="text-moss shrink-0" />
+                      <span>Included in Pass</span>
+                    </div>
+                  </div>
+                ) : currentPlanInfo.hasDiscount ? (
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-semibold text-soot tracking-tight">
+                        SAR {currentPlanInfo.effectivePrice.toLocaleString()}
+                      </span>
+                      <span className="text-sm font-medium text-moss">{planLabel}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-900 font-semibold text-xs border border-amber-500/30">
+                      <span>{currentPlanInfo.discountPercentage}% Pass Discount</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-semibold text-soot tracking-tight">
+                      SAR {planPrice.toLocaleString()}
+                    </span>
+                    <span className="text-sm font-medium text-moss">{planLabel}</span>
+                  </div>
+                )}
               </div>
 
               {/* Plan Choice Selectors */}
-              <div className="mb-6">
-                <label className="text-xs font-semibold uppercase tracking-wider text-moss mb-2.5 block">
-                  Select Billing Cycle
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['daily', 'monthly', 'yearly'] as const).map(plan => {
-                    const isSelected = selectedPlan === plan;
-                    const planP = getEffectiveSpacePrice(currentUser, space, plan);
-                    return (
-                      <button
-                        key={plan}
-                        type="button"
-                        onClick={() => setSelectedPlan(plan)}
-                        className={`py-2.5 px-2 rounded-xl text-center border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-eucalyptus text-soot border-eucalyptus/80 shadow-xs font-semibold'
-                            : 'bg-plaster-dark/30 border-soot/10 text-moss hover:text-soot hover:bg-plaster-dark/60'
-                        }`}
-                      >
-                        <div className="capitalize text-xs font-semibold">{plan}</div>
-                        <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-soot/80 font-medium' : 'text-moss/70'}`}>
-                          {planP.isCovered ? 'Included' : `SAR ${planP.effectivePrice.toLocaleString()}`}
-                        </div>
-                      </button>
-                    );
-                  })}
+              <div className="mb-6 space-y-4">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-moss mb-2.5 block">
+                    Select Booking Plan
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {(['hourly', 'daily', 'monthly', 'yearly'] as const).map(plan => {
+                      const isSelected = selectedPlan === plan;
+                      const planP = getEffectiveSpacePrice(currentUser, space, plan, undefined, plan === 'hourly' ? durationHours : 1);
+                      return (
+                        <button
+                          key={plan}
+                          type="button"
+                          onClick={() => setSelectedPlan(plan)}
+                          className={`py-2.5 px-2 rounded-xl text-center border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-eucalyptus text-soot border-eucalyptus/80 shadow-xs font-semibold'
+                              : 'bg-plaster-dark/30 border-soot/10 text-moss hover:text-soot hover:bg-plaster-dark/60'
+                          }`}
+                        >
+                          <div className="capitalize text-xs font-semibold">{plan}</div>
+                          <div className={`text-[10px] mt-0.5 ${isSelected ? 'text-soot/80 font-medium' : 'text-moss/70'}`}>
+                            {planP.isCovered ? 'Included' : `SAR ${planP.effectivePrice.toLocaleString()}`}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {/* Direct Hourly Duration Selector */}
+                {selectedPlan === 'hourly' && (
+                  <div className="p-3.5 rounded-2xl bg-plaster-dark/40 border border-soot/10 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-moss flex items-center gap-1.5">
+                        <Clock size={12} />
+                        <span>Select Duration</span>
+                      </label>
+                      <span className="text-xs font-bold text-soot">{durationHours} Hours</span>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                      {[1, 2, 3, 4, 6, 8].map(h => (
+                        <button
+                          key={h}
+                          type="button"
+                          onClick={() => setDurationHours(h)}
+                          className={`py-1.5 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
+                            durationHours === h
+                              ? 'bg-soot text-plaster border-soot shadow-2xs font-semibold'
+                              : 'bg-white border-soot/10 text-moss hover:text-soot hover:border-soot/30'
+                          }`}
+                        >
+                          {h}h
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {selectedPlan === 'yearly' && !passActive && (
                   <div className="mt-2.5 text-[11px] text-moss bg-eucalyptus/20 border border-eucalyptus/30 rounded-xl px-3 py-1.5 flex items-center gap-1.5">
                     <Sparkles size={12} className="text-soot shrink-0" />
-                    <span>Save {Math.round((1 - space.pricing.yearly / (space.pricing.monthly * 12)) * 100)}% with annual commitment</span>
+                    <span>Save {Math.round((1 - (space.pricing?.yearly || 18000) / ((space.pricing?.monthly || 1800) * 12)) * 100)}% with annual commitment</span>
                   </div>
                 )}
               </div>

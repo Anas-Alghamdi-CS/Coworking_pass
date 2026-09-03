@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { MapPin, Calendar, Users, Check, X, AlertCircle, ArrowRight } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Booking, BookingStatus } from '@/types/types';
+import { Booking, BookingStatus, getHourlyPriceForDuration } from '@/types/types';
 import Modal from '@/components/ui/Modal';
 
 const TABS: { label: string; status: BookingStatus }[] = [
@@ -13,13 +13,26 @@ const TABS: { label: string; status: BookingStatus }[] = [
 ];
 
 export default function MyBookings() {
-  const { bookings, currentUser, navigate, cancelBooking, nav } = useApp();
+  const { bookings, spaces, currentUser, navigate, cancelBooking, nav } = useApp();
   const [activeTab, setActiveTab] = useState<BookingStatus>((nav.params?.tab as BookingStatus) || 'active');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [cancelModal, setCancelModal] = useState(false);
   const [detailsModal, setDetailsModal] = useState(false);
 
   if (!currentUser) return null;
+
+  const getBookingPrice = (b: Booking) => {
+    if (typeof b.totalPrice === 'number' && b.totalPrice > 0) return b.totalPrice;
+    const sp = spaces.find(s => s.id === b.spaceId || s.name.toLowerCase() === b.spaceName.toLowerCase());
+    if (sp) {
+      if (b.plan === 'hourly') {
+        return getHourlyPriceForDuration(sp, b.durationHours || 1) * (b.seats || 1);
+      }
+      const rate = sp.pricing?.[b.plan] || 150;
+      return rate * (b.seats || 1);
+    }
+    return b.totalPrice || 0;
+  };
 
   const myBookings = bookings.filter(b => b.userId === currentUser.id);
   const filtered = myBookings.filter(b => b.status === activeTab);
@@ -132,17 +145,23 @@ export default function MyBookings() {
                       <span>•</span>
                       <span className="capitalize">{booking.type.replace('-', ' ')}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-moss mt-2">
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-moss mt-2">
                       <div className="flex items-center gap-1">
                         <Calendar size={12} />
-                        <span>{booking.startDate}{booking.endDate !== booking.startDate ? ` → ${booking.endDate}` : ''}</span>
+                        <span>{booking.startDate}{booking.endDate && booking.endDate !== booking.startDate ? ` → ${booking.endDate}` : ''}</span>
                       </div>
+                      {booking.startTime && (
+                        <div className="flex items-center gap-1 text-soot font-medium bg-eucalyptus/20 px-2 py-0.5 rounded-md">
+                          <span>{booking.startTime}{booking.endTime ? ` – ${booking.endTime}` : ''}</span>
+                          {booking.durationHours && <span>({booking.durationHours}h)</span>}
+                        </div>
+                      )}
                       <div className="flex items-center gap-1">
                         <Users size={12} />
                         <span>{booking.seats} seat{booking.seats > 1 ? 's' : ''}</span>
                       </div>
                       <span className="capitalize bg-soot/5 text-soot/80 px-2 py-0.5 rounded-md font-medium">
-                        {booking.plan} pass
+                        {booking.plan === 'hourly' ? `${booking.durationHours || 1} Hour Booking` : `${booking.plan} pass`}
                       </span>
                     </div>
                   </div>
@@ -151,7 +170,7 @@ export default function MyBookings() {
                 <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-soot/5">
                   <div className="text-right">
                     <span className="text-xs text-moss block">Total Paid</span>
-                    <span className="font-semibold text-soot text-lg">SAR {booking.totalPrice.toLocaleString()}</span>
+                    <span className="font-semibold text-soot text-lg">SAR {getBookingPrice(booking).toLocaleString()}</span>
                   </div>
                   {booking.status === 'active' && (
                     <div className="mt-2 flex gap-2" onClick={e => e.stopPropagation()}>
@@ -211,11 +230,13 @@ export default function MyBookings() {
               {[
                 { label: 'Booking Reference', value: `#${selectedBooking.id.slice(-8).toUpperCase()}` },
                 { label: 'Space Type', value: selectedBooking.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) },
-                { label: 'Plan', value: selectedBooking.plan.charAt(0).toUpperCase() + selectedBooking.plan.slice(1) + ' Pass' },
-                { label: 'Start Date', value: selectedBooking.startDate },
-                { label: 'End Date', value: selectedBooking.endDate },
+                { label: 'Plan', value: selectedBooking.plan === 'hourly' ? `Hourly Reservation (${selectedBooking.durationHours || 1} Hours)` : selectedBooking.plan.charAt(0).toUpperCase() + selectedBooking.plan.slice(1) + ' Pass' },
+                { label: 'Date', value: selectedBooking.startDate },
+                ...(selectedBooking.startTime ? [{ label: 'Time Window', value: `${selectedBooking.startTime} – ${selectedBooking.endTime || ''}` }] : []),
+                ...(selectedBooking.durationHours ? [{ label: 'Duration', value: `${selectedBooking.durationHours} ${selectedBooking.durationHours === 1 ? 'Hour' : 'Hours'}` }] : []),
+                ...(selectedBooking.plan !== 'hourly' && selectedBooking.endDate !== selectedBooking.startDate ? [{ label: 'End Date', value: selectedBooking.endDate }] : []),
                 { label: 'Seats Reserved', value: `${selectedBooking.seats} seat${selectedBooking.seats > 1 ? 's' : ''}` },
-                { label: 'Booked On', value: selectedBooking.createdAt },
+                { label: 'Booked On', value: selectedBooking.createdAt || 'Recent' },
               ].map(r => (
                 <div key={r.label} className="flex justify-between items-center py-1">
                   <span className="text-moss">{r.label}</span>
@@ -224,7 +245,7 @@ export default function MyBookings() {
               ))}
               <div className="pt-3 border-t border-soot/8 flex justify-between items-center font-semibold text-base">
                 <span className="text-soot">Total Paid (incl. VAT)</span>
-                <span className="text-soot">SAR {selectedBooking.totalPrice.toLocaleString()}</span>
+                <span className="text-soot">SAR {getBookingPrice(selectedBooking).toLocaleString()}</span>
               </div>
             </div>
 

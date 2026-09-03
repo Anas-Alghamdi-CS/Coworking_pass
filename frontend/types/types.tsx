@@ -12,7 +12,7 @@ export type BookingStatus = 'active' | 'previous' | 'cancelled';
 
 export type BookingType = 'hot-desk' | 'private-office' | 'meeting-room';
 
-export type BookingPlan = 'daily' | 'monthly' | 'yearly';
+export type BookingPlan = 'hourly' | 'daily' | 'monthly' | 'yearly';
 
 export type SpaceType =
   | 'hot-desk'
@@ -43,6 +43,8 @@ export interface SpaceBookingPackage {
 }
 
 export interface SpacePricing {
+  hourly?: number; // Base 1-hour rate
+  hourlyTiers?: { hours: number; price: number }[]; // Specific duration pricing, e.g. [{hours: 1, price: 50}, {hours: 2, price: 90}, ...]
   daily: number;
   monthly: number;
   yearly: number;
@@ -141,13 +143,235 @@ export interface PlanPricingResult {
   discountPercentage?: number;
 }
 
+/**
+ * Calculate the price for a specific duration in hours for a space.
+ * Checks for specific custom duration tier, otherwise computes based on hourly rate with multi-hour discounts.
+ */
+export function getHourlyPriceForDuration(space: Space, durationHours: number = 1): number {
+  if (!space || !space.pricing) return 50 * durationHours;
+  const hours = Math.max(1, Math.round(durationHours));
+
+  // 1. Check if an exact tier exists
+  if (space.pricing.hourlyTiers && space.pricing.hourlyTiers.length > 0) {
+    const tier = space.pricing.hourlyTiers.find(t => t.hours === hours);
+    if (tier && tier.price > 0) {
+      return tier.price;
+    }
+  }
+
+  // 2. Base hourly rate fallback
+  const baseHourly = space.pricing.hourly || Math.max(25, Math.round((space.pricing.daily || 150) / 4));
+
+  // If hours is 1, return base rate
+  if (hours === 1) return baseHourly;
+
+  // Progressive volume discount for multi-hour reservations:
+  // 2h = 1.8x, 3h = 2.5x, 4h = 3.1x, 6h = 4.4x, 8h = 5.5x
+  const discountMultiplier =
+    hours === 2 ? 1.8
+    : hours === 3 ? 2.5
+    : hours === 4 ? 3.1
+    : hours === 5 ? 3.8
+    : hours === 6 ? 4.4
+    : hours === 7 ? 5.0
+    : hours >= 8 ? Math.min(space.pricing.daily || 150, Math.round(baseHourly * (hours * 0.7)))
+    : hours;
+
+  return typeof discountMultiplier === 'number' && hours < 8
+    ? Math.round(baseHourly * discountMultiplier)
+    : Math.round(baseHourly * hours);
+}
+
+/**
+ * Automatically calculate the end time string (e.g. "12:00 PM") given a start time and duration hours.
+ */
+export function calculateEndTime(startTimeStr: string, durationHours: number = 1): string {
+  if (!startTimeStr) return '';
+  // Parse format like "09:00", "09:00 AM", "14:30"
+  let hours = 9;
+  let minutes = 0;
+  
+  const cleanStr = startTimeStr.trim().toUpperCase();
+  const isPM = cleanStr.includes('PM');
+  const isAM = cleanStr.includes('AM');
+  const timeOnly = cleanStr.replace(/[^\d:]/g, '');
+  const parts = timeOnly.split(':');
+  
+  if (parts.length >= 1) {
+    hours = parseInt(parts[0], 10) || 9;
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
+  }
+  if (parts.length >= 2) {
+    minutes = parseInt(parts[1], 10) || 0;
+  }
+
+  const totalEndMinutes = (hours * 60 + minutes) + Math.round(durationHours * 60);
+  const endHours24 = Math.floor(totalEndMinutes / 60) % 24;
+  const endMinutes = totalEndMinutes % 60;
+
+  const period = endHours24 >= 12 ? 'PM' : 'AM';
+  const displayHours = endHours24 % 12 === 0 ? 12 : endHours24 % 12;
+  const displayMinutes = String(endMinutes).padStart(2, '0');
+
+  return `${String(displayHours).padStart(2, '0')}:${displayMinutes} ${period}`;
+}
+
+/**
+ * Converts a time string (e.g. "09:00 AM", "14:30") to minutes from midnight for arithmetic comparisons.
+ */
+export function timeStringToMinutes(timeStr: string): number {
+  if (!timeStr) return 0;
+  const cleanStr = timeStr.trim().toUpperCase();
+  const isPM = cleanStr.includes('PM');
+  const isAM = cleanStr.includes('AM');
+  const timeOnly = cleanStr.replace(/[^\d:]/g, '');
+  const parts = timeOnly.split(':');
+  let h = parseInt(parts[0], 10) || 0;
+  const m = parts.length > 1 ? parseInt(parts[1], 10) || 0 : 0;
+  if (isPM && h < 12) h += 12;
+  if (isAM && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+/**
+ * Validate whether the booking time falls inside the space's operating hours.
+ */
+export function isTimeWithinOpenHours(
+  dateStr: string,
+  startTime: string,
+  endTime: string,
+  openHoursStr?: string
+): { valid: boolean; reason?: string } {
+  if (!startTime || !endTime) return { valid: true };
+
+  const startMin = timeStringToMinutes(startTime);
+  const endMin = timeStringToMinutes(endTime);
+
+  if (endMin <= startMin) {
+    return { valid: false, reason: 'End time must be after start time.' };
+  }
+
+  // Default operating window: 07:00 AM (420m) to 11:00 PM (1380m)
+  let openMin = 420;  // 7:00 AM
+  let closeMin = 1380; // 11:00 PM
+
+  if (openHoursStr) {
+    const lower = openHoursStr.toLowerCase();
+    if (lower.includes('24/7') || lower.includes('24 hours')) {
+      return { valid: true };
+    }
+    // Check if weekend / Friday specific hours exist
+    if (dateStr) {
+      const dayOfWeek = new Date(dateStr).getDay(); // 5 is Friday, 6 is Saturday
+      if ((dayOfWeek === 5 || dayOfWeek === 6) && lower.includes('fri')) {
+        // e.g. "Fri: 2pm-10pm" or "Fri-Sat: 9am-6pm"
+        if (lower.includes('2pm') || lower.includes('14:00')) openMin = 14 * 60;
+        else if (lower.includes('9am')) openMin = 9 * 60;
+        else if (lower.includes('10am')) openMin = 10 * 60;
+      }
+    }
+    if (lower.includes('8am')) openMin = 8 * 60;
+    else if (lower.includes('7am')) openMin = 7 * 60;
+    else if (lower.includes('6am')) openMin = 6 * 60;
+    else if (lower.includes('9am')) openMin = 9 * 60;
+
+    if (lower.includes('11pm')) closeMin = 23 * 60;
+    else if (lower.includes('10pm')) closeMin = 22 * 60;
+    else if (lower.includes('9pm')) closeMin = 21 * 60;
+    else if (lower.includes('8pm')) closeMin = 20 * 60;
+    else if (lower.includes('6pm')) closeMin = 18 * 60;
+  }
+
+  if (startMin < openMin) {
+    const openH = Math.floor(openMin / 60);
+    const openPeriod = openH >= 12 ? 'PM' : 'AM';
+    const displayH = openH % 12 === 0 ? 12 : openH % 12;
+    return { valid: false, reason: `Space opens at ${displayH}:00 ${openPeriod}. Please select a later start time.` };
+  }
+
+  if (endMin > closeMin) {
+    const closeH = Math.floor(closeMin / 60);
+    const closePeriod = closeH >= 12 ? 'PM' : 'AM';
+    const displayH = closeH % 12 === 0 ? 12 : closeH % 12;
+    return { valid: false, reason: `Space closes at ${displayH}:00 ${closePeriod}. Reservation duration exceeds operating hours.` };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Check if the requested booking overlaps with existing active bookings for the same space and exceeds capacity.
+ */
+export function checkSpaceOverlap(
+  bookings: Booking[],
+  spaceId: string,
+  date: string,
+  startTime?: string,
+  endTime?: string,
+  totalCapacity: number = 20,
+  excludeBookingId?: string
+): { available: boolean; conflictCount: number; maxCapacity: number } {
+  if (!bookings || !spaceId || !date) return { available: true, conflictCount: 0, maxCapacity: totalCapacity };
+
+  const startMin = startTime ? timeStringToMinutes(startTime) : 0;
+  const endMin = endTime ? timeStringToMinutes(endTime) : 1440;
+
+  const conflictingBookings = bookings.filter(b => {
+    if (b.spaceId !== spaceId) return false;
+    if (b.status !== 'active') return false;
+    if (excludeBookingId && b.id === excludeBookingId) return false;
+
+    // Check date overlap
+    const bStart = b.startDate || '';
+    const bEnd = b.endDate || b.startDate || '';
+    if (date < bStart || date > bEnd) return false;
+
+    // Check time interval overlap if both have start/end times
+    if (b.startTime && b.endTime && startTime && endTime) {
+      const bStartMin = timeStringToMinutes(b.startTime);
+      const bEndMin = timeStringToMinutes(b.endTime);
+      // Overlap condition: startMin < bEndMin && endMin > bStartMin
+      return startMin < bEndMin && endMin > bStartMin;
+    }
+
+    return true; // daily/monthly bookings span the whole day
+  });
+
+  const bookedSeats = conflictingBookings.reduce((sum, b) => sum + (b.seats || 1), 0);
+  const isAvailable = (totalCapacity - bookedSeats) > 0;
+
+  return {
+    available: isAvailable,
+    conflictCount: bookedSeats,
+    maxCapacity: totalCapacity,
+  };
+}
+
 export function getEffectiveSpacePrice(
   user: User | null,
   space: Space,
-  planType: 'daily' | 'monthly' | 'yearly' = 'daily',
-  deskType?: BookingType | SpaceType
+  planType: BookingPlan = 'daily',
+  deskType?: BookingType | SpaceType,
+  durationHours: number = 1
 ): PlanPricingResult {
-  const originalPrice = space?.pricing?.[planType] ?? 100;
+  let originalPrice = 100;
+  if (planType === 'hourly') {
+    originalPrice = getHourlyPriceForDuration(space, durationHours);
+  } else {
+    originalPrice = space?.pricing?.[planType] ?? 100;
+  }
+
+  // Hourly duration bookings are on-demand per-hour reservations
+  if (planType === 'hourly') {
+    return {
+      isCovered: false,
+      effectivePrice: originalPrice,
+      originalPrice,
+      badgeLabel: `SAR ${originalPrice.toLocaleString()}`,
+      hasDiscount: false,
+    };
+  }
 
   if (!user) {
     return {
@@ -164,10 +388,9 @@ export function getEffectiveSpacePrice(
         : user.membershipTier.toLowerCase().includes('all-access') ? 'all-access'
         : user.membershipTier.toLowerCase().includes('pro') ? 'pro'
         : user.membershipTier.toLowerCase().includes('basic') ? 'basic' : 'none')
-    : (user.role === 'organization' || user.role === 'HR_ADMIN' ? 'enterprise'
-        : user.hasActivePass !== false ? 'all-access' : 'none');
+    : (user.hasActivePass === true ? 'all-access' : 'none');
 
-  const targetType = deskType || space.type;
+  const targetType = deskType || space?.type;
 
   if (tier === 'enterprise') {
     return {
@@ -257,9 +480,14 @@ export interface Booking {
   spaceAddress: string;
   spaceImage: string;
   type: BookingType;
-  plan: BookingPlan;
+  plan: BookingPlan; // 'hourly' | 'daily' | 'monthly' | 'yearly'
 
-  // الحقول الخاصة بحجز الساعات
+  // Time & Duration for Hourly Reservations
+  startTime?: string; // e.g. '09:00 AM'
+  endTime?: string;   // e.g. '11:00 AM'
+  durationHours?: number; // e.g. 1, 2, 3, 4
+
+  // Package reference if any
   bookingPackageId?: string;
   bookingHours?: number;
 

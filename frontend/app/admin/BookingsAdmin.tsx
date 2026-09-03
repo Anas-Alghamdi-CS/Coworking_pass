@@ -250,6 +250,7 @@ export default function BookingsAdmin() {
               <div className="space-y-0.5">
                 {[
                   { value: '', label: 'All Plans' },
+                  { value: 'hourly', label: 'Hourly Pass' },
                   { value: 'daily', label: 'Daily Pass' },
                   { value: 'monthly', label: 'Monthly Pass' },
                   { value: 'yearly', label: 'Annual Pass' },
@@ -324,12 +325,18 @@ export default function BookingsAdmin() {
               {/* Booking Period */}
               <div className="col-span-2 mt-2 lg:mt-0 text-xs text-moss font-medium">
                 <div className="text-soot font-semibold">{b.startDate}</div>
-                {b.endDate !== b.startDate && <div className="text-[11px]">→ {b.endDate}</div>}
+                {b.startTime ? (
+                  <div className="text-[11px] text-soot font-medium mt-0.5">{b.startTime} – {b.endTime}</div>
+                ) : b.endDate !== b.startDate ? (
+                  <div className="text-[11px]">→ {b.endDate}</div>
+                ) : null}
               </div>
 
               {/* Plan & Seats */}
               <div className="col-span-1 mt-2 lg:mt-0">
-                <div className="text-xs font-semibold text-soot capitalize">{b.plan}</div>
+                <div className="text-xs font-semibold text-soot capitalize">
+                  {b.plan === 'hourly' ? `${b.durationHours || 1}h Hourly` : b.plan}
+                </div>
                 <div className="flex items-center gap-1 text-[11px] text-moss mt-0.5">
                   <Users size={11} />
                   <span>{b.seats} seat{b.seats > 1 ? 's' : ''}</span>
@@ -433,10 +440,12 @@ export default function BookingsAdmin() {
               {/* Data Summary Grid */}
               <div className="space-y-3 text-sm">
                 {[
-                  { label: 'Booking Plan', value: `${selectedBooking.plan.toUpperCase()} PASS`, icon: CreditCard },
+                  { label: 'Booking Plan', value: selectedBooking.plan === 'hourly' ? `HOURLY RESERVATION (${selectedBooking.durationHours || 1} HOURS)` : `${selectedBooking.plan.toUpperCase()} PASS`, icon: CreditCard },
                   { label: 'Reserved Seats', value: `${selectedBooking.seats} seat(s)`, icon: Users },
                   { label: 'Start Date', value: selectedBooking.startDate, icon: Calendar },
-                  { label: 'End Date', value: selectedBooking.endDate, icon: Calendar },
+                  ...(selectedBooking.startTime ? [{ label: 'Time Window', value: `${selectedBooking.startTime} – ${selectedBooking.endTime || ''}`, icon: Clock }] : []),
+                  ...(selectedBooking.durationHours ? [{ label: 'Duration', value: `${selectedBooking.durationHours} Hours`, icon: Clock }] : []),
+                  ...(selectedBooking.plan !== 'hourly' && selectedBooking.endDate !== selectedBooking.startDate ? [{ label: 'End Date', value: selectedBooking.endDate, icon: Calendar }] : []),
                   { label: 'Total Amount Paid', value: `SAR ${selectedBooking.totalPrice.toLocaleString()}`, icon: DollarSign },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-soot/6 last:border-0">

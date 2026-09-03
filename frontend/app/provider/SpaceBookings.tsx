@@ -182,10 +182,16 @@ export default function ProviderSpaceBookings() {
                     <div className="col-span-2 text-sm text-soot truncate">{getUserName(b.userId)}</div>
                     <div className="col-span-2 text-xs text-moss">
                       {b.startDate}
-                      <br />
-                      {b.endDate !== b.startDate ? `→ ${b.endDate}` : ''}
+                      {b.startTime && (
+                        <div className="text-[11px] text-soot font-medium">{b.startTime} – {b.endTime}</div>
+                      )}
+                      {!b.startTime && b.endDate !== b.startDate && (
+                        <div>→ {b.endDate}</div>
+                      )}
                     </div>
-                    <div className="col-span-1 text-xs capitalize text-moss">{b.plan}</div>
+                    <div className="col-span-1 text-xs capitalize text-moss">
+                      {b.plan === 'hourly' ? `${b.durationHours || 1}h Hourly` : b.plan}
+                    </div>
                     <div className="col-span-1 flex items-center gap-1 text-xs text-moss">
                       <Users size={10} />
                       {b.seats}
@@ -228,8 +234,11 @@ export default function ProviderSpaceBookings() {
               {[
                 { l: 'Booking ID', v: selectedBooking.id.slice(-10).toUpperCase() },
                 { l: 'Type', v: selectedBooking.type.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase()) },
-                { l: 'Plan', v: selectedBooking.plan.charAt(0).toUpperCase() + selectedBooking.plan.slice(1) },
-                { l: 'Period', v: `${selectedBooking.startDate} → ${selectedBooking.endDate}` },
+                { l: 'Plan', v: selectedBooking.plan === 'hourly' ? `Hourly Reservation (${selectedBooking.durationHours || 1} Hours)` : selectedBooking.plan.charAt(0).toUpperCase() + selectedBooking.plan.slice(1) },
+                { l: 'Date', v: selectedBooking.startDate },
+                ...(selectedBooking.startTime ? [{ l: 'Time Window', v: `${selectedBooking.startTime} – ${selectedBooking.endTime || ''}` }] : []),
+                ...(selectedBooking.durationHours ? [{ l: 'Duration', v: `${selectedBooking.durationHours} Hours` }] : []),
+                ...(selectedBooking.plan !== 'hourly' && selectedBooking.endDate !== selectedBooking.startDate ? [{ l: 'End Date', v: selectedBooking.endDate }] : []),
                 { l: 'Seats', v: selectedBooking.seats.toString() },
                 { l: 'Booked on', v: selectedBooking.createdAt || 'N/A' },
                 { l: 'Total', v: `SAR ${selectedBooking.totalPrice.toLocaleString()}` },

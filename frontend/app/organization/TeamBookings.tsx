@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { MapPin, Calendar, Users, AlertCircle, X, Search } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Booking, BookingStatus, Employee } from '@/types/types';
+import { Booking, BookingStatus, Employee, getHourlyPriceForDuration } from '@/types/types';
 import Modal from '@/components/ui/Modal';
 
 const TABS: { label: string; status: BookingStatus }[] = [
@@ -13,7 +13,7 @@ const TABS: { label: string; status: BookingStatus }[] = [
 ];
 
 export default function TeamBookings() {
-  const { bookings, currentUser, navigate, cancelBooking, showToast } = useApp();
+  const { bookings, spaces, currentUser, navigate, cancelBooking, showToast } = useApp();
   const [activeTab, setActiveTab] = useState<BookingStatus>('active');
   const [search, setSearch] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -21,6 +21,19 @@ export default function TeamBookings() {
   const [detailsModal, setDetailsModal] = useState(false);
 
   if (!currentUser) return null;
+
+  const getBookingPrice = (b: Booking) => {
+    if (typeof b.totalPrice === 'number' && b.totalPrice > 0) return b.totalPrice;
+    const sp = spaces.find(s => s.id === b.spaceId || s.name.toLowerCase() === b.spaceName.toLowerCase());
+    if (sp) {
+      if (b.plan === 'hourly') {
+        return getHourlyPriceForDuration(sp, b.durationHours || 1) * (b.seats || 1);
+      }
+      const rate = sp.pricing?.[b.plan] || 150;
+      return rate * (b.seats || 1);
+    }
+    return b.totalPrice || 0;
+  };
 
   const orgBookings = bookings.filter((b: Booking) => b.userId === currentUser.id);
 
@@ -161,11 +174,19 @@ export default function TeamBookings() {
                       <Calendar size={11} />
                       {booking.startDate} {booking.endDate && booking.endDate !== booking.startDate ? `→ ${booking.endDate}` : ''}
                     </div>
+                    {booking.startTime && (
+                      <div className="flex items-center gap-1 text-soot font-medium bg-eucalyptus/20 px-2 py-0.5 rounded-full">
+                        <span>{booking.startTime}{booking.endTime ? ` – ${booking.endTime}` : ''}</span>
+                        {booking.durationHours && <span>({booking.durationHours}h)</span>}
+                      </div>
+                    )}
                     <div className="flex items-center gap-1.5">
                       <Users size={11} />
                       {booking.seats} seat{booking.seats > 1 ? 's' : ''}
                     </div>
-                    <span className="capitalize bg-soot/5 px-2 py-0.5 rounded-full">{booking.plan}</span>
+                    <span className="capitalize bg-soot/5 px-2 py-0.5 rounded-full">
+                      {booking.plan === 'hourly' ? `${booking.durationHours || 1}h Hourly` : booking.plan}
+                    </span>
                     <span className="capitalize">{booking.type.replace('-', ' ')}</span>
                   </div>
 
@@ -183,7 +204,7 @@ export default function TeamBookings() {
                   )}
 
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-soot/5">
-                    <span className="font-semibold text-soot">SAR {booking.totalPrice.toLocaleString()}</span>
+                    <span className="font-semibold text-soot">SAR {getBookingPrice(booking).toLocaleString()}</span>
                     {booking.status === 'active' && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setSelectedBooking(booking); setCancelModal(true); }}
@@ -212,7 +233,7 @@ export default function TeamBookings() {
                   <MapPin size={10} />
                   {selectedBooking.spaceCity}
                 </div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize mt-1 inline-block ${statusColor(selectedBooking.status)}`}>
+                <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize mt-1 inline-block ${statusColor(selectedBooking.status)}`}>
                   {selectedBooking.status}
                 </span>
               </div>
@@ -222,9 +243,12 @@ export default function TeamBookings() {
               {[
                 { l: 'ID', v: selectedBooking.id.slice(-8).toUpperCase() },
                 { l: 'Type', v: selectedBooking.type.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase()) },
-                { l: 'Plan', v: selectedBooking.plan.charAt(0).toUpperCase() + selectedBooking.plan.slice(1) },
+                { l: 'Plan', v: selectedBooking.plan === 'hourly' ? `Hourly Reservation (${selectedBooking.durationHours || 1} Hours)` : selectedBooking.plan.charAt(0).toUpperCase() + selectedBooking.plan.slice(1) },
                 { l: 'Seats', v: selectedBooking.seats.toString() },
-                { l: 'Period', v: `${selectedBooking.startDate} → ${selectedBooking.endDate}` },
+                { l: 'Date', v: selectedBooking.startDate },
+                ...(selectedBooking.startTime ? [{ l: 'Time Window', v: `${selectedBooking.startTime} – ${selectedBooking.endTime || ''}` }] : []),
+                ...(selectedBooking.durationHours ? [{ l: 'Duration', v: `${selectedBooking.durationHours} Hours` }] : []),
+                ...(selectedBooking.plan !== 'hourly' && selectedBooking.endDate !== selectedBooking.startDate ? [{ l: 'End Date', v: selectedBooking.endDate }] : []),
               ].map(r => (
                 <div key={r.l} className="flex justify-between">
                   <span className="text-moss">{r.l}</span>
@@ -245,7 +269,7 @@ export default function TeamBookings() {
               )}
               <div className="pt-2 border-t border-soot/8 flex justify-between font-semibold">
                 <span className="text-soot">Total</span>
-                <span className="text-soot">SAR {selectedBooking.totalPrice.toLocaleString()}</span>
+                <span className="text-soot">SAR {getBookingPrice(selectedBooking).toLocaleString()}</span>
               </div>
             </div>
 

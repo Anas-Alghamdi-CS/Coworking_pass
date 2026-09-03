@@ -41,7 +41,20 @@ const emptyForm = (): Partial<Space> => ({
   amenities: ['High-Speed WiFi', 'Coffee & Tea', 'Parking'],
   totalCapacity: 20,
   availableCapacity: 20,
-  pricing: { daily: 100, monthly: 1200, yearly: 12000 },
+  pricing: {
+    hourly: 45,
+    hourlyTiers: [
+      { hours: 1, price: 45 },
+      { hours: 2, price: 80 },
+      { hours: 3, price: 110 },
+      { hours: 4, price: 140 },
+      { hours: 6, price: 180 },
+      { hours: 8, price: 220 },
+    ],
+    daily: 150,
+    monthly: 1800,
+    yearly: 18000,
+  },
   rating: 0,
   reviewCount: 0,
   isVisible: true,
@@ -130,11 +143,55 @@ export default function ProviderMySpaces() {
     }));
   };
 
-  const setPrice = (field: 'daily' | 'monthly' | 'yearly', val: number) => {
-    setForm((prev) => ({
-      ...prev,
-      pricing: { ...(prev.pricing || { daily: 0, monthly: 0, yearly: 0 }), [field]: val },
-    }));
+  const setPrice = (field: 'hourly' | 'daily' | 'monthly' | 'yearly', val: number) => {
+    setForm((prev) => {
+      const currentPricing = prev.pricing || { hourly: 45, daily: 150, monthly: 1800, yearly: 18000 };
+      const updatedPricing = { ...currentPricing, [field]: val };
+      
+      // If hourly base changed, update duration tiers automatically if not custom
+      if (field === 'hourly') {
+        const base = val || 45;
+        updatedPricing.hourlyTiers = [
+          { hours: 1, price: base },
+          { hours: 2, price: Math.round(base * 1.8) },
+          { hours: 3, price: Math.round(base * 2.5) },
+          { hours: 4, price: Math.round(base * 3.1) },
+          { hours: 6, price: Math.round(base * 4.4) },
+          { hours: 8, price: Math.round(base * 5.5) },
+        ];
+      }
+      return { ...prev, pricing: updatedPricing };
+    });
+  };
+
+  const setTierPrice = (hours: number, val: number) => {
+    setForm((prev) => {
+      const currentPricing = prev.pricing || { hourly: 45, daily: 150, monthly: 1800, yearly: 18000 };
+      const currentTiers = currentPricing.hourlyTiers || [
+        { hours: 1, price: 45 },
+        { hours: 2, price: 80 },
+        { hours: 3, price: 110 },
+        { hours: 4, price: 140 },
+        { hours: 6, price: 180 },
+        { hours: 8, price: 220 },
+      ];
+      const existingIdx = currentTiers.findIndex(t => t.hours === hours);
+      let updatedTiers = [...currentTiers];
+      if (existingIdx >= 0) {
+        updatedTiers[existingIdx] = { hours, price: val };
+      } else {
+        updatedTiers.push({ hours, price: val });
+        updatedTiers.sort((a, b) => a.hours - b.hours);
+      }
+      return {
+        ...prev,
+        pricing: {
+          ...currentPricing,
+          hourly: hours === 1 ? val : currentPricing.hourly,
+          hourlyTiers: updatedTiers,
+        },
+      };
+    });
   };
 
   return (
@@ -389,22 +446,49 @@ export default function ProviderMySpaces() {
           </div>
 
           {/* Pricing Section */}
-          <div className="space-y-3 pt-2">
+          <div className="space-y-4 pt-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
-              Pricing Plans (SAR)
+              Standard Rates & Pass Pricing (SAR)
             </span>
-            <div className="grid grid-cols-3 gap-3">
-              {(['daily', 'monthly', 'yearly'] as const).map((plan) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(['hourly', 'daily', 'monthly', 'yearly'] as const).map((plan) => (
                 <div key={plan} className="space-y-1">
-                  <span className="block text-[10px] font-bold text-moss uppercase tracking-wider">{plan}</span>
+                  <span className="block text-[10px] font-bold text-moss uppercase tracking-wider">{plan === 'hourly' ? '1 Hour (Base)' : plan}</span>
                   <input
                     type="number"
-                    value={form.pricing?.[plan] || 0}
+                    value={form.pricing?.[plan] ?? (plan === 'hourly' ? 45 : 150)}
                     onChange={(e) => setPrice(plan, +e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-soot/15 bg-white text-soot text-sm font-semibold outline-none focus:border-soot shadow-2xs"
                   />
                 </div>
               ))}
+            </div>
+
+            {/* Hourly Duration Tiers */}
+            <div className="p-3.5 rounded-2xl bg-plaster-dark/40 border border-soot/10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-soot">
+                  Custom Multi-Hour Duration Pricing (SAR)
+                </span>
+                <span className="text-[10px] text-moss">Custom rates for duration booking</span>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {[1, 2, 3, 4, 6, 8].map((hours) => {
+                  const currentPrice = form.pricing?.hourlyTiers?.find(t => t.hours === hours)?.price ||
+                    (hours === 1 ? form.pricing?.hourly || 45 : Math.round((form.pricing?.hourly || 45) * (hours === 2 ? 1.8 : hours === 3 ? 2.5 : hours === 4 ? 3.1 : hours === 6 ? 4.4 : 5.5)));
+                  return (
+                    <div key={hours} className="space-y-1 bg-white p-2 rounded-xl border border-soot/10">
+                      <span className="block text-[10px] font-semibold text-moss text-center">{hours}h Duration</span>
+                      <input
+                        type="number"
+                        value={currentPrice}
+                        onChange={(e) => setTierPrice(hours, +e.target.value)}
+                        className="w-full text-center px-1.5 py-1 rounded-lg border border-soot/10 bg-plaster-dark/20 text-soot text-xs font-semibold outline-none focus:border-soot"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
