@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -9,6 +9,7 @@ import {
   CreditCard,
   MapPin,
   ChevronRight,
+  ChevronDown,
   Clock,
   AlertCircle,
   Sparkles,
@@ -94,6 +95,24 @@ export default function BookingFlow() {
   // Hourly Booking Configuration State
   const [durationHours, setDurationHours] = useState<number>(initialDuration);
   const [startTime, setStartTime] = useState('10:00 AM');
+  
+  const [startTimeOpen, setStartTimeOpen] = useState(false);
+  const [durationOpen, setDurationOpen] = useState(false);
+  const startTimeRef = useRef<HTMLDivElement>(null);
+  const durationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (startTimeRef.current && !startTimeRef.current.contains(event.target as Node)) {
+        setStartTimeOpen(false);
+      }
+      if (durationRef.current && !durationRef.current.contains(event.target as Node)) {
+        setDurationOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [manualEndDate, setManualEndDate] = useState('');
@@ -483,35 +502,103 @@ export default function BookingFlow() {
             {isHourly && (
               <div className="space-y-4 p-5 rounded-2xl bg-[#F9F8F5] border border-soot/8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <div className="relative" ref={startTimeRef}>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2 flex items-center gap-1.5">
                       <Clock size={13} />
                       <span>Start Time</span>
                     </label>
-                    <select
-                      value={startTime}
-                      onChange={e => setStartTime(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-white text-soot text-sm outline-none focus:border-eucalyptus font-medium cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={() => setStartTimeOpen(!startTimeOpen)}
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white border border-soot/12 text-soot text-sm font-medium text-left transition-all duration-200 cursor-pointer focus:outline-none shadow-2xs"
                     >
-                      {START_TIMES.map(t => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
+                      <span className="truncate">{startTime}</span>
+                      <ChevronDown
+                        size={15}
+                        className={`text-moss shrink-0 transition-transform duration-200 ${
+                          startTimeOpen ? 'rotate-180 text-soot' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {startTimeOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1.5 p-1.5 bg-plaster-surface border border-soot/15 rounded-2xl shadow-xl z-50 animate-in fade-in-50 zoom-in-95 duration-100 max-h-52 overflow-y-auto">
+                        <div className="space-y-0.5">
+                          {START_TIMES.map((t) => {
+                            const isSelected = startTime === t;
+                            return (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => {
+                                  setStartTime(t);
+                                  setStartTimeOpen(false);
+                                }}
+                                className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-sm font-medium transition-colors text-left cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-soot text-plaster font-semibold'
+                                    : 'text-soot hover:bg-plaster-dark/60'
+                                }`}
+                              >
+                                <span>{t}</span>
+                                {isSelected && <Check size={14} className="text-eucalyptus" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  <div className="relative" ref={durationRef}>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-2">
                       Duration (Hours)
                     </label>
-                    <select
-                      value={durationHours}
-                      onChange={e => setDurationHours(parseInt(e.target.value, 10) || 1)}
-                      className="w-full px-4 py-3 rounded-2xl border border-soot/10 bg-white text-soot text-sm outline-none focus:border-eucalyptus font-medium cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={() => setDurationOpen(!durationOpen)}
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white border border-soot/12 text-soot text-sm font-medium text-left transition-all duration-200 cursor-pointer focus:outline-none shadow-2xs"
                     >
-                      {DURATION_OPTIONS.map(h => (
-                        <option key={h} value={h}>{h} {h === 1 ? 'Hour' : 'Hours'} — SAR {getHourlyPriceForDuration(space, h)}</option>
-                      ))}
-                    </select>
+                      <span className="truncate">
+                        {durationHours} {durationHours === 1 ? 'Hour' : 'Hours'} — SAR {getHourlyPriceForDuration(space, durationHours)}
+                      </span>
+                      <ChevronDown
+                        size={15}
+                        className={`text-moss shrink-0 transition-transform duration-200 ${
+                          durationOpen ? 'rotate-180 text-soot' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {durationOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1.5 p-1.5 bg-plaster-surface border border-soot/15 rounded-2xl shadow-xl z-50 animate-in fade-in-50 zoom-in-95 duration-100 max-h-52 overflow-y-auto">
+                        <div className="space-y-0.5">
+                          {DURATION_OPTIONS.map((h) => {
+                            const isSelected = durationHours === h;
+                            return (
+                              <button
+                                key={h}
+                                type="button"
+                                onClick={() => {
+                                  setDurationHours(h);
+                                  setDurationOpen(false);
+                                }}
+                                className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-sm font-medium transition-colors text-left cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-soot text-plaster font-semibold'
+                                    : 'text-soot hover:bg-plaster-dark/60'
+                                }`}
+                              >
+                                <span>
+                                  {h} {h === 1 ? 'Hour' : 'Hours'} — SAR {getHourlyPriceForDuration(space, h)}
+                                </span>
+                                {isSelected && <Check size={14} className="text-eucalyptus" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

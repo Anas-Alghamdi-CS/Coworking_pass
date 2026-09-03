@@ -112,7 +112,7 @@ function NotificationButton() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-soot/10 z-50 overflow-hidden divide-y divide-soot/5">
+          <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-soot/10 z-50 overflow-hidden divide-y divide-soot/5 animate-in fade-in-50 zoom-in-95 duration-100">
             <div className="p-3.5 bg-[#374142] text-[#FAF8F3] flex items-center justify-between shadow-2xs border-b border-white/10">
               <div className="flex items-center gap-2">
                 <Bell size={16} className="text-eucalyptus" />
