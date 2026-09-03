@@ -36,7 +36,6 @@ import TeamBookings from './organization/TeamBookings';
 import OrgProfile from './organization/OrgProfile';
 import CompanyBookings from './organization/CompanyBookings';
 import CompanyTeam from './organization/CompanyTeam';
-import MyWorkspaces from './organization/MyWorkspaces';
 
 // Provider screens
 import ProviderDashboard from './provider/Dashboard';
@@ -67,10 +66,9 @@ const individualNav: NavItem[] = [
 
 const orgNav: NavItem[] = [
   { label: 'Dashboard', screen: 'org-dashboard', icon: LayoutDashboard },
-  { label: 'Workspaces', screen: 'company-workspaces', icon: Building2 },
+  { label: 'Browse Spaces', screen: 'browse', icon: Search },
   { label: 'Team Bookings', screen: 'team-bookings', icon: Briefcase },
   { label: 'Team Members', screen: 'company-team', icon: Users },
-  { label: 'Browse Spaces', screen: 'browse', icon: Search },
   { label: 'Settings', screen: 'org-settings', icon: Settings },
 ];
 
@@ -462,9 +460,9 @@ export function Router() {
     return (
       <DashboardLayout>
         {screen === 'org-dashboard' && <OrgDashboard />}
-        {screen === 'company-workspaces' && <MyWorkspaces />}
-        {screen === 'company-add-workspace' && <MyWorkspaces />}
-        {screen === 'company-bookings' && <CompanyBookings />}
+        {screen === 'company-workspaces' && <OrgDashboard />}
+        {screen === 'company-add-workspace' && <OrgDashboard />}
+        {screen === 'company-bookings' && <TeamBookings />}
         {screen === 'company-team' && <CompanyTeam />}
         {screen === 'team-booking' && <TeamBooking />}
         {screen === 'team-bookings' && <TeamBookings />}
