@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard, Notification } from '@/types/types';
-import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS } from '@/data/data';
+import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS, INITIAL_NOTIFICATIONS } from '@/data/data';
 
 interface AppContextType {
   // Navigation
@@ -38,7 +38,12 @@ interface AppContextType {
   notifications: Notification[];
   unreadNotificationsCount: number;
   markNotificationRead: (id: string) => void;
+  toggleNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+  deleteNotification: (id: string) => void;
+  clearAllNotifications: () => void;
+  addNotification: (notif: Omit<Notification, 'id' | 'createdAt' | 'read'> & { read?: boolean }) => Notification;
+  generateFakeNotification: (presetType?: string, customTitle?: string, customMessage?: string) => Notification;
 
   // Users (admin)
   users: User[];
@@ -101,6 +106,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
         setUsers(cleanedUsers);
         localStorage.setItem('cp_users', JSON.stringify(cleanedUsers));
+      }
+      const savedNotifs = localStorage.getItem('cp_notifications');
+      if (savedNotifs) {
+        setNotifications(JSON.parse(savedNotifs));
+      } else {
+        setNotifications(INITIAL_NOTIFICATIONS);
+        localStorage.setItem('cp_notifications', JSON.stringify(INITIAL_NOTIFICATIONS));
       }
     } catch (e) {
       console.error('Failed to load storage state:', e);
@@ -297,8 +309,113 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // دوال الإشعارات المشتقة والخاصة بالمستخدم المسجل
   const userNotifications = currentUser ? notifications.filter(n => n.userId === currentUser.id || currentUser.role === 'admin') : [];
-  const markNotificationRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  const markAllNotificationsRead = () => setNotifications(prev => prev.map(n => userNotifications.some(u => u.id === n.id) ? { ...n, read: true } : n));
+
+  const markNotificationRead = (id: string) => setNotifications(prev => {
+    const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
+    if (typeof window !== 'undefined') localStorage.setItem('cp_notifications', JSON.stringify(updated));
+    return updated;
+  });
+
+  const toggleNotificationRead = (id: string) => setNotifications(prev => {
+    const updated = prev.map(n => n.id === id ? { ...n, read: !n.read } : n);
+    if (typeof window !== 'undefined') localStorage.setItem('cp_notifications', JSON.stringify(updated));
+    return updated;
+  });
+
+  const markAllNotificationsRead = () => setNotifications(prev => {
+    const updated = prev.map(n => userNotifications.some(u => u.id === n.id) ? { ...n, read: true } : n);
+    if (typeof window !== 'undefined') localStorage.setItem('cp_notifications', JSON.stringify(updated));
+    return updated;
+  });
+
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      if (typeof window !== 'undefined') localStorage.setItem('cp_notifications', JSON.stringify(updated));
+      return updated;
+    });
+    showToast('Notification removed', 'info');
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications(prev => {
+      const userNotifIds = new Set(userNotifications.map(u => u.id));
+      const updated = prev.filter(n => !userNotifIds.has(n.id));
+      if (typeof window !== 'undefined') localStorage.setItem('cp_notifications', JSON.stringify(updated));
+      return updated;
+    });
+    showToast('All notifications cleared', 'info');
+  };
+
+  const addNotification = (notifData: Omit<Notification, 'id' | 'createdAt' | 'read'> & { read?: boolean }): Notification => {
+    const newNotif: Notification = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      userId: notifData.userId || currentUser?.id || 'user-1',
+      title: notifData.title,
+      message: notifData.message,
+      type: notifData.type || 'info',
+      read: notifData.read ?? false,
+      createdAt: 'Just now',
+    };
+    setNotifications(prev => {
+      const updated = [newNotif, ...prev];
+      if (typeof window !== 'undefined') localStorage.setItem('cp_notifications', JSON.stringify(updated));
+      return updated;
+    });
+    return newNotif;
+  };
+
+  const generateFakeNotification = (presetType: string = 'booking', customTitle?: string, customMessage?: string): Notification => {
+    const userId = currentUser?.id || 'user-1';
+    let title = customTitle || '';
+    let message = customMessage || '';
+    let type: Notification['type'] = 'booking';
+
+    if (!customTitle || !customMessage) {
+      switch (presetType) {
+        case 'booking':
+          title = 'Booking Confirmed!';
+          message = 'Your reservation at The Hub Riyadh has been confirmed for tomorrow at 9:00 AM.';
+          type = 'booking';
+          break;
+        case 'reminder':
+          title = 'Pass Expiring Soon';
+          message = 'Your All-Access Pass will renew in 3 days. Ensure your billing card is up to date.';
+          type = 'reminder';
+          break;
+        case 'info':
+          title = 'Waitlist Spot Available!';
+          message = 'A hot desk opened up at WorkBay Jeddah. Click here to confirm your reservation.';
+          type = 'info';
+          break;
+        case 'payment':
+          title = 'Payment Received';
+          message = 'SAR 150.00 successfully processed for Daily Pass booking #BP-8821.';
+          type = 'payment';
+          break;
+        case 'system':
+          title = 'System Maintenance';
+          message = 'Coworking Pass platform upgraded with instant auto-booking capabilities.';
+          type = 'system';
+          break;
+        default:
+          title = 'Test Notification';
+          message = 'This is a mock notification generated for testing user notification flows.';
+          type = 'info';
+      }
+    } else {
+      type = (presetType as Notification['type']) || 'info';
+    }
+
+    const created = addNotification({ userId, title, message, type });
+    return created;
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).generateFakeNotification = generateFakeNotification;
+    }
+  }, [currentUser]);
 
   const blockUser = (id: string) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, isBlocked: true } : u));
@@ -317,12 +434,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const joinWaitlist = (spaceId: string) => {
     setWaitlist(prev => ({ ...prev, [spaceId]: true }));
+    const space = spaces.find(s => s.id === spaceId);
+    addNotification({
+      userId: currentUser?.id || 'user-1',
+      title: 'Joined Waitlist',
+      message: `You joined the waitlist for ${space?.name || 'the workspace'}. We'll notify you as soon as a spot opens!`,
+      type: 'info',
+    });
     showToast('You have joined the waitlist! We\'ll notify you when a spot opens.');
   };
 
   const enableAutoBooking = (spaceId: string, cardId: string) => {
     setAutobooking(prev => ({ ...prev, [spaceId]: true }));
     setAutobookingCard(prev => ({ ...prev, [spaceId]: cardId }));
+    const space = spaces.find(s => s.id === spaceId);
+    addNotification({
+      userId: currentUser?.id || 'user-1',
+      title: 'Auto-Booking Activated',
+      message: `Auto-Booking enabled for ${space?.name || 'workspace'}. We'll automatically book and notify you when a desk opens.`,
+      type: 'info',
+    });
     showToast('Auto-Booking enabled! We\'ll charge your selected card and book automatically when a spot opens.', 'success');
   };
 
@@ -354,7 +485,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       bookings, addBooking, cancelBooking, updateBookingStatus,
       notifications: userNotifications,
       unreadNotificationsCount: userNotifications.filter(n => !n.read).length,
-      markNotificationRead, markAllNotificationsRead,
+      markNotificationRead, toggleNotificationRead, markAllNotificationsRead, deleteNotification, clearAllNotifications, addNotification, generateFakeNotification,
       users, blockUser, unblockUser, changeUserRole,
       waitlist, autobooking, autobookingCard, joinWaitlist, enableAutoBooking, disableAutoBooking,
       addPaymentCard,

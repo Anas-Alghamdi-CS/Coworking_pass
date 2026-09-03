@@ -29,9 +29,10 @@ export interface Notification {
   userId: string;
   title: string;
   message: string;
-  type: 'booking' | 'cancelled' | 'reminder' | 'info';
+  type: 'booking' | 'cancelled' | 'reminder' | 'info' | 'payment' | 'system';
   read: boolean;
   createdAt: string;
+  link?: string;
 }
 
 export interface SpaceBookingPackage {
