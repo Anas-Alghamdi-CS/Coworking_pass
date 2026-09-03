@@ -10,19 +10,151 @@ export type UserRole =
 
 export type BookingStatus = 'active' | 'previous' | 'cancelled';
 
-export type BookingType = 'hot-desk' | 'private-office' | 'meeting-room';
-
 export type BookingPlan = 'hourly' | 'daily' | 'monthly' | 'yearly';
+
+export type SpaceCategory = 'office' | 'hall' | 'theater';
 
 export type SpaceType =
   | 'hot-desk'
   | 'shared-desk'
   | 'private-office'
   | 'meeting-room'
+  | 'meeting-hall'
+  | 'training-hall'
+  | 'conference-hall'
+  | 'workshop-hall'
+  | 'event-hall'
+  | 'lecture-hall'
+  | 'multipurpose-hall'
   | 'theater'
+  | 'performance-theater'
+  | 'conference-theater'
   | 'mixed';
 
+export type BookingType = SpaceType;
+
 export type BookingMode = 'subscription' | 'hourly';
+
+/**
+ * Derives or retrieves the main space category ('office' | 'hall' | 'theater').
+ */
+export function getSpaceCategory(spaceOrType?: Space | SpaceType | string): SpaceCategory {
+  if (!spaceOrType) return 'office';
+  if (typeof spaceOrType === 'object') {
+    if (spaceOrType.category) return spaceOrType.category;
+    return getSpaceCategory(spaceOrType.type);
+  }
+  const t = String(spaceOrType).toLowerCase().trim();
+  if (t === 'theater' || t === 'performance-theater' || t === 'conference-theater' || t.includes('theater')) {
+    return 'theater';
+  }
+  if (
+    t === 'meeting-hall' ||
+    t === 'training-hall' ||
+    t === 'conference-hall' ||
+    t === 'workshop-hall' ||
+    t === 'event-hall' ||
+    t === 'lecture-hall' ||
+    t === 'multipurpose-hall' ||
+    t.includes('hall')
+  ) {
+    return 'hall';
+  }
+  return 'office';
+}
+
+/**
+ * Checks if hourly bookings are permitted (only for Halls and Theaters).
+ */
+export function isHourlyAllowed(spaceOrType?: Space | SpaceType | string): boolean {
+  const cat = getSpaceCategory(spaceOrType);
+  return cat === 'hall' || cat === 'theater';
+}
+
+/**
+ * Helper to check if a space is a Hall or Theater that supports hourly duration booking.
+ */
+export function isHourlyOnlySpace(spaceType?: string): boolean {
+  return isHourlyAllowed(spaceType);
+}
+
+/**
+ * Checks if a space type is an Office (which does NOT support hourly booking).
+ */
+export function isOfficeSpace(spaceType?: string): boolean {
+  return getSpaceCategory(spaceType) === 'office';
+}
+
+/**
+ * Returns allowed booking plans based on space type:
+ * - Halls: ['hourly', 'daily', 'monthly', 'yearly']
+ * - Theaters: ['hourly', 'daily', 'monthly', 'yearly']
+ * - Offices: ['daily', 'monthly', 'yearly'] (NO hourly)
+ */
+export function getAllowedPlansForSpace(spaceOrType?: Space | string): BookingPlan[] {
+  const cat = getSpaceCategory(spaceOrType);
+  if (cat === 'hall' || cat === 'theater') {
+    return ['hourly', 'daily', 'monthly', 'yearly'];
+  }
+  // Offices: Daily, Monthly, Yearly only
+  return ['daily', 'monthly', 'yearly'];
+}
+
+/**
+ * Calculate the end date string given start date, plan, and month duration.
+ */
+export function calculateEndDate(
+  startDate: string,
+  plan: BookingPlan,
+  durationMonths: number = 1
+): string {
+  if (!startDate) return '';
+  if (plan === 'hourly' || plan === 'daily') return startDate;
+  const d = new Date(startDate);
+  if (isNaN(d.getTime())) return startDate;
+  if (plan === 'monthly') {
+    const months = Math.max(1, durationMonths);
+    d.setMonth(d.getMonth() + months);
+    return d.toISOString().split('T')[0];
+  }
+  if (plan === 'yearly') {
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().split('T')[0];
+  }
+  return startDate;
+}
+
+export const ALL_SPACE_TYPES: { value: SpaceType; label: string; group: 'Offices' | 'Halls' | 'Theaters' | 'Desks & Workspaces' }[] = [
+  // Offices
+  { value: 'private-office', label: 'Private Office', group: 'Offices' },
+  
+  // Halls
+  { value: 'meeting-hall', label: 'Meeting Hall', group: 'Halls' },
+  { value: 'training-hall', label: 'Training Hall', group: 'Halls' },
+  { value: 'conference-hall', label: 'Conference Hall', group: 'Halls' },
+  { value: 'workshop-hall', label: 'Workshop Hall', group: 'Halls' },
+  { value: 'event-hall', label: 'Event Hall', group: 'Halls' },
+  { value: 'lecture-hall', label: 'Lecture Hall', group: 'Halls' },
+  { value: 'multipurpose-hall', label: 'Multi-purpose Hall', group: 'Halls' },
+  
+  // Theaters
+  { value: 'theater', label: 'Theater', group: 'Theaters' },
+  { value: 'performance-theater', label: 'Performance Theater', group: 'Theaters' },
+  { value: 'conference-theater', label: 'Conference & Event Theater', group: 'Theaters' },
+  
+  // Desks & Workspaces (under Offices / Workspaces)
+  { value: 'hot-desk', label: 'Hot Desk', group: 'Desks & Workspaces' },
+  { value: 'shared-desk', label: 'Shared Desk', group: 'Desks & Workspaces' },
+  { value: 'meeting-room', label: 'Meeting Room', group: 'Desks & Workspaces' },
+  { value: 'mixed', label: 'Mixed Workspace', group: 'Desks & Workspaces' },
+];
+
+export function getSpaceTypeLabel(type?: string): string {
+  if (!type) return 'Workspace';
+  const found = ALL_SPACE_TYPES.find(t => t.value === type);
+  if (found) return found.label;
+  return type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
 
 export interface Notification {
   id: string;
@@ -43,17 +175,29 @@ export interface SpaceBookingPackage {
   price: number;
 }
 
+export interface HourlyTier {
+  hours: number;
+  price: number;
+}
+
+export interface MonthlyTier {
+  months: number;
+  price: number;
+}
+
 export interface SpacePricing {
   hourly?: number; // Base 1-hour rate
-  hourlyTiers?: { hours: number; price: number }[]; // Specific duration pricing, e.g. [{hours: 1, price: 50}, {hours: 2, price: 90}, ...]
+  hourlyTiers?: HourlyTier[]; // Specific duration pricing, e.g. [{hours: 1, price: 150}, {hours: 2, price: 280}, ...]
   daily: number;
-  monthly: number;
+  monthly: number; // Base 1-month rate
+  monthlyTiers?: MonthlyTier[]; // Specific multi-month pricing, e.g. [{months: 1, price: 1800}, {months: 2, price: 3400}, ...]
   yearly: number;
 }
 
 export interface Space {
   id: string;
   name: string;
+  category?: SpaceCategory; // 'office' | 'hall' | 'theater'
   city: string;
   region?: string;
   district?: string;
@@ -146,41 +290,50 @@ export interface PlanPricingResult {
 
 /**
  * Calculate the price for a specific duration in hours for a space.
- * Checks for specific custom duration tier, otherwise computes based on hourly rate with multi-hour discounts.
+ * Checks for exact provider configured duration tier, otherwise computes based on base hourly rate.
  */
 export function getHourlyPriceForDuration(space: Space, durationHours: number = 1): number {
   if (!space || !space.pricing) return 50 * durationHours;
   const hours = Math.max(1, Math.round(durationHours));
 
-  // 1. Check if an exact tier exists
+  // 1. Check if an exact provider configured tier exists
   if (space.pricing.hourlyTiers && space.pricing.hourlyTiers.length > 0) {
     const tier = space.pricing.hourlyTiers.find(t => t.hours === hours);
-    if (tier && tier.price > 0) {
+    if (tier && typeof tier.price === 'number' && tier.price > 0) {
       return tier.price;
     }
   }
 
   // 2. Base hourly rate fallback
-  const baseHourly = space.pricing.hourly || Math.max(25, Math.round((space.pricing.daily || 150) / 4));
+  const baseHourly = space.pricing.hourly || 150;
+  return baseHourly * hours;
+}
 
-  // If hours is 1, return base rate
-  if (hours === 1) return baseHourly;
+/**
+ * Calculate the price for a specific duration in months for a space.
+ * Checks for exact provider configured monthly duration tier (e.g. 1, 2, 3, 6, 12 months),
+ * otherwise computes based on base monthly rate or yearly rate.
+ */
+export function getMonthlyPriceForDuration(space: Space, durationMonths: number = 1): number {
+  if (!space || !space.pricing) return 1800 * durationMonths;
+  const months = Math.max(1, Math.round(durationMonths));
 
-  // Progressive volume discount for multi-hour reservations:
-  // 2h = 1.8x, 3h = 2.5x, 4h = 3.1x, 6h = 4.4x, 8h = 5.5x
-  const discountMultiplier =
-    hours === 2 ? 1.8
-    : hours === 3 ? 2.5
-    : hours === 4 ? 3.1
-    : hours === 5 ? 3.8
-    : hours === 6 ? 4.4
-    : hours === 7 ? 5.0
-    : hours >= 8 ? Math.min(space.pricing.daily || 150, Math.round(baseHourly * (hours * 0.7)))
-    : hours;
+  // 1. Check if an exact provider configured monthly tier exists
+  if (space.pricing.monthlyTiers && space.pricing.monthlyTiers.length > 0) {
+    const tier = space.pricing.monthlyTiers.find(t => t.months === months);
+    if (tier && typeof tier.price === 'number' && tier.price > 0) {
+      return tier.price;
+    }
+  }
 
-  return typeof discountMultiplier === 'number' && hours < 8
-    ? Math.round(baseHourly * discountMultiplier)
-    : Math.round(baseHourly * hours);
+  // 2. Check 12-month yearly rate if configured
+  if (months === 12 && space.pricing.yearly && space.pricing.yearly > 0) {
+    return space.pricing.yearly;
+  }
+
+  // 3. Base monthly rate * months
+  const baseMonthly = space.pricing.monthly || 1800;
+  return baseMonthly * months;
 }
 
 /**
@@ -354,13 +507,29 @@ export function getEffectiveSpacePrice(
   space: Space,
   planType: BookingPlan = 'daily',
   deskType?: BookingType | SpaceType,
-  durationHours: number = 1
+  durationHours: number = 1,
+  durationMonths: number = 1
 ): PlanPricingResult {
-  let originalPrice = 100;
+  if (!space) {
+    return {
+      isCovered: false,
+      effectivePrice: 150,
+      originalPrice: 150,
+      badgeLabel: 'SAR 150',
+      hasDiscount: false,
+    };
+  }
+
+  let originalPrice = 150;
   if (planType === 'hourly') {
     originalPrice = getHourlyPriceForDuration(space, durationHours);
+  } else if (planType === 'monthly') {
+    originalPrice = getMonthlyPriceForDuration(space, durationMonths);
+  } else if (planType === 'yearly') {
+    originalPrice = space.pricing?.yearly ?? ((space.pricing?.monthly ?? 1800) * 10);
   } else {
-    originalPrice = space?.pricing?.[planType] ?? 100;
+    // daily
+    originalPrice = space.pricing?.daily ?? 150;
   }
 
   // Hourly duration bookings are on-demand per-hour reservations
@@ -411,7 +580,7 @@ export function getEffectiveSpacePrice(
         isCovered: false,
         effectivePrice,
         originalPrice,
-        badgeLabel: `SAR ${effectivePrice} (70% Off Upgrade)`,
+        badgeLabel: `SAR ${effectivePrice.toLocaleString()} (70% Off Upgrade)`,
         hasDiscount: true,
         discountPercentage: 70,
       };
@@ -444,7 +613,7 @@ export function getEffectiveSpacePrice(
       isCovered: false,
       effectivePrice,
       originalPrice,
-      badgeLabel: `SAR ${effectivePrice} (50% Off)`,
+      badgeLabel: `SAR ${effectivePrice.toLocaleString()} (50% Off)`,
       hasDiscount: true,
       discountPercentage: 50,
     };
@@ -480,13 +649,17 @@ export interface Booking {
   spaceCity: string;
   spaceAddress: string;
   spaceImage: string;
+  category?: SpaceCategory; // 'office' | 'hall' | 'theater'
   type: BookingType;
   plan: BookingPlan; // 'hourly' | 'daily' | 'monthly' | 'yearly'
 
-  // Time & Duration for Hourly Reservations
+  // Time & Duration for Hourly Reservations (Halls & Theaters only)
   startTime?: string; // e.g. '09:00 AM'
   endTime?: string;   // e.g. '11:00 AM'
-  durationHours?: number; // e.g. 1, 2, 3, 4
+  durationHours?: number; // e.g. 1, 2, 3, 4, 6, 8
+
+  // Duration for Monthly Reservations (Multi-month: 1, 2, 3, 6, 12)
+  durationMonths?: number;
 
   // Package reference if any
   bookingPackageId?: string;
@@ -500,6 +673,27 @@ export interface Booking {
   status: BookingStatus;
   createdAt?: string;
   notes?: string;
+}
+
+export function getBookingPrice(b: Booking, spaces: Space[] = []): number {
+  if (typeof b.totalPrice === 'number' && !isNaN(b.totalPrice) && b.totalPrice >= 0) {
+    return b.totalPrice;
+  }
+  const space = spaces.find(s => s.id === b.spaceId || s.name.toLowerCase() === b.spaceName.toLowerCase());
+  const seats = b.seats || 1;
+  if (!space) return 150 * seats;
+  if (b.plan === 'hourly') {
+    const hours = b.durationHours || 1;
+    return getHourlyPriceForDuration(space, hours) * seats;
+  }
+  if (b.plan === 'monthly') {
+    const months = b.durationMonths || 1;
+    return getMonthlyPriceForDuration(space, months) * seats;
+  }
+  if (b.plan === 'yearly') {
+    return (space.pricing?.yearly || ((space.pricing?.monthly || 1800) * 10)) * seats;
+  }
+  return (space.pricing?.daily || 150) * seats;
 }
 
 export type Screen =
