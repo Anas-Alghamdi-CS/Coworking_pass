@@ -3,14 +3,13 @@
 import React from 'react';
 import { CalendarDays, MapPin, Star, Clock, ArrowRight, Bookmark, Check, Users, Building2 } from 'lucide-react';
 import { useApp } from '@/app/store';
-import { Space, isUserPassHolder, getEffectiveSpacePrice, Booking, getHourlyPriceForDuration, Employee } from '@/types/types';
+import { Space, getEffectiveSpacePrice, Booking, getHourlyPriceForDuration, Employee } from '@/types/types';
 
 export default function OrgDashboard() {
   const { currentUser, spaces, bookings, favorites, navigate } = useApp();
 
   if (!currentUser) return null;
 
-  // Organization team bookings
   const orgBookings = bookings.filter((b: Booking) => b.userId === currentUser.id);
   const activeBookings = orgBookings.filter((b: Booking) => b.status === 'active');
   const favoriteSpaces = spaces.filter((s: Space) => favorites.includes(s.id) && s.isVisible);
@@ -39,118 +38,121 @@ export default function OrgDashboard() {
   const getEmpName = (id: string) => employees.find((e: Employee) => e.id === id)?.name || id;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 sm:px-8 py-10">
-      {/* Welcome Header */}
-      <div className="mb-8">
-        <p className="text-moss text-base font-normal mb-1">{greeting()},</p>
-        <h1 className="text-4xl sm:text-5xl text-soot font-normal" style={{ fontFamily: 'DM Serif Display, serif' }}>
-          {currentUser.orgName || currentUser.name}
-        </h1>
-        <p className="text-moss text-xs sm:text-sm mt-1.5 font-normal">
-          {currentUser.industry || 'Enterprise Solutions'} · {employees.length || currentUser.orgSize || 15} team members
-        </p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <span className="text-xs font-semibold tracking-wider uppercase text-moss block mb-1">
+            Enterprise HR & Corporate Portal
+          </span>
+          <h1 className="text-3xl sm:text-4xl text-soot font-normal font-serif-display">
+            {currentUser.orgName || currentUser.name}
+          </h1>
+          <p className="text-moss text-sm mt-1">
+            {currentUser.industry || 'Enterprise Solutions'} · {employees.length || currentUser.orgSize || 15} team members on pass
+          </p>
+        </div>
       </div>
 
-      {/* Top 4 Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10">
-        {/* Active bookings */}
-        <div className="bg-white rounded-3xl p-6 border border-soot/8 shadow-sm flex flex-col justify-between h-36">
-          <div className="text-moss">
-            <CalendarDays size={22} className="stroke-[1.5]" />
-          </div>
-          <div>
-            <div className="text-3xl font-semibold text-soot leading-none mb-1.5">{activeBookings.length}</div>
-            <div className="text-xs sm:text-sm text-moss font-medium">Active bookings</div>
-          </div>
-        </div>
-
-        {/* Total bookings */}
-        <div className="bg-white rounded-3xl p-6 border border-soot/8 shadow-sm flex flex-col justify-between h-36">
-          <div className="text-moss">
-            <Bookmark size={22} className="stroke-[1.5]" />
-          </div>
-          <div>
-            <div className="text-3xl font-semibold text-soot leading-none mb-1.5">{orgBookings.length}</div>
-            <div className="text-xs sm:text-sm text-moss font-medium">Total bookings</div>
-          </div>
-        </div>
-
-        {/* Team Members */}
-        <div className="bg-white rounded-3xl p-6 border border-soot/8 shadow-sm flex flex-col justify-between h-36">
-          <div className="text-moss">
-            <Users size={22} className="stroke-[1.5]" />
-          </div>
-          <div>
-            <div className="text-3xl font-semibold text-soot leading-none mb-1.5">{employees.length || 1}</div>
-            <div className="text-xs sm:text-sm text-moss font-medium">Team members</div>
-          </div>
-        </div>
-
-        {/* Days booked */}
-        <div className="bg-[#E5ECE9] rounded-3xl p-6 border border-eucalyptus/20 shadow-sm flex flex-col justify-between h-36">
-          <div className="text-moss">
-            <Clock size={22} className="stroke-[1.5]" />
-          </div>
-          <div>
-            <div className="text-3xl font-semibold text-soot leading-none mb-1.5">
-              {orgBookings.filter(b => b.status !== 'cancelled').length * 4}
+      {/* Admin-Matching Elevated Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          {
+            label: 'Active Bookings',
+            count: activeBookings.length,
+            badge: 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30',
+            icon: CalendarDays,
+            iconBg: 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30',
+          },
+          {
+            label: 'Total Bookings',
+            count: orgBookings.length,
+            badge: 'bg-soot/10 text-soot border border-soot/15',
+            icon: Bookmark,
+            iconBg: 'bg-soot text-plaster border-soot/20',
+          },
+          {
+            label: 'Team Members',
+            count: employees.length || 1,
+            badge: 'bg-amber-500/15 text-amber-800 border border-amber-500/30',
+            icon: Users,
+            iconBg: 'bg-amber-500/15 text-amber-800 border-amber-500/30',
+          },
+          {
+            label: 'Days Booked',
+            count: orgBookings.filter(b => b.status !== 'cancelled').length * 4,
+            badge: 'bg-blue-500/15 text-blue-800 border border-blue-500/30',
+            icon: Clock,
+            iconBg: 'bg-blue-500/15 text-blue-800 border-blue-500/30',
+          },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-plaster-surface rounded-3xl border border-soot/12 p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs ${stat.iconBg}`}>
+                <stat.icon size={20} />
+              </div>
+              <div>
+                <div className="text-3xl font-normal text-soot tracking-tight font-serif-display">{stat.count}</div>
+                <div className="text-xs font-medium text-moss mt-0.5">{stat.label}</div>
+              </div>
             </div>
-            <div className="text-xs sm:text-sm text-moss font-medium">Days booked</div>
           </div>
-        </div>
+        ))}
       </div>
 
       {/* Main Grid: Active bookings & Saved spaces */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Active bookings column */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl text-soot font-normal" style={{ fontFamily: 'DM Serif Display, serif' }}>
-              Active bookings
-            </h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-serif-display text-soot">Active Team Bookings</h2>
             <button
               onClick={() => navigate('team-bookings')}
-              className="text-sm font-medium text-moss hover:text-soot flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-moss hover:text-soot flex items-center gap-1 cursor-pointer transition-colors"
             >
-              View all <ArrowRight size={14} />
+              <span>View all</span>
+              <ArrowRight size={13} />
             </button>
           </div>
 
           {activeBookings.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-soot/8 p-12 text-center shadow-sm min-h-[220px] flex flex-col items-center justify-center">
-              <CalendarDays size={32} className="text-moss stroke-[1.5] mx-auto mb-3" />
-              <div className="text-base font-semibold text-soot mb-2">No active team bookings</div>
+            <div className="bg-plaster-surface rounded-3xl border border-soot/10 p-8 text-center shadow-2xs min-h-[200px] flex flex-col items-center justify-center">
+              <CalendarDays size={32} className="text-moss mx-auto mb-3" />
+              <div className="text-sm font-semibold text-soot mb-1">No active team bookings</div>
               <button
                 onClick={() => navigate('browse')}
-                className="text-sm font-medium text-moss hover:text-soot flex items-center gap-1 transition-colors cursor-pointer"
+                className="text-xs font-semibold text-moss hover:text-soot flex items-center gap-1 transition-colors cursor-pointer mt-2"
               >
                 Browse workspaces →
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="bg-plaster-surface rounded-3xl border border-soot/10 overflow-hidden shadow-2xs divide-y divide-soot/8">
               {activeBookings.slice(0, 3).map(b => (
                 <div
                   key={b.id}
                   onClick={() => navigate('team-bookings')}
-                  className="bg-white rounded-2xl border border-soot/8 p-4 shadow-sm hover:shadow-md hover:border-eucalyptus/40 transition-all cursor-pointer flex items-center justify-between gap-4"
+                  className="p-4 hover:bg-plaster-dark/30 transition-colors flex items-center justify-between gap-4 cursor-pointer group"
                 >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <img src={b.spaceImage} alt={b.spaceName} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <img src={b.spaceImage} alt={b.spaceName} className="w-12 h-12 rounded-xl object-cover border border-soot/10 shrink-0 shadow-2xs group-hover:scale-105 transition-transform" />
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-soot text-base truncate">{b.spaceName}</h4>
-                      <div className="flex items-center gap-1.5 text-xs text-moss mt-0.5">
-                        <MapPin size={12} />
-                        <span>{b.spaceCity}</span>
+                      <h4 className="font-semibold text-soot text-sm truncate group-hover:text-emerald-900 transition-colors">{b.spaceName}</h4>
+                      <div className="flex items-center gap-1.5 text-xs text-moss mt-0.5 font-medium">
+                        <MapPin size={12} className="shrink-0" />
+                        <span className="truncate">{b.spaceCity}</span>
                         <span>•</span>
-                        <span>{b.startDate} {b.endDate && b.endDate !== b.startDate ? `→ ${b.endDate}` : ''}</span>
+                        <span className="truncate">{b.startDate} {b.endDate && b.endDate !== b.startDate ? `→ ${b.endDate}` : ''}</span>
                       </div>
                       <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] font-medium bg-eucalyptus/20 text-moss px-2 py-0.5 rounded-full capitalize">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-800 border border-emerald-500/30 uppercase tracking-wider">
                           {b.plan === 'hourly' ? `${b.durationHours || 1}h Hourly` : `${b.plan} pass`} • {b.seats} seat{b.seats > 1 ? 's' : ''}
                         </span>
                         {b.employees && b.employees.length > 0 && (
-                          <span className="text-[11px] text-moss bg-soot/5 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] text-moss bg-soot/5 px-2 py-0.5 rounded-full border border-soot/8 font-medium">
                             {getEmpName(b.employees[0]).split(' ')[0]} {b.employees.length > 1 ? `+${b.employees.length - 1}` : ''}
                           </span>
                         )}
@@ -158,8 +160,8 @@ export default function OrgDashboard() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-base font-semibold text-soot">SAR {getBookingPrice(b).toLocaleString()}</div>
-                    <span className="text-xs text-moss">Confirmed</span>
+                    <div className="text-sm font-semibold text-soot">SAR {getBookingPrice(b).toLocaleString()}</div>
+                    <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider">Confirmed</span>
                   </div>
                 </div>
               ))}
@@ -168,52 +170,51 @@ export default function OrgDashboard() {
         </div>
 
         {/* Saved spaces column */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl text-soot font-normal" style={{ fontFamily: 'DM Serif Display, serif' }}>
-              Saved spaces
-            </h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-serif-display text-soot">Saved Workspaces</h2>
             <button
               onClick={() => navigate('browse')}
-              className="text-sm font-medium text-moss hover:text-soot flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-moss hover:text-soot flex items-center gap-1 cursor-pointer transition-colors"
             >
-              Browse more <ArrowRight size={14} />
+              <span>Browse more</span>
+              <ArrowRight size={13} />
             </button>
           </div>
 
           {favoriteSpaces.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-soot/8 p-12 text-center shadow-sm min-h-[220px] flex flex-col items-center justify-center">
-              <Star size={32} className="text-moss stroke-[1.5] mx-auto mb-3" />
-              <div className="text-base font-semibold text-soot mb-2">No saved spaces yet</div>
+            <div className="bg-plaster-surface rounded-3xl border border-soot/10 p-8 text-center shadow-2xs min-h-[200px] flex flex-col items-center justify-center">
+              <Star size={32} className="text-moss mx-auto mb-3" />
+              <div className="text-sm font-semibold text-soot mb-1">No saved spaces yet</div>
               <button
                 onClick={() => navigate('browse')}
-                className="text-sm font-medium text-moss hover:text-soot flex items-center gap-1 transition-colors cursor-pointer"
+                className="text-xs font-semibold text-moss hover:text-soot flex items-center gap-1 transition-colors cursor-pointer mt-2"
               >
                 Browse workspaces →
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="bg-plaster-surface rounded-3xl border border-soot/10 overflow-hidden shadow-2xs divide-y divide-soot/8">
               {favoriteSpaces.map(space => (
                 <div
                   key={space.id}
                   onClick={() => navigate('space-details', { spaceId: space.id })}
-                  className="bg-white rounded-2xl border border-soot/8 p-4 shadow-sm hover:shadow-md hover:border-eucalyptus/40 transition-all cursor-pointer flex items-center justify-between gap-4"
+                  className="p-4 hover:bg-plaster-dark/30 transition-colors flex items-center justify-between gap-4 cursor-pointer group"
                 >
-                  <div className="flex items-center gap-4 min-w-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
                     <img
                       src={space.images[0]}
                       alt={space.name}
-                      className="w-16 h-16 rounded-xl object-cover shrink-0 shadow-sm"
+                      className="w-12 h-12 rounded-xl object-cover border border-soot/10 shrink-0 shadow-2xs group-hover:scale-105 transition-transform"
                     />
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-soot text-base truncate">{space.name}</h4>
-                      <div className="flex items-center gap-1.5 text-xs text-moss mt-0.5">
-                        <MapPin size={12} />
+                      <h4 className="font-semibold text-soot text-sm truncate group-hover:text-emerald-900 transition-colors">{space.name}</h4>
+                      <div className="flex items-center gap-1.5 text-xs text-moss mt-0.5 font-medium">
+                        <MapPin size={12} className="shrink-0" />
                         <span>{space.city}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-moss mt-1 font-medium">
-                        <Star size={12} fill="#98AA9D" className="text-eucalyptus" />
+                        <Star size={12} className="fill-amber-400 text-amber-400" />
                         <span>{space.rating}</span>
                       </div>
                     </div>
@@ -223,8 +224,8 @@ export default function OrgDashboard() {
                       const planInfo = getEffectiveSpacePrice(currentUser, space, 'daily');
                       if (planInfo.isCovered) {
                         return (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-eucalyptus/30 text-soot font-semibold text-[11px] border border-eucalyptus/40 shadow-2xs">
-                            <Check size={11} className="text-moss shrink-0" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-800 font-bold text-[10px] border border-emerald-500/30 uppercase tracking-wider shadow-2xs">
+                            <Check size={11} className="text-emerald-800 shrink-0" />
                             <span>Corporate Pass</span>
                           </span>
                         );
@@ -233,7 +234,7 @@ export default function OrgDashboard() {
                         return (
                           <div>
                             <div className="text-sm font-semibold text-soot">SAR {planInfo.effectivePrice}/day</div>
-                            <div className="text-[10px] text-amber-900 font-semibold">{planInfo.discountPercentage}% Pass Discount</div>
+                            <div className="text-[10px] text-amber-800 font-bold">{planInfo.discountPercentage}% Pass Discount</div>
                           </div>
                         );
                       }
@@ -247,23 +248,23 @@ export default function OrgDashboard() {
         </div>
       </div>
 
-      {/* Quick actions */}
-      <div className="mt-10 grid sm:grid-cols-3 gap-5">
+      {/* Admin-Matching Action Cards */}
+      <div className="mt-10 grid sm:grid-cols-3 gap-4">
         {[
-          { label: 'Browse workspaces', desc: 'Find and reserve desks & team rooms', action: () => navigate('browse'), icon: Building2 },
-          { label: 'Team bookings', desc: 'Manage active company reservations', action: () => navigate('team-bookings'), icon: CalendarDays },
-          { label: 'Manage team', desc: 'Add colleagues to enterprise pass', action: () => navigate('company-team'), icon: Users },
+          { label: 'Browse Workspaces', desc: 'Find and reserve desks & meeting rooms', action: () => navigate('browse'), icon: Building2 },
+          { label: 'Team Bookings', desc: 'Manage active company reservations', action: () => navigate('team-bookings'), icon: CalendarDays },
+          { label: 'Manage Team', desc: 'Add colleagues to enterprise pass', action: () => navigate('company-team'), icon: Users },
         ].map(a => (
           <button
             key={a.label}
             onClick={a.action}
-            className="bg-white rounded-3xl border border-soot/8 p-6 text-left hover:border-eucalyptus/40 hover:shadow-md transition-all group cursor-pointer"
+            className="bg-plaster-surface rounded-3xl border border-soot/12 p-5 text-left hover:border-eucalyptus/40 hover:shadow-md transition-all group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-2xl bg-eucalyptus/15 flex items-center justify-center mb-3.5 group-hover:bg-eucalyptus/25 transition-colors">
-              <a.icon size={18} className="text-moss" />
+            <div className="w-11 h-11 rounded-2xl bg-soot text-plaster flex items-center justify-center mb-3 shadow-2xs group-hover:scale-105 transition-transform">
+              <a.icon size={20} />
             </div>
             <div className="font-semibold text-soot text-base">{a.label}</div>
-            <div className="text-xs text-moss mt-1 font-normal">{a.desc}</div>
+            <div className="text-xs text-moss mt-1 font-medium">{a.desc}</div>
           </button>
         ))}
       </div>

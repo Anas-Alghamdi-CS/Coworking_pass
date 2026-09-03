@@ -1,7 +1,22 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Eye, EyeOff, Pencil, Trash2, MapPin, Users, AlertCircle, Check, Warehouse, ChevronDown } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Eye,
+  EyeOff,
+  Pencil,
+  Trash2,
+  MapPin,
+  Star,
+  AlertCircle,
+  Check,
+  ChevronDown,
+  Building2,
+  Warehouse,
+  Upload,
+} from 'lucide-react';
 import { useApp } from '@/app/store';
 import { Space, SpaceType } from '@/types';
 import Modal from '@/components/ui/Modal';
@@ -32,55 +47,34 @@ const TYPES: { value: SpaceType; label: string }[] = [
   { value: 'mixed', label: 'Mixed Space' },
 ];
 
-const emptyForm = (): Partial<Space> => ({
-  name: '',
-  city: 'Riyadh',
-  address: '',
-  description: '',
-  type: 'mixed',
-  amenities: ['High-Speed WiFi', 'Coffee & Tea', 'Parking'],
-  totalCapacity: 20,
-  availableCapacity: 20,
-  pricing: {
-    hourly: 45,
-    hourlyTiers: [
-      { hours: 1, price: 45 },
-      { hours: 2, price: 80 },
-      { hours: 3, price: 110 },
-      { hours: 4, price: 140 },
-      { hours: 6, price: 180 },
-      { hours: 8, price: 220 },
-    ],
-    daily: 150,
-    monthly: 1800,
-    yearly: 18000,
-  },
-  rating: 0,
-  reviewCount: 0,
-  isVisible: true,
-  isFeatured: false,
-  openHours: 'Sun–Thu: 8am–9pm',
-  phone: '',
-  email: '',
-  images: ['https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&h=800&fit=crop&auto=format'],
-});
-
 export default function ProviderMySpaces() {
-  const { currentUser, spaces, bookings, addSpace, updateSpace, toggleSpaceVisibility, deleteSpace } = useApp();
+  const { currentUser, spaces, addSpace, updateSpace, toggleSpaceVisibility, deleteSpace } = useApp();
+  const [query, setQuery] = useState('');
+  const [filterCity, setFilterCity] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [editingSpace, setEditingSpace] = useState<Space | null>(null);
   const [spaceToDelete, setSpaceToDelete] = useState<Space | null>(null);
-  const [form, setForm] = useState<Partial<Space>>(emptyForm());
+  const [form, setForm] = useState<Partial<Space>>({});
   const [saved, setSaved] = useState(false);
+
   const [modalCityOpen, setModalCityOpen] = useState(false);
   const [modalTypeOpen, setModalTypeOpen] = useState(false);
 
   const modalCityRef = useRef<HTMLDivElement>(null);
   const modalTypeRef = useRef<HTMLDivElement>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
       if (modalCityRef.current && !modalCityRef.current.contains(e.target as Node)) {
         setModalCityOpen(false);
       }
@@ -96,16 +90,54 @@ export default function ProviderMySpaces() {
 
   const mySpaces = spaces.filter((s) => s.ownerId === currentUser.id);
 
-  const bookingCountFor = (spaceId: string) => bookings.filter((b) => b.spaceId === spaceId && b.status !== 'cancelled').length;
+  const filteredSpaces = mySpaces.filter((s) => {
+    const q = query.trim().toLowerCase();
+    if (q && !s.name.toLowerCase().includes(q) && !s.city.toLowerCase().includes(q)) return false;
+    if (filterCity && s.city !== filterCity) return false;
+    return true;
+  });
 
   const openAdd = () => {
     setEditingSpace(null);
-    setForm(emptyForm());
+    setForm({
+      name: '',
+      city: 'Riyadh',
+      address: '',
+      description: '',
+      type: 'mixed',
+      amenities: ['High-Speed WiFi', 'Coffee & Tea', 'Parking'],
+      totalCapacity: 20,
+      availableCapacity: 20,
+      pricing: {
+        hourly: 45,
+        hourlyTiers: [
+          { hours: 1, price: 45 },
+          { hours: 2, price: 80 },
+          { hours: 3, price: 110 },
+          { hours: 4, price: 140 },
+          { hours: 6, price: 180 },
+          { hours: 8, price: 220 },
+        ],
+        daily: 150,
+        monthly: 1800,
+        yearly: 18000,
+      },
+      rating: 4.8,
+      reviewCount: 0,
+      isVisible: true,
+      isFeatured: false,
+      openHours: 'Sun–Thu: 8am–9pm',
+      phone: '',
+      email: '',
+      images: ['https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&h=800&fit=crop&auto=format'],
+      ownerId: currentUser.id,
+    });
     setEditModal(true);
     setSaved(false);
   };
 
-  const openEdit = (space: Space) => {
+  const openEdit = (e: React.MouseEvent, space: Space) => {
+    e.stopPropagation();
     setEditingSpace(space);
     setForm({ ...space });
     setEditModal(true);
@@ -117,16 +149,25 @@ export default function ProviderMySpaces() {
     if (editingSpace) {
       updateSpace(editingSpace.id, form as Space);
     } else {
-      addSpace({ ...(form as Omit<Space, 'id'>), ownerId: currentUser.id });
+      addSpace({
+        ...form,
+        ownerId: currentUser.id,
+      } as Omit<Space, 'id'>);
     }
     setSaved(true);
     setTimeout(() => {
       setEditModal(false);
       setSaved(false);
-    }, 1200);
+    }, 800);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent, space: Space) => {
+    e.stopPropagation();
+    setSpaceToDelete(space);
+    setDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
     if (spaceToDelete) {
       deleteSpace(spaceToDelete.id);
       setDeleteModal(false);
@@ -134,12 +175,17 @@ export default function ProviderMySpaces() {
     }
   };
 
-  const toggleAmenity = (a: string) => {
+  const handleToggleVisibility = (e: React.MouseEvent, spaceId: string) => {
+    e.stopPropagation();
+    toggleSpaceVisibility(spaceId);
+  };
+
+  const toggleAmenity = (amenity: string) => {
     setForm((prev) => ({
       ...prev,
-      amenities: prev.amenities?.includes(a)
-        ? prev.amenities.filter((x) => x !== a)
-        : [...(prev.amenities || []), a],
+      amenities: prev.amenities?.includes(amenity)
+        ? prev.amenities.filter((item) => item !== amenity)
+        : [...(prev.amenities || []), amenity],
     }));
   };
 
@@ -147,8 +193,7 @@ export default function ProviderMySpaces() {
     setForm((prev) => {
       const currentPricing = prev.pricing || { hourly: 45, daily: 150, monthly: 1800, yearly: 18000 };
       const updatedPricing = { ...currentPricing, [field]: val };
-      
-      // If hourly base changed, update duration tiers automatically if not custom
+
       if (field === 'hourly') {
         const base = val || 45;
         updatedPricing.hourlyTiers = [
@@ -175,7 +220,7 @@ export default function ProviderMySpaces() {
         { hours: 6, price: 180 },
         { hours: 8, price: 220 },
       ];
-      const existingIdx = currentTiers.findIndex(t => t.hours === hours);
+      const existingIdx = currentTiers.findIndex((t) => t.hours === hours);
       let updatedTiers = [...currentTiers];
       if (existingIdx >= 0) {
         updatedTiers[existingIdx] = { hours, price: val };
@@ -194,109 +239,317 @@ export default function ProviderMySpaces() {
     });
   };
 
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    setForm((p) => ({
+      ...p,
+      images: [...(p.images || []), imageUrlInput.trim()],
+    }));
+    setImageUrlInput('');
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setForm((prev) => ({
+            ...prev,
+            images: [...(prev.images || []), result],
+          }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      images: (prev.images || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const visibleCount = mySpaces.filter((s) => s.isVisible).length;
+  const hiddenCount = mySpaces.filter((s) => !s.isVisible).length;
+  const fullyBookedCount = mySpaces.filter((s) => s.availableCapacity === 0).length;
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl text-soot" style={{ fontFamily: 'DM Serif Display, serif' }}>
-            My Spaces
+          <span className="text-xs font-semibold tracking-wider uppercase text-moss block mb-1">
+            Space Management
+          </span>
+          <h1 className="text-3xl sm:text-4xl text-soot font-normal font-serif-display">
+            My Workspaces
           </h1>
-          <p className="text-moss text-sm mt-1">Manage the workspaces you list on Coworking Pass.</p>
+          <p className="text-moss text-sm mt-1">Manage and update your listed workspace properties.</p>
         </div>
-        <button onClick={openAdd} className="btn-primary">
-          <Plus size={15} />
+
+        <button type="button" onClick={openAdd} className="btn-primary">
+          <Plus size={17} className="text-[#FAF8F5]/80" />
           <span>Add space</span>
         </button>
       </div>
 
-      {/* Stats bar */}
-      <div className="flex gap-4 mb-5 text-sm text-moss">
-        <span>{mySpaces.length} total</span>
-        <span>{mySpaces.filter((s) => s.isVisible).length} visible</span>
-        <span>{mySpaces.filter((s) => !s.isVisible).length} hidden</span>
-        <span>{mySpaces.filter((s) => s.availableCapacity === 0).length} fully booked</span>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          {
+            label: 'Total Spaces',
+            count: mySpaces.length,
+            badge: 'bg-soot/10 text-soot border border-soot/15',
+            icon: Building2,
+            iconBg: 'bg-soot text-plaster border-soot/20',
+          },
+          {
+            label: 'Visible Listings',
+            count: visibleCount,
+            badge: 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30',
+            icon: Eye,
+            iconBg: 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30',
+          },
+          {
+            label: 'Hidden Spaces',
+            count: hiddenCount,
+            badge: 'bg-amber-500/15 text-amber-800 border border-amber-500/30',
+            icon: EyeOff,
+            iconBg: 'bg-amber-500/15 text-amber-800 border-amber-500/30',
+          },
+          {
+            label: 'Fully Booked',
+            count: fullyBookedCount,
+            badge: 'bg-red-500/15 text-red-700 border border-red-500/30',
+            icon: AlertCircle,
+            iconBg: 'bg-red-500/15 text-red-700 border-red-500/30',
+          },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-plaster-surface rounded-3xl border border-soot/12 p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs ${stat.iconBg}`}>
+                <stat.icon size={20} />
+              </div>
+              <div>
+                <div className="text-3xl font-normal text-soot tracking-tight font-serif-display">{stat.count}</div>
+                <div className="text-xs font-medium text-moss mt-0.5">{stat.label}</div>
+              </div>
+            </div>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-bold shadow-2xs ${stat.badge}`}>
+              {Math.round((stat.count / (mySpaces.length || 1)) * 100)}%
+            </span>
+          </div>
+        ))}
       </div>
 
-      {mySpaces.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-soot/8 py-16 text-center">
-          <Warehouse size={32} className="text-moss mx-auto mb-3" />
-          <div className="text-sm text-moss mb-4">You haven't listed a workspace yet.</div>
-          <button onClick={openAdd} className="btn-primary">
-            <Plus size={15} />
-            <span>Add your first space</span>
+      {/* Search & Custom City Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 bg-plaster-surface p-3 rounded-2xl border border-soot/10 shadow-2xs relative z-30">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-moss" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by space name or city..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-soot/12 bg-plaster-dark/30 text-soot text-sm placeholder:text-moss/70 outline-none focus:border-eucalyptus focus:bg-plaster-surface transition-all"
+          />
+        </div>
+
+        {/* Custom City Dropdown */}
+        <div className="relative min-w-52" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-plaster-dark/30 hover:bg-plaster-dark/50 border border-soot/12 transition-all duration-200 text-left cursor-pointer focus:outline-none"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <MapPin size={16} className="text-moss shrink-0" />
+              <span className="text-sm font-medium text-soot truncate">
+                {filterCity || 'All Cities'}
+              </span>
+            </div>
+            <ChevronDown
+              size={15}
+              className={`text-moss transition-transform duration-200 shrink-0 ${
+                dropdownOpen ? 'rotate-180 text-soot' : ''
+              }`}
+            />
           </button>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-soot/8 overflow-hidden">
-          <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 border-b border-soot/8 text-xs font-medium text-moss uppercase tracking-wide">
-            <div className="col-span-3">Space</div>
-            <div className="col-span-2">City</div>
-            <div className="col-span-2">Availability</div>
-            <div className="col-span-2">Bookings</div>
-            <div className="col-span-3 text-right">Actions</div>
-          </div>
 
-          <div className="divide-y divide-soot/8">
-            {mySpaces.map((space) => (
-              <div key={space.id} className="p-5 flex flex-col md:grid md:grid-cols-12 gap-4 md:items-center">
-                <div className="col-span-3 font-medium text-soot flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-eucalyptus/20 text-soot flex items-center justify-center font-semibold text-xs shrink-0">
-                    {space.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold">{space.name}</div>
-                    <div className="text-xs text-moss capitalize">{space.type}</div>
-                  </div>
-                </div>
-
-                <div className="col-span-2 text-sm text-moss flex items-center gap-1">
-                  <MapPin size={13} /> {space.city}
-                </div>
-
-                <div className="col-span-2 text-sm text-moss flex items-center gap-1">
-                  <Users size={13} /> {space.availableCapacity} / {space.totalCapacity} seats
-                </div>
-
-                <div className="col-span-2 text-sm text-moss font-medium">
-                  {bookingCountFor(space.id)} active
-                </div>
-
-                <div className="col-span-3 flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => openEdit(space)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-soot/12 text-xs text-moss hover:text-soot hover:bg-plaster transition-colors"
-                  >
-                    <Pencil size={11} /> Edit
-                  </button>
-                  <button
-                    onClick={() => toggleSpaceVisibility(space.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-soot/12 text-xs text-moss hover:text-soot hover:bg-plaster transition-colors"
-                  >
-                    {space.isVisible ? <EyeOff size={11} /> : <Eye size={11} />}
-                    {space.isVisible ? 'Hide' : 'Show'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSpaceToDelete(space);
-                      setDeleteModal(true);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-100 text-xs text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 size={11} /> Delete
-                  </button>
-                </div>
+          {dropdownOpen && (
+            <div className="absolute top-full left-0 right-0 mt-1.5 p-1.5 bg-plaster-surface border border-soot/15 rounded-2xl shadow-xl z-50 animate-in fade-in-50 zoom-in-95 duration-100">
+              <div className="max-h-52 overflow-y-auto space-y-0.5">
+                {['All Cities', ...CITIES].map((city) => {
+                  const isSelected = (city === 'All Cities' && !filterCity) || filterCity === city;
+                  return (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => {
+                        setFilterCity(city === 'All Cities' ? '' : city);
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 text-left cursor-pointer focus:outline-none ${
+                        isSelected
+                          ? 'bg-soot text-plaster font-semibold'
+                          : 'text-soot hover:bg-plaster-dark/60 hover:text-soot'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            isSelected ? 'bg-eucalyptus' : 'bg-transparent'
+                          }`}
+                        />
+                        <span>{city}</span>
+                      </div>
+                      {isSelected && <Check size={14} className="text-eucalyptus" />}
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Add/Edit Workspace Modal matching SpacesAdmin 100% */}
+      {/* Table Layout */}
+      <div className="bg-plaster-surface rounded-3xl border border-soot/10 overflow-hidden shadow-2xs relative z-10">
+        <div className="hidden md:grid grid-cols-12 gap-6 px-6 py-4 border-b border-soot/10 text-xs font-semibold uppercase tracking-wider text-moss bg-plaster-dark/40 items-center">
+          <div className="col-span-5">Space Name</div>
+          <div className="col-span-2">City</div>
+          <div className="col-span-2">Capacity</div>
+          <div className="col-span-2">Daily Price</div>
+          <div className="col-span-1 text-right">Actions</div>
+        </div>
+
+        {filteredSpaces.length === 0 ? (
+          <div className="py-16 text-center text-moss">
+            <Warehouse size={32} className="mx-auto mb-3 opacity-50" />
+            <p className="text-sm">No workspaces match your search filter.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-soot/8">
+            {filteredSpaces.map((space) => {
+              const occupancyRatio =
+                space.totalCapacity > 0 ? (space.availableCapacity / space.totalCapacity) * 100 : 0;
+
+              return (
+                <div
+                  key={space.id}
+                  className="px-6 py-4 hover:bg-plaster-dark/30 transition-colors flex flex-col md:grid md:grid-cols-12 md:gap-6 md:items-center cursor-pointer group"
+                >
+                  {/* Space Name & Thumbnail */}
+                  <div className="col-span-5 flex items-center gap-3.5 min-w-0">
+                    <img
+                      src={space.images[0]}
+                      alt={space.name}
+                      className="w-11 h-11 rounded-xl object-cover border border-soot/10 shrink-0 shadow-2xs group-hover:scale-105 transition-transform"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-soot group-hover:text-emerald-900 transition-colors truncate">
+                          {space.name}
+                        </span>
+                        {!space.isVisible && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-red-500/10 text-red-700 shrink-0">
+                            Hidden
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-moss mt-1 font-medium">
+                        <span className="flex items-center gap-1 text-soot">
+                          <Star size={12} className="fill-amber-400 text-amber-400" />
+                          {space.rating || '4.8'}
+                        </span>
+                        <span>·</span>
+                        <span className="capitalize">{space.type.replace('-', ' ')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* City */}
+                  <div className="col-span-2 mt-2 md:mt-0 text-sm text-soot font-medium flex items-center gap-1.5">
+                    <MapPin size={14} className="text-moss shrink-0" />
+                    <span className="truncate">{space.city}</span>
+                  </div>
+
+                  {/* Capacity */}
+                  <div className="col-span-2 mt-3 md:mt-0 flex flex-col justify-center">
+                    <div className="flex items-center gap-1 text-xs text-moss mb-1.5 font-medium">
+                      <span className="font-semibold text-soot text-sm leading-none">
+                        {space.availableCapacity}
+                      </span>
+                      <span>/ {space.totalCapacity}</span>
+                    </div>
+                    <div className="w-full max-w-[120px] h-2 bg-soot/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          space.availableCapacity === 0
+                            ? 'bg-red-500'
+                            : space.availableCapacity <= 5
+                            ? 'bg-amber-500'
+                            : 'bg-[#40534C]'
+                        }`}
+                        style={{ width: `${Math.min(100, Math.max(0, occupancyRatio))}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Daily Price */}
+                  <div className="col-span-2 mt-3 md:mt-0 text-sm font-semibold text-soot">
+                    SAR {space.pricing.daily.toLocaleString()}
+                    <span className="text-xs text-moss font-normal ml-1">/ day</span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-1 mt-4 md:mt-0 flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => openEdit(e, space)}
+                      className="p-2 rounded-xl text-moss hover:text-soot hover:bg-plaster-surface border border-transparent hover:border-soot/10 transition-all cursor-pointer"
+                      title="Edit Space"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleVisibility(e, space.id)}
+                      className="p-2 rounded-xl text-moss hover:text-soot hover:bg-plaster-surface border border-transparent hover:border-soot/10 transition-all cursor-pointer"
+                      title={space.isVisible ? 'Hide Space' : 'Show Space'}
+                    >
+                      {space.isVisible ? <EyeOff size={15} /> : <Eye size={15} className="text-emerald-700" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDelete(e, space)}
+                      className="p-2 rounded-xl text-moss hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all cursor-pointer"
+                      title="Delete Space"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Edit Workspace Modal */}
       <Modal
         open={editModal}
         onClose={() => setEditModal(false)}
         title={editingSpace ? 'Edit Workspace' : 'Add New Workspace'}
-        subtitle="Configure details, amenities, and visibility options."
+        subtitle="Configure details, amenities, pricing, and media options."
         size="2xl"
         footer={
           <>
@@ -304,50 +557,52 @@ export default function ProviderMySpaces() {
               Cancel
             </button>
             <button type="button" onClick={handleSave} className="btn-primary">
-              {editingSpace ? 'Save Changes' : 'Publish Space'}
+              Save Changes
             </button>
           </>
         }
       >
-        <div className="space-y-6">
-          {saved && (
-            <div className="flex items-center gap-2.5 bg-eucalyptus/25 border border-eucalyptus text-soot rounded-2xl px-4 py-3 text-sm font-semibold shadow-xs">
-              <Check size={16} className="text-moss" />
-              <span>{editingSpace ? 'Workspace updated successfully!' : 'New workspace published successfully!'}</span>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
-              General Details
-            </span>
-
+        {saved ? (
+          <div className="py-12 text-center text-emerald-800">
+            <Check size={40} className="mx-auto mb-2" />
+            <div className="text-lg font-semibold">Workspace updated successfully!</div>
+          </div>
+        ) : (
+          <div className="space-y-6 text-sm text-soot">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-soot mb-1.5">Space Name *</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-1">
+                  Workspace Name *
+                </label>
                 <input
-                  type="text"
                   value={form.name || ''}
                   onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                  placeholder="e.g. Olaya Business Hub"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-soot/15 bg-white text-soot text-sm placeholder:text-moss/60 outline-none focus:border-soot transition-all shadow-2xs"
+                  placeholder="e.g. The Hub Olaya"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
                 />
               </div>
 
-              {/* Custom Styled City Dropdown */}
+              {/* City Custom Dropdown */}
               <div className="relative" ref={modalCityRef}>
-                <label className="block text-xs font-semibold text-soot mb-1.5">City *</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-1">
+                  City *
+                </label>
                 <button
                   type="button"
                   onClick={() => setModalCityOpen(!modalCityOpen)}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-soot/15 bg-white hover:bg-plaster-dark/30 text-soot text-sm text-left transition-all cursor-pointer focus:outline-none shadow-2xs"
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white border border-soot/12 text-soot text-sm text-left cursor-pointer focus:outline-none"
                 >
-                  <span className="truncate">{form.city || 'Select City'}</span>
-                  <ChevronDown size={14} className={`text-moss transition-transform ${modalCityOpen ? 'rotate-180' : ''}`} />
+                  <span>{form.city || 'Select City'}</span>
+                  <ChevronDown
+                    size={15}
+                    className={`text-moss transition-transform duration-200 ${
+                      modalCityOpen ? 'rotate-180 text-soot' : ''
+                    }`}
+                  />
                 </button>
 
                 {modalCityOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1.5 p-1 bg-white border border-soot/15 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 p-1 bg-white border border-soot/15 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
                     {CITIES.map((c) => (
                       <button
                         key={c}
@@ -356,57 +611,70 @@ export default function ProviderMySpaces() {
                           setForm((p) => ({ ...p, city: c }));
                           setModalCityOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors ${
-                          form.city === c ? 'bg-soot text-plaster' : 'text-soot hover:bg-plaster-dark/50'
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium cursor-pointer ${
+                          form.city === c
+                            ? 'bg-soot text-plaster font-semibold'
+                            : 'text-soot hover:bg-soot/5'
                         }`}
                       >
                         <span>{c}</span>
-                        {form.city === c && <Check size={12} className="text-eucalyptus" />}
+                        {form.city === c && <Check size={14} className="text-eucalyptus" />}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-soot mb-1.5">Full Address *</label>
-                <input
-                  type="text"
-                  value={form.address || ''}
-                  onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                  placeholder="District, Street Name, Building Number"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-soot/15 bg-white text-soot text-sm placeholder:text-moss/60 outline-none focus:border-soot transition-all shadow-2xs"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-1">
+                Address / Location *
+              </label>
+              <input
+                value={form.address || ''}
+                onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+                placeholder="District, Street Name, City"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
+              />
+            </div>
 
-              {/* Expanded Description */}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-soot mb-1.5">Description</label>
-                <textarea
-                  rows={4}
-                  value={form.description || ''}
-                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="Write a comprehensive description about the workspace, ambiance, facilities, and unique perks..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-soot/15 bg-white text-soot text-sm placeholder:text-moss/60 outline-none focus:border-soot transition-all resize-y shadow-2xs"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-1">
+                Description
+              </label>
+              <textarea
+                value={form.description || ''}
+                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                rows={3}
+                placeholder="Describe your workspace, vibe, and amenities..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus resize-none"
+              />
+            </div>
 
-              {/* Custom Styled Workspace Type Dropdown */}
+            {/* Type & Capacity */}
+            <div className="grid sm:grid-cols-2 gap-4">
               <div className="relative" ref={modalTypeRef}>
-                <label className="block text-xs font-semibold text-soot mb-1.5">Workspace Type</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-1">
+                  Type *
+                </label>
                 <button
                   type="button"
                   onClick={() => setModalTypeOpen(!modalTypeOpen)}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-soot/15 bg-white hover:bg-plaster-dark/30 text-soot text-sm text-left transition-all cursor-pointer focus:outline-none shadow-2xs"
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white border border-soot/12 text-soot text-sm text-left cursor-pointer focus:outline-none"
                 >
-                  <span className="capitalize truncate">
-                    {TYPES.find((t) => t.value === (form.type || 'mixed'))?.label || 'Mixed Space'}
+                  <span className="truncate">
+                    {TYPES.find((t) => t.value === form.type)?.label || 'Select Type'}
                   </span>
-                  <ChevronDown size={14} className={`text-moss transition-transform ${modalTypeOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    size={15}
+                    className={`text-moss transition-transform duration-200 shrink-0 ${
+                      modalTypeOpen ? 'rotate-180 text-soot' : ''
+                    }`}
+                  />
                 </button>
 
                 {modalTypeOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1.5 p-1 bg-white border border-soot/15 rounded-xl shadow-xl z-50">
+                  <div className="absolute top-full left-0 right-0 mt-1 p-1 bg-white border border-soot/15 rounded-xl shadow-lg z-50">
                     {TYPES.map((t) => (
                       <button
                         key={t.value}
@@ -415,12 +683,14 @@ export default function ProviderMySpaces() {
                           setForm((p) => ({ ...p, type: t.value }));
                           setModalTypeOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors ${
-                          form.type === t.value ? 'bg-soot text-plaster' : 'text-soot hover:bg-plaster-dark/50'
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium cursor-pointer ${
+                          form.type === t.value
+                            ? 'bg-soot text-plaster font-semibold'
+                            : 'text-soot hover:bg-soot/5'
                         }`}
                       >
                         <span>{t.label}</span>
-                        {form.type === t.value && <Check size={12} className="text-eucalyptus" />}
+                        {form.type === t.value && <Check size={14} className="text-eucalyptus" />}
                       </button>
                     ))}
                   </div>
@@ -428,147 +698,187 @@ export default function ProviderMySpaces() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-soot mb-1.5">Total Capacity (Desks)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-1">
+                  Total Capacity
+                </label>
                 <input
                   type="number"
-                  value={form.totalCapacity || 20}
+                  min={1}
+                  value={form.totalCapacity ?? 20}
                   onChange={(e) =>
                     setForm((p) => ({
                       ...p,
-                      totalCapacity: +e.target.value,
-                      availableCapacity: +e.target.value,
+                      totalCapacity: parseInt(e.target.value) || 0,
+                      availableCapacity: parseInt(e.target.value) || 0,
                     }))
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-soot/15 bg-white text-soot text-sm outline-none focus:border-soot transition-all shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-soot/12 bg-white text-soot text-sm outline-none focus:border-eucalyptus"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Pricing Section */}
-          <div className="space-y-4 pt-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
-              Standard Rates & Pass Pricing (SAR)
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {(['hourly', 'daily', 'monthly', 'yearly'] as const).map((plan) => (
-                <div key={plan} className="space-y-1">
-                  <span className="block text-[10px] font-bold text-moss uppercase tracking-wider">{plan === 'hourly' ? '1 Hour (Base)' : plan}</span>
-                  <input
-                    type="number"
-                    value={form.pricing?.[plan] ?? (plan === 'hourly' ? 45 : 150)}
-                    onChange={(e) => setPrice(plan, +e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-soot/15 bg-white text-soot text-sm font-semibold outline-none focus:border-soot shadow-2xs"
-                  />
+            {/* Pricing Section */}
+            <div className="space-y-4 pt-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
+                Standard Rates & Pass Pricing (SAR)
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {(['hourly', 'daily', 'monthly', 'yearly'] as const).map((plan) => (
+                  <div key={plan} className="space-y-1">
+                    <span className="block text-[10px] font-bold text-moss uppercase tracking-wider">
+                      {plan === 'hourly' ? '1 Hour (Base)' : plan}
+                    </span>
+                    <input
+                      type="number"
+                      value={form.pricing?.[plan] ?? (plan === 'hourly' ? 45 : 150)}
+                      onChange={(e) => setPrice(plan, +e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-soot/15 bg-white text-soot text-sm font-semibold outline-none focus:border-soot shadow-2xs"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Hourly Duration Tiers */}
+              <div className="p-3.5 rounded-2xl bg-plaster-dark/40 border border-soot/10 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-soot">
+                    Custom Multi-Hour Duration Pricing (SAR)
+                  </span>
+                  <span className="text-[10px] text-moss">Custom rates for duration booking</span>
                 </div>
-              ))}
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {[1, 2, 3, 4, 6, 8].map((hours) => {
+                    const currentPrice =
+                      form.pricing?.hourlyTiers?.find((t) => t.hours === hours)?.price ||
+                      (hours === 1
+                        ? form.pricing?.hourly || 45
+                        : Math.round(
+                            (form.pricing?.hourly || 45) *
+                              (hours === 2 ? 1.8 : hours === 3 ? 2.5 : hours === 4 ? 3.1 : hours === 6 ? 4.4 : 5.5)
+                          ));
+                    return (
+                      <div key={hours} className="space-y-1 bg-white p-2 rounded-xl border border-soot/10">
+                        <span className="block text-[10px] font-semibold text-moss text-center">{hours}h Duration</span>
+                        <input
+                          type="number"
+                          value={currentPrice}
+                          onChange={(e) => setTierPrice(hours, +e.target.value)}
+                          className="w-full text-center px-1.5 py-1 rounded-lg border border-soot/10 bg-plaster-dark/20 text-soot text-xs font-semibold outline-none focus:border-soot"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            {/* Hourly Duration Tiers */}
-            <div className="p-3.5 rounded-2xl bg-plaster-dark/40 border border-soot/10 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-soot">
-                  Custom Multi-Hour Duration Pricing (SAR)
-                </span>
-                <span className="text-[10px] text-moss">Custom rates for duration booking</span>
+            {/* Images Section */}
+            <div className="space-y-3 pt-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
+                Workspace Photos
+              </span>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  placeholder="Paste direct image URL..."
+                  value={imageUrlInput}
+                  onChange={(e) => setImageUrlInput(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl border border-soot/12 bg-white text-soot text-xs outline-none focus:border-eucalyptus"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAddImageUrl}
+                    className="px-3.5 py-2 rounded-xl bg-soot text-plaster text-xs font-medium cursor-pointer hover:bg-soot/90"
+                  >
+                    Add URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-soot/15 bg-white text-xs font-medium text-soot hover:bg-plaster-dark/40 cursor-pointer"
+                  >
+                    <Upload size={14} />
+                    <span>Upload</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {[1, 2, 3, 4, 6, 8].map((hours) => {
-                  const currentPrice = form.pricing?.hourlyTiers?.find(t => t.hours === hours)?.price ||
-                    (hours === 1 ? form.pricing?.hourly || 45 : Math.round((form.pricing?.hourly || 45) * (hours === 2 ? 1.8 : hours === 3 ? 2.5 : hours === 4 ? 3.1 : hours === 6 ? 4.4 : 5.5)));
-                  return (
-                    <div key={hours} className="space-y-1 bg-white p-2 rounded-xl border border-soot/10">
-                      <span className="block text-[10px] font-semibold text-moss text-center">{hours}h Duration</span>
-                      <input
-                        type="number"
-                        value={currentPrice}
-                        onChange={(e) => setTierPrice(hours, +e.target.value)}
-                        className="w-full text-center px-1.5 py-1 rounded-lg border border-soot/10 bg-plaster-dark/20 text-soot text-xs font-semibold outline-none focus:border-soot"
-                      />
+
+              {form.images && form.images.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 pt-2">
+                  {form.images.map((img, idx) => (
+                    <div key={idx} className="relative group rounded-xl overflow-hidden border border-soot/10 aspect-video">
+                      <img src={img} alt={`Space photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 p-1 bg-red-600/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Amenities Section */}
+            <div className="space-y-3 pt-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
+                Available Amenities
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {AMENITY_OPTIONS.map((a) => {
+                  const sel = form.amenities?.includes(a);
+                  return (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => toggleAmenity(a)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                        sel ? 'bg-soot text-plaster font-semibold' : 'bg-plaster-dark/40 text-soot hover:bg-plaster-dark/70'
+                      }`}
+                    >
+                      {a}
+                    </button>
                   );
                 })}
               </div>
             </div>
           </div>
-
-          {/* Amenities */}
-          <div className="space-y-3 pt-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-moss block border-b border-soot/10 pb-1.5">
-              Available Amenities
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {AMENITY_OPTIONS.map((item) => {
-                const selected = form.amenities?.includes(item);
-                return (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => toggleAmenity(item)}
-                    className={`text-xs px-3.5 py-1.5 rounded-xl border font-medium transition-all cursor-pointer ${
-                      selected
-                        ? 'bg-soot border-soot text-plaster shadow-xs'
-                        : 'bg-white border-soot/15 text-soot hover:border-soot/30 hover:bg-plaster-dark/30'
-                    }`}
-                  >
-                    {item}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Visibility Options */}
-          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-plaster-dark/40 border border-soot/12">
-            <label className="flex items-center gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.isVisible ?? true}
-                onChange={(e) => setForm((p) => ({ ...p, isVisible: e.target.checked }))}
-                className="w-4 h-4 rounded accent-soot cursor-pointer"
-              />
-              <span className="text-xs sm:text-sm font-semibold text-soot">Visible to Members</span>
-            </label>
-
-            <label className="flex items-center gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.isFeatured ?? false}
-                onChange={(e) => setForm((p) => ({ ...p, isFeatured: e.target.checked }))}
-                className="w-4 h-4 rounded accent-soot cursor-pointer"
-              />
-              <span className="text-xs sm:text-sm font-semibold text-soot">Feature on Highlights</span>
-            </label>
-          </div>
-        </div>
+        )}
       </Modal>
 
-      {/* Delete confirmation */}
+      {/* Delete Confirmation Modal */}
       <Modal
         open={deleteModal}
         onClose={() => setDeleteModal(false)}
-        title="Delete Space"
+        title="Delete Workspace Listing"
         size="sm"
         footer={
           <>
-            <button onClick={() => setDeleteModal(false)} className="btn-secondary flex-1">
+            <button type="button" onClick={() => setDeleteModal(false)} className="btn-secondary">
               Cancel
             </button>
-            <button onClick={handleDelete} className="btn-danger flex-1">
-              Delete
+            <button type="button" onClick={confirmDelete} className="btn-danger">
+              Confirm Delete
             </button>
           </>
         }
       >
-        <div className="py-2">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-              <AlertCircle size={18} className="text-red-500" />
-            </div>
-            <p className="text-sm text-moss leading-relaxed">
-              Are you sure you want to delete <strong className="text-soot">{spaceToDelete?.name}</strong>? This will permanently remove the space and all associated data.
-            </p>
-          </div>
+        <div className="text-sm text-soot space-y-2 py-2">
+          <p>
+            Are you sure you want to delete <span className="font-semibold">{spaceToDelete?.name}</span>?
+          </p>
+          <p className="text-xs text-moss">This workspace listing will be removed from the platform catalog.</p>
         </div>
       </Modal>
     </div>
