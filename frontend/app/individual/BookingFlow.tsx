@@ -15,7 +15,8 @@ import {
   Sparkles,
   Info,
   ShieldCheck,
-  Receipt
+  Receipt,
+  ShoppingBag
 } from 'lucide-react';
 import { useApp } from '@/app/store';
 import {
@@ -79,7 +80,7 @@ function Row({ label, value }: { label: string; value: string | React.ReactNode 
 }
 
 export default function BookingFlow() {
-  const { nav, navigate, goBack, spaces, bookings, currentUser, addBooking, showToast } = useApp();
+  const { nav, navigate, goBack, spaces, bookings, currentUser, addBooking, showToast, addToCart } = useApp();
   
   const urlId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '';
   const spaceId = nav?.params?.spaceId || (urlId && urlId !== 'page' && urlId !== 'booking-flow' ? urlId : '') || 'space-1';
@@ -811,12 +812,40 @@ export default function BookingFlow() {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-2">
+          <div className="flex gap-3 pt-2">
             <button
               onClick={back}
-              className="flex-1 py-3.5 px-6 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white cursor-pointer"
+              className="py-3.5 px-6 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white cursor-pointer"
             >
               Back
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                addToCart({
+                  spaceId: space.id,
+                  spaceName: space.name,
+                  spaceCity: space.city,
+                  spaceAddress: space.address || space.city,
+                  spaceImage: space.images?.[0] || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
+                  type: deskType,
+                  plan: plan,
+                  durationHours: isHourly ? durationHours : undefined,
+                  startTime: isHourly ? startTime : undefined,
+                  endTime: isHourly ? endTime : undefined,
+                  startDate: startDate,
+                  endDate: endDate,
+                  seats: seats,
+                  notes: notes,
+                  pricePerSeat: planPrice,
+                  itemTotal: totalPrice,
+                });
+                navigate('browse');
+              }}
+              className="py-3.5 px-5 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            >
+              <ShoppingBag size={16} />
+              <span>Add to Cart</span>
             </button>
             <button
               onClick={confirmBooking}
@@ -828,7 +857,7 @@ export default function BookingFlow() {
               ) : (
                 <>
                   <CreditCard size={16} />
-                  <span>Pay & Confirm (SAR {totalPrice.toLocaleString()})</span>
+                  <span>Pay Now (SAR {totalPrice.toLocaleString()})</span>
                 </>
               )}
             </button>

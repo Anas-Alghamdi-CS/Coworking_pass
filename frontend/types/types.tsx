@@ -502,6 +502,27 @@ export interface Booking {
   notes?: string;
 }
 
+export interface CartItem {
+  id: string;
+  spaceId: string;
+  spaceName: string;
+  spaceCity: string;
+  spaceAddress: string;
+  spaceImage: string;
+  type: BookingType | SpaceType;
+  plan: BookingPlan;
+  startTime?: string;
+  endTime?: string;
+  durationHours?: number;
+  startDate: string;
+  endDate: string;
+  seats: number;
+  employees?: string[];
+  pricePerSeat: number;
+  itemTotal: number;
+  notes?: string;
+}
+
 export type Screen =
   | 'landing'
   | 'browse'

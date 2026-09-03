@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard, Notification } from '@/types/types';
+import { User, Space, Booking, Screen, NavState, UserRole, BookingPlan, BookingType, PaymentCard, Notification, CartItem } from '@/types/types';
 import { INITIAL_SPACES, INITIAL_USERS, INITIAL_BOOKINGS, INITIAL_NOTIFICATIONS } from '@/data/data';
 
 interface AppContextType {
@@ -62,6 +62,14 @@ interface AppContextType {
   // Payment cards
   addPaymentCard: (card: Omit<PaymentCard, 'id'>) => PaymentCard;
 
+  // Shopping Cart
+  cart: CartItem[];
+  addToCart: (item: Omit<CartItem, 'id'>) => void;
+  removeFromCart: (cartItemId: string) => void;
+  updateCartItemSeats: (cartItemId: string, seats: number) => void;
+  clearCart: () => void;
+  checkoutCart: () => Booking[];
+
   // Toast
   toast: { message: string; type: 'success' | 'error' | 'info' } | null;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
@@ -83,6 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [autobookingCard, setAutobookingCard] = useState<Record<string, string>>({});
   const [toast, setToast] = useState<AppContextType['toast']>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   // Sync state from localStorage after initial client mount to avoid SSR hydration mismatch
   useEffect(() => {
@@ -113,6 +122,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } else {
         setNotifications(INITIAL_NOTIFICATIONS);
         localStorage.setItem('cp_notifications', JSON.stringify(INITIAL_NOTIFICATIONS));
+      }
+      const savedCart = localStorage.getItem('cp_cart');
+      if (savedCart) {
+        setCart(JSON.parse(savedCart));
       }
     } catch (e) {
       console.error('Failed to load storage state:', e);
@@ -477,6 +490,100 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return newCard;
   };
 
+  const saveCartToStorage = (newCart: CartItem[]) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cp_cart', JSON.stringify(newCart));
+      } catch (e) {
+        console.error('Failed to save cart state:', e);
+      }
+    }
+  };
+
+  const addToCart = (item: Omit<CartItem, 'id'>) => {
+    const newItem: CartItem = {
+      ...item,
+      id: `cart-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    };
+    const updated = [...cart, newItem];
+    setCart(updated);
+    saveCartToStorage(updated);
+    showToast(`Added ${item.spaceName} to your cart!`, 'success');
+  };
+
+  const removeFromCart = (cartItemId: string) => {
+    const updated = cart.filter((i) => i.id !== cartItemId);
+    setCart(updated);
+    saveCartToStorage(updated);
+    showToast('Item removed from cart.', 'info');
+  };
+
+  const updateCartItemSeats = (cartItemId: string, seats: number) => {
+    if (seats < 1) return;
+    const updated = cart.map((i) => {
+      if (i.id === cartItemId) {
+        const itemTotal = i.pricePerSeat * seats;
+        return { ...i, seats, itemTotal };
+      }
+      return i;
+    });
+    setCart(updated);
+    saveCartToStorage(updated);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('cp_cart');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const checkoutCart = (): Booking[] => {
+    if (!currentUser || cart.length === 0) return [];
+
+    const newBookings: Booking[] = [];
+    cart.forEach((item) => {
+      const b = addBooking({
+        userId: currentUser.id,
+        spaceId: item.spaceId,
+        spaceName: item.spaceName,
+        spaceCity: item.spaceCity,
+        spaceAddress: item.spaceAddress,
+        spaceImage: item.spaceImage,
+        type: item.type as BookingType,
+        plan: item.plan,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        durationHours: item.durationHours,
+        startDate: item.startDate,
+        endDate: item.endDate,
+        seats: item.seats,
+        employees: item.employees || [],
+        totalPrice: item.itemTotal,
+        status: 'active',
+        notes: item.notes,
+      });
+      newBookings.push(b);
+    });
+
+    clearCart();
+
+    addNotification({
+      userId: currentUser.id,
+      title: 'Batch Checkout Successful',
+      message: `Payment confirmed for ${newBookings.length} workspace pass${newBookings.length > 1 ? 'es' : ''}.`,
+      type: 'payment',
+    });
+
+    showToast(`Payment processed! ${newBookings.length} workspace pass${newBookings.length > 1 ? 'es' : ''} confirmed.`, 'success');
+
+    return newBookings;
+  };
+
   return (
     <AppContext.Provider value={{
       nav, navigate, goBack,
@@ -489,6 +596,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       users, blockUser, unblockUser, changeUserRole,
       waitlist, autobooking, autobookingCard, joinWaitlist, enableAutoBooking, disableAutoBooking,
       addPaymentCard,
+      cart, addToCart, removeFromCart, updateCartItemSeats, clearCart, checkoutCart,
       toast, showToast, updateCurrentUser, completeSignup,
     }}>
       {children}

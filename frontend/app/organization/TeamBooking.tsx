@@ -12,7 +12,8 @@ import {
   CreditCard,
   Clock,
   Info,
-  Receipt
+  Receipt,
+  ShoppingBag
 } from 'lucide-react';
 import { useApp } from '@/app/store';
 import {
@@ -37,7 +38,7 @@ const START_TIMES = [
 ];
 
 export default function TeamBooking() {
-  const { nav, goBack, spaces, bookings, currentUser, addBooking, navigate, showToast } = useApp();
+  const { nav, goBack, spaces, bookings, currentUser, addBooking, navigate, showToast, addToCart } = useApp();
   const spaceId = nav.params?.spaceId;
   const space = spaces.find((s: Space) => s.id === spaceId);
 
@@ -740,10 +741,10 @@ export default function TeamBooking() {
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex gap-4 mt-6">
+      <div className="flex gap-3 mt-6">
         <button
           onClick={back}
-          className="flex-1 py-3 px-6 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white cursor-pointer"
+          className="py-3 px-6 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white cursor-pointer"
         >
           {step === 0 ? 'Cancel' : 'Back'}
         </button>
@@ -756,20 +757,52 @@ export default function TeamBooking() {
             <ChevronRight size={16} />
           </button>
         ) : (
-          <button
-            onClick={confirmBooking}
-            disabled={loading}
-            className="flex-1 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot font-medium text-sm hover:bg-[#D0DDD3] transition-all flex items-center justify-center gap-2 shadow-xs border border-soot/8 cursor-pointer disabled:opacity-50"
-          >
-            {loading ? (
-              <span>Confirming...</span>
-            ) : (
-              <>
-                <CreditCard size={15} />
-                <span>Confirm Reservation (SAR {totalPrice.toLocaleString()})</span>
-              </>
-            )}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                if (!space) return;
+                addToCart({
+                  spaceId: space.id,
+                  spaceName: space.name,
+                  spaceCity: space.city,
+                  spaceAddress: space.address || space.city,
+                  spaceImage: space.images?.[0] || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
+                  type: bookingType,
+                  plan: plan,
+                  durationHours: isHourly ? durationHours : undefined,
+                  startTime: isHourly ? startTime : undefined,
+                  endTime: isHourly ? endTime : undefined,
+                  startDate: startDate,
+                  endDate: endDate,
+                  seats: seats,
+                  employees: selectedEmployees,
+                  pricePerSeat: pricePerSeat,
+                  itemTotal: totalPrice,
+                });
+                navigate('browse');
+              }}
+              className="py-3 px-5 rounded-full border border-soot/15 text-soot font-medium text-sm hover:bg-soot/5 transition-all bg-white flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            >
+              <ShoppingBag size={15} />
+              <span>Add to Cart</span>
+            </button>
+
+            <button
+              onClick={confirmBooking}
+              disabled={loading}
+              className="flex-1 py-3 px-6 rounded-full bg-[#DDE6DF] text-soot font-medium text-sm hover:bg-[#D0DDD3] transition-all flex items-center justify-center gap-2 shadow-xs border border-soot/8 cursor-pointer disabled:opacity-50"
+            >
+              {loading ? (
+                <span>Confirming...</span>
+              ) : (
+                <>
+                  <CreditCard size={15} />
+                  <span>Confirm Reservation (SAR {totalPrice.toLocaleString()})</span>
+                </>
+              )}
+            </button>
+          </>
         )}
       </div>
     </div>
